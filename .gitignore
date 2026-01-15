@@ -37,3 +37,4 @@ backend/dist/
 frontend/dist/
 mobile/dist/
 shared/dist/
+.env

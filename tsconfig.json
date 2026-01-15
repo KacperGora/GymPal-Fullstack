@@ -1,13 +1,4 @@
 {
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@gympal/shared/*": ["shared/src/*"]
-    },
-    "target": "ES2023",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "esModuleInterop": true,
-    "strict": true
-  }
+  "files": [],
+  "references": [{ "path": "./shared" }, { "path": "./backend" }]
 }
