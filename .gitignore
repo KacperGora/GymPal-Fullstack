@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+
+# Node modules in all packages
+backend/node_modules/
+frontend/node_modules/
+mobile/node_modules/
+shared/node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs in all packages
+backend/logs/
+frontend/logs/
+mobile/logs/
+shared/logs/
+
+# Optional lock files (zazwyczaj zostawiamy w repo)
+# package-lock.json
+# yarn.lock
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Build output in all packages
+backend/dist/
+frontend/dist/
+mobile/dist/
+shared/dist/
