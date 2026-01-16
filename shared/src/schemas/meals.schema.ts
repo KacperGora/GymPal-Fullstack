@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createMealSchema = z.object({
   name: z.string().min(1),
-  calories: z.number().nonnegative(),
+  calories: z.number().int().nonnegative(),
   proteins: z.number().nonnegative(),
   carbs: z.number().nonnegative(),
   fats: z.number().nonnegative(),

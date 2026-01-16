@@ -17,7 +17,6 @@ export class AuthController {
   @Post('login')
   @UsePipes(new ZodValidationPipe(loginSchema))
   login(@Body() dto: LoginDto) {
-    console.log(dto);
     return this.authService.login(dto);
   }
 }

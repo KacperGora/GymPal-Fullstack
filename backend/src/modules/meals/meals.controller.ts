@@ -13,10 +13,10 @@ import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { createMealSchema, updateMealSchema } from '@gympal/shared';
 import type { CreateMealDto, UpdateMealDto } from '@gympal/shared';
-import { JwtAuthGurad } from '../auth/jwt/jwt-auth.gurad';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 
 @Controller('meals')
-@UseGuards(JwtAuthGurad)
+@UseGuards(JwtAuthGuard)
 export class MealsController {
   constructor(private mealsService: MealsService) {}
 
