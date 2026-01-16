@@ -1,12 +1,8 @@
 import { Body, Controller, Post, UsePipes } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
-import {
-  registerSchema,
-  loginSchena,
-  RegisterDto,
-  LoginDto,
-} from '@gympal/shared';
+import type { RegisterDto, LoginDto } from '@gympal/shared';
+import { registerSchema, loginSchema } from '@gympal/shared';
 
 @Controller('auth')
 export class AuthController {
@@ -19,8 +15,9 @@ export class AuthController {
   }
 
   @Post('login')
-  @UsePipes(new ZodValidationPipe(loginSchena))
+  @UsePipes(new ZodValidationPipe(loginSchema))
   login(@Body() dto: LoginDto) {
+    console.log(dto);
     return this.authService.login(dto);
   }
 }

@@ -5,7 +5,10 @@
     "rootDir": "src",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "module": "NodeNext"
+    "module": "NodeNext",
+    "strict": true,
+    "isolatedModules": true,
+    "target": "es2020"
   },
   "include": ["src"]
 }

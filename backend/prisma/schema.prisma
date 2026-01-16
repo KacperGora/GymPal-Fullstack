@@ -20,4 +20,19 @@ model User {
   lastName  String
   password  String
   email     String @unique
+  meals     Meal[]
+}
+
+model Meal {
+  id        String   @id @default(cuid())
+  name      String
+  calories  Int
+  fats      Float
+  proteins  Float
+  carbs     Float
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
