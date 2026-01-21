@@ -15,12 +15,14 @@ datasource db {
 }
 
 model User {
-  id        Int    @id @unique @default(autoincrement())
-  firstName String
-  lastName  String
-  password  String
-  email     String @unique
-  meals     Meal[]
+  id          Int          @id @unique @default(autoincrement())
+  firstName   String
+  lastName    String
+  password    String
+  email       String       @unique
+  meals       Meal[]
+  userProfile UserProfile?
+  dailyStats  DailyStat[]
 }
 
 model Meal {
@@ -35,4 +37,30 @@ model Meal {
   date      DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model UserProfile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+  height    Float
+  weight    Float
+  age       Int
+  activity  Float
+  goal      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DailyStat {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  date     DateTime @default(now())
+  calories Float
+  fats     Float
+  proteins Float
+  carbs    Float
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
 }

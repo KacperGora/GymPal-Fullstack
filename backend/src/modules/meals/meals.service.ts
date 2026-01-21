@@ -25,6 +25,7 @@ export class MealsService {
     const meal = await this.prisma.meal.findFirst({
       where: { id, userId },
     });
+
     if (!meal) {
       throw new NotFoundException('Meal not found');
     }
@@ -32,16 +33,23 @@ export class MealsService {
   }
 
   async update(userId: number, id: string, dto: UpdateMealDto) {
-    const meal = await this.findOne(userId, id);
-    return this.prisma.meal.update({
-      where: { id: meal.id },
+    const updated = await this.prisma.meal.updateMany({
+      where: { userId, id },
       data: dto,
     });
+    if (updated.count === 0) {
+      throw new NotFoundException('Meal not found');
+    }
+    return updated;
   }
 
   async remove(userId: number, id: string) {
-    const meal = await this.findOne(userId, id);
-    await this.prisma.meal.delete({ where: { id: meal.id } });
+    const deleted = await this.prisma.meal.deleteMany({
+      where: { userId, id },
+    });
+    if (deleted.count === 0) {
+      throw new NotFoundException('Meal not found or not owned by user');
+    }
     return { id };
   }
 }
