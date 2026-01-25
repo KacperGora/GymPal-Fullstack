@@ -14,15 +14,23 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ExerciseCategory {
+  STRENGTH
+  CARDIO
+  FLEXIBILITY
+  HIIT
+}
+
 model User {
-  id          Int          @id @unique @default(autoincrement())
+  id          Int              @id @unique @default(autoincrement())
   firstName   String
   lastName    String
   password    String
-  email       String       @unique
+  email       String           @unique
   meals       Meal[]
   userProfile UserProfile?
   dailyStats  DailyStat[]
+  workouts    WorkoutSession[]
 }
 
 model Meal {
@@ -63,4 +71,45 @@ model DailyStat {
   user     User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, date])
+}
+
+model Exercise {
+  id               String            @id @default(cuid())
+  name             String            @unique
+  category         ExerciseCategory
+  muscleGroup      String
+  equipment        String
+  description      String?
+  workoutExercises WorkoutExercise[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model WorkoutSession {
+  id             String            @id @default(cuid())
+  userId         Int
+  user           User              @relation(fields: [userId], references: [id])
+  name           String
+  date           DateTime          @default(now())
+  duration       Int
+  caloriesBurned Float
+  notes          String?
+  exercises      WorkoutExercise[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model WorkoutExercise {
+  id               String         @id @default(cuid())
+  workoutSessionId String
+  workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  exerciseId       String
+  exercise         Exercise       @relation(fields: [exerciseId], references: [id])
+  sets             Int
+  reps             Int
+  weight           Float
+  restTime         Int
+  notes            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }

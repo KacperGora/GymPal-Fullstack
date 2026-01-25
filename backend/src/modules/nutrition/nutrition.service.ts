@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/db/prisma.service';
 
 @Injectable()
@@ -34,7 +34,7 @@ export class NutritionService {
     });
 
     if (!profile) {
-      throw new Error('User profile not found');
+      throw new NotFoundException('User profile not found');
     }
 
     let bmr = 10 * profile.weight + 6.25 * profile.height - 5 * profile.age + 5;

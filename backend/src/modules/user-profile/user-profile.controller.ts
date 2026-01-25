@@ -1,8 +1,10 @@
 import { Controller, Body, Put, Get, UseGuards } from '@nestjs/common';
 import { UserProfileService } from './user-profile.service';
-import { CreateUserProfileDto, UpdateUserProfileDto } from '@gympal/shared';
+import { CreateUserProfileSchema } from '@gympal/shared';
+import type { CreateUserProfileDto } from '@gympal/shared';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 
 @UseGuards(JwtAuthGuard)
 @Controller('user-profile')
@@ -17,7 +19,8 @@ export class UserProfileController {
   @Put()
   async upsertProfile(
     @RequestUser('id') userId: number,
-    @Body() dto: CreateUserProfileDto | UpdateUserProfileDto,
+    @Body(new ZodValidationPipe(CreateUserProfileSchema))
+    dto: CreateUserProfileDto,
   ) {
     return this.userProfileService.upsertProfile(userId, dto);
   }

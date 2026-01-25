@@ -33,14 +33,18 @@ export class MealsService {
   }
 
   async update(userId: number, id: string, dto: UpdateMealDto) {
-    const updated = await this.prisma.meal.updateMany({
-      where: { userId, id },
-      data: dto,
+    return this.prisma.$transaction(async (tx) => {
+      const meal = await tx.meal.findFirst({
+        where: { userId, id },
+      });
+      if (!meal) {
+        throw new NotFoundException('Meal not found');
+      }
+      return tx.meal.update({
+        where: { id },
+        data: dto,
+      });
     });
-    if (updated.count === 0) {
-      throw new NotFoundException('Meal not found');
-    }
-    return updated;
   }
 
   async remove(userId: number, id: string) {

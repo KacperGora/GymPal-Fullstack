@@ -1,4 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Mock PrismaService before importing
+jest.mock('../../shared/db/prisma.service');
+
 import { MealsController } from './meals.controller';
 import { MealsService } from './meals.service';
 
