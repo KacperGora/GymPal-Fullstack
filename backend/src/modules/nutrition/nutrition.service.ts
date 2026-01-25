@@ -5,12 +5,18 @@ import { PrismaService } from '../../shared/db/prisma.service';
 export class NutritionService {
   constructor(private prisma: PrismaService) {}
   async calculateDailyStats(userId: number, date: Date = new Date()) {
-    const stats = this.prisma.meal.aggregate({
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const stats = await this.prisma.meal.aggregate({
       where: {
         userId,
         date: {
-          gte: new Date(date.setHours(0, 0, 0, 0)),
-          lte: new Date(date.setHours(23, 59, 59, 999)),
+          gte: startOfDay,
+          lte: endOfDay,
         },
       },
       _sum: {
@@ -20,7 +26,7 @@ export class NutritionService {
         fats: true,
       },
     });
-    return { ...(await stats)._sum };
+    return { ...stats._sum };
   }
   async getTDEE(userId: number) {
     const profile = await this.prisma.userProfile.findUnique({

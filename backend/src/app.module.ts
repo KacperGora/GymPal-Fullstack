@@ -5,8 +5,6 @@ import { PrismaModule } from './shared/db/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LoggingMiddleware } from './middlewares/logging.middleware';
 import { MealsModule } from './modules/meals/meals.module';
-import { NutritionService } from './modules/nutrition/nutrition.service';
-import { NutritionController } from './modules/nutrition/nutrition.controller';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
 import { UserProfileModule } from './modules/user-profile/user-profile.module';
 
@@ -18,8 +16,8 @@ import { UserProfileModule } from './modules/user-profile/user-profile.module';
     NutritionModule,
     UserProfileModule,
   ],
-  controllers: [AppController, NutritionController],
-  providers: [AppService, NutritionService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -6,7 +6,7 @@ import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 @Controller('nutrition')
 @UseGuards(JwtAuthGuard)
 export class NutritionController {
-  constructor(private nutritionService: NutritionService) {}
+  constructor(private readonly nutritionService: NutritionService) {}
 
   @Get('daily-stats')
   getDailyStats(@RequestUser('id') userId: number) {

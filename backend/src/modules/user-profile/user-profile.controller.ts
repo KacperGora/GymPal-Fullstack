@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Param,
-  Body,
-  Put,
-  Get,
-  UseGuards,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Body, Put, Get, UseGuards } from '@nestjs/common';
 import { UserProfileService } from './user-profile.service';
 import { CreateUserProfileDto, UpdateUserProfileDto } from '@gympal/shared';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
@@ -17,8 +9,8 @@ import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 export class UserProfileController {
   constructor(private readonly userProfileService: UserProfileService) {}
 
-  @Get(':userId')
-  async getProfile(@Param('userId', ParseIntPipe) userId: number) {
+  @Get()
+  async getProfile(@RequestUser('id') userId: number) {
     return this.userProfileService.getProfile(userId);
   }
 
