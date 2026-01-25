@@ -87,7 +87,7 @@
       "^@/(.*)$": "<rootDir>/$1"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(@prisma)/)"
+      "node_modules/(?!(@prisma|@gympal)/)"
     ],
     "modulePathIgnorePatterns": [
       "<rootDir>/generated/"

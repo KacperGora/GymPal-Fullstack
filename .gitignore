@@ -20,7 +20,6 @@ frontend/logs/
 mobile/logs/
 shared/logs/
 
-# Optional lock files (zazwyczaj zostawiamy w repo)
 # package-lock.json
 # yarn.lock
 
@@ -38,3 +37,6 @@ frontend/dist/
 mobile/dist/
 shared/dist/
 .env
+
+GymPal.postman_collection.json
+API_TESTING_GUIDE.md
