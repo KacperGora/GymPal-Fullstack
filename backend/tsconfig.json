@@ -10,5 +10,5 @@
     "isolatedModules": true,
     "target": "es2020"
   },
-  "include": ["src"]
+  "include": ["src", "test"]
 }

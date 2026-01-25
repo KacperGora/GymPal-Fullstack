@@ -1,5 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+
+// Mock PrismaService before importing
+jest.mock('../../shared/db/prisma.service');
+
 import { NutritionController } from './nutrition.controller';
+import { NutritionService } from './nutrition.service';
+
+const mockNutritionService = {
+  getDailyNutrition: jest.fn(),
+  getDateRangeNutrition: jest.fn(),
+};
 
 describe('NutritionController', () => {
   let controller: NutritionController;
@@ -7,6 +17,12 @@ describe('NutritionController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [NutritionController],
+      providers: [
+        {
+          provide: NutritionService,
+          useValue: mockNutritionService,
+        },
+      ],
     }).compile();
 
     controller = module.get<NutritionController>(NutritionController);

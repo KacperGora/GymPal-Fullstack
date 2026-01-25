@@ -1,4 +1,4 @@
-export const PrismaService = jest.fn().mockImplementation(() => ({
+export const mockPrismaService = {
   user: {
     findUnique: jest.fn(),
     findMany: jest.fn(),
@@ -51,4 +51,4 @@ export const PrismaService = jest.fn().mockImplementation(() => ({
   },
   $connect: jest.fn(),
   $disconnect: jest.fn(),
-}));
+};

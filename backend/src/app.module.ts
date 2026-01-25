@@ -7,6 +7,7 @@ import { LoggingMiddleware } from './middlewares/logging.middleware';
 import { MealsModule } from './modules/meals/meals.module';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
 import { UserProfileModule } from './modules/user-profile/user-profile.module';
+import { WorkoutsModule } from './modules/workouts/workouts.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UserProfileModule } from './modules/user-profile/user-profile.module';
     MealsModule,
     NutritionModule,
     UserProfileModule,
+    WorkoutsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
