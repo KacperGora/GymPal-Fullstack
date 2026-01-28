@@ -41,4 +41,14 @@ export class AuthService {
 
     return { id: user.id, email: user.email, token };
   }
+  async me(id: number) {
+    console.log(id);
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        firstName: true,
+        lastName: true,
+      },
+    });
+  }
 }
