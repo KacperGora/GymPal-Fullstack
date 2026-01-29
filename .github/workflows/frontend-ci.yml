@@ -30,7 +30,8 @@ jobs:
         run: npm run lint --workspace=frontend
 
       - name: Check formatting
-        run: npx prettier --check "frontend/**/*.{ts,tsx,js,jsx,css,json}" --ignore-path frontend/.gitignore
+        run: npx prettier --check "**/*.{ts,tsx,js,jsx,css,json}" --ignore-path .gitignore
+        working-directory: frontend
 
   build:
     name: Build Frontend
