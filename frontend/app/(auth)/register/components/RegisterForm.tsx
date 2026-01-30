@@ -8,7 +8,11 @@ import { TextField, InputAdornment, IconButton, Button } from "@mui/material";
 import Link from "next/link";
 import { useState } from "react";
 
-import { AuthCard, AuthFormLayout, AuthSubmitButton } from "@/app/components";
+import {
+  AuthCard,
+  AuthFormLayout,
+  AuthSubmitButton,
+} from "@/features/auth/components";
 
 export default function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
