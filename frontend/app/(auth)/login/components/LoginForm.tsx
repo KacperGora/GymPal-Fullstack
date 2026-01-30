@@ -14,7 +14,11 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 
-import { AuthCard, AuthFormLayout, AuthSubmitButton } from "@/app/components";
+import {
+  AuthCard,
+  AuthFormLayout,
+  AuthSubmitButton,
+} from "@/features/auth/components";
 export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

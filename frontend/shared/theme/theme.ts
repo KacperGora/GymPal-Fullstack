@@ -1,4 +1,6 @@
-// theme/theme.ts
+/* eslint-disable @typescript-eslint/triple-slash-reference */
+/// <reference path="./theme.d.ts" />
+/// <reference path="./mui.d.ts" />
 import { createTheme } from "@mui/material/styles";
 
 export const theme = createTheme({
