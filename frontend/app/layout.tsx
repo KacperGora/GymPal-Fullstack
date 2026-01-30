@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
-import { Navbar } from "./components/shared/navbar/Navbar";
-import "./globals.css";
-import ThemeRegistry from "./ThemeRegistry";
+import { Navbar } from "@/shared/components/navbar/Navbar";
+import ThemeRegistry from "@/shared/theme/ThemeRegistry";
 
+import "./globals.css";
+import { Providers } from "./providers";
 export const metadata: Metadata = {
   title: "GymPal",
   description: "Your fitness companion",
@@ -18,8 +19,10 @@ export default function RootLayout({
     <html lang="pl">
       <body>
         <ThemeRegistry>
-          <Navbar />
-          {children}
+          <Providers>
+            <Navbar />
+            {children}
+          </Providers>
         </ThemeRegistry>
       </body>
     </html>

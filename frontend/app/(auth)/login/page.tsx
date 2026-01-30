@@ -1,6 +1,6 @@
 import { Typography } from "@mui/material";
 
-import { PageWrapper } from "@/app/components/shared/page-wrapper/PageWrapper";
+import { PageWrapper } from "@/shared/components/page-wrapper/PageWrapper";
 
 import LoginForm from "./components/LoginForm";
 

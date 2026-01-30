@@ -1,6 +1,6 @@
-import { Box, Typography } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 
-export default function Home() {
+export default function Loading() {
   return (
     <Box
       sx={{
@@ -10,7 +10,7 @@ export default function Home() {
         minHeight: "calc(100vh - 64px)",
       }}
     >
-      <Typography variant="h1">GymPal</Typography>
+      <CircularProgress />
     </Box>
   );
 }
