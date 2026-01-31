@@ -1,0 +1,48 @@
+{
+  "navbar": {
+    "home": "Strona główna",
+    "workouts": "Treningi",
+    "profile": "Profil",
+    "login": "Zaloguj"
+  },
+  "home": {
+    "title": "GymPal"
+  },
+  "auth": {
+    "login": {
+      "title": "Logowanie",
+      "email": "Email",
+      "password": "Hasło",
+      "submit": "Zaloguj",
+      "register": "Rejestracja",
+      "forgotPassword": "Nie pamiętasz hasła?",
+      "errorInvalid": "Niepoprawne dane logowania",
+      "errorGeneral": "Wystąpił błąd podczas logowania"
+    },
+    "register": {
+      "title": "Rejestracja",
+      "email": "Email",
+      "password": "Hasło",
+      "confirmPassword": "Potwierdź hasło",
+      "submit": "Zarejestruj",
+      "backToLogin": "Wróć do logowania",
+      "errorPasswordMismatch": "Hasła nie są zgodne",
+      "errorInvalid": "Niepoprawne dane rejestracji",
+      "errorGeneral": "Wystąpił błąd podczas rejestracji"
+    },
+    "remindPassword": {
+      "title": "Przypomnij hasło",
+      "email": "Email",
+      "submit": "Wyślij email",
+      "backToLogin": "Wróć do logowania",
+      "errorInvalid": "Niepoprawne dane logowania",
+      "errorGeneral": "Wystąpił błąd podczas logowania"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard"
+  },
+  "profile": {
+    "title": "Profil"
+  }
+}
