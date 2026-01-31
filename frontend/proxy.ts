@@ -1,15 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
 
-export function proxy(req: NextRequest) {
-  const token = req.cookies.get("access_token");
+import { routing } from "./i18n/routing";
 
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
+const intlMiddleware = createMiddleware(routing);
+
+const protectedPaths = ["/dashboard", "/profile"];
+
+export default function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  const pathnameWithoutLocale = routing.locales.reduce(
+    (path, locale) =>
+      path.startsWith(`/${locale}/`)
+        ? path.slice(locale.length + 1)
+        : path === `/${locale}`
+          ? "/"
+          : path,
+    pathname,
+  );
+
+  const isProtected = protectedPaths.some(
+    (p) =>
+      pathnameWithoutLocale === p || pathnameWithoutLocale.startsWith(`${p}/`),
+  );
+
+  if (isProtected) {
+    const token = req.cookies.get("access_token");
+    if (!token) {
+      const hasLocale = routing.locales.some(
+        (l) => pathname.startsWith(`/${l}/`) || pathname === `/${l}`,
+      );
+      const locale = hasLocale ? pathname.split("/")[1] : routing.defaultLocale;
+      return NextResponse.redirect(new URL(`/${locale}/login`, req.url));
+    }
   }
 
-  return NextResponse.next();
+  return intlMiddleware(req);
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*"],
+  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
 };

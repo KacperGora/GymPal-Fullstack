@@ -11,7 +11,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -19,7 +19,10 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from "@/features/auth/components";
+import { Link, useRouter } from "@/i18n/navigation";
 export default function LoginForm() {
+  const t = useTranslations("auth.login");
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,12 +38,12 @@ export default function LoginForm() {
 
     try {
       if (email === "admin@example.com" && password === "1234") {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else {
-        setError("Niepoprawne dane logowania");
+        setError(t("errorInvalid"));
       }
     } catch {
-      setError("Wystąpił błąd podczas logowania");
+      setError(t("errorGeneral"));
     } finally {
       setLoading(false);
     }
@@ -50,7 +53,7 @@ export default function LoginForm() {
     <AuthCard>
       <AuthFormLayout onSubmit={handleSubmit} error={error}>
         <TextField
-          label="Email"
+          label={t("email")}
           name="email"
           type="email"
           required
@@ -67,7 +70,7 @@ export default function LoginForm() {
           }}
         />
         <TextField
-          label="Hasło"
+          label={t("password")}
           name="password"
           type={showPassword ? "text" : "password"}
           required
@@ -95,11 +98,11 @@ export default function LoginForm() {
           }}
         />
 
-        <AuthSubmitButton label="Zaloguj" loading={loading} />
+        <AuthSubmitButton label={t("submit")} loading={loading} />
 
         <Stack direction="row" justifyContent="space-between">
           <Button component={Link} href="/register" variant="text">
-            Rejestracja
+            {t("register")}
           </Button>
           <Button
             component={Link}
@@ -108,7 +111,7 @@ export default function LoginForm() {
             variant="text"
             size="small"
           >
-            Nie pamiętasz hasła?
+            {t("forgotPassword")}
           </Button>
         </Stack>
       </AuthFormLayout>

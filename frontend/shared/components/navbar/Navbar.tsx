@@ -1,10 +1,40 @@
 "use client";
 
-import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+import LanguageIcon from "@mui/icons-material/Language";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemText,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { useLocale, useTranslations } from "next-intl";
+import { useState, type MouseEvent } from "react";
+
+import { usePathname, useRouter } from "@/i18n/navigation";
+
+const localeLabels: Record<string, string> = {
+  pl: "Polski",
+  en: "English",
+};
 
 export const Navbar = () => {
   const theme = useTheme();
+  const t = useTranslations("navbar");
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleLocaleChange = (newLocale: string) => {
+    setAnchorEl(null);
+    router.replace(pathname, { locale: newLocale });
+  };
 
   return (
     <AppBar
@@ -14,10 +44,35 @@ export const Navbar = () => {
     >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
         <Typography variant="h6">GymPal</Typography>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button color="primary">Home</Button>
-          <Button color="primary">Workouts</Button>
-          <Button color="primary">Profile</Button>
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          <Button color="primary">{t("home")}</Button>
+          <Button color="primary">{t("workouts")}</Button>
+          <Button color="primary">{t("profile")}</Button>
+          <Button color="primary" variant="contained">
+            {t("login")}
+          </Button>
+          <IconButton
+            onClick={(e: MouseEvent<HTMLElement>) =>
+              setAnchorEl(e.currentTarget)
+            }
+          >
+            <LanguageIcon color="disabled" />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={() => setAnchorEl(null)}
+          >
+            {Object.entries(localeLabels).map(([key, label]) => (
+              <MenuItem
+                key={key}
+                selected={key === locale}
+                onClick={() => handleLocaleChange(key)}
+              >
+                <ListItemText>{label}</ListItemText>
+              </MenuItem>
+            ))}
+          </Menu>
         </Box>
       </Toolbar>
     </AppBar>
