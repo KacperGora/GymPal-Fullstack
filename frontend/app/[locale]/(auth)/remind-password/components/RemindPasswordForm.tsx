@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, TextField } from "@mui/material";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -9,8 +9,11 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from "@/features/auth/components";
+import { Link, useRouter } from "@/i18n/navigation";
 
 export default function RemindPasswordForm() {
+  const t = useTranslations("auth.remindPassword");
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,12 +28,12 @@ export default function RemindPasswordForm() {
 
     try {
       if (email === "admin@example.com" && password === "1234") {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else {
-        setError("Niepoprawne dane logowania");
+        setError(t("errorInvalid"));
       }
     } catch {
-      setError("Wystąpił błąd podczas logowania");
+      setError(t("errorGeneral"));
     } finally {
       setLoading(false);
     }
@@ -40,13 +43,13 @@ export default function RemindPasswordForm() {
     <AuthCard>
       <AuthFormLayout onSubmit={handleSubmit} error={error}>
         <TextField
-          label="Email"
+          label={t("email")}
           name="email"
           type="email"
           required
           disabled={loading}
         />
-        <AuthSubmitButton label="Wyślij email" loading={loading} />
+        <AuthSubmitButton label={t("submit")} loading={loading} />
         <Button
           component={Link}
           href="/login"
@@ -54,7 +57,7 @@ export default function RemindPasswordForm() {
           variant="text"
           size="small"
         >
-          Wróć do logowania
+          {t("backToLogin")}
         </Button>
       </AuthFormLayout>
     </AuthCard>

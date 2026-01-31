@@ -1,0 +1,48 @@
+{
+  "navbar": {
+    "home": "Home",
+    "workouts": "Workouts",
+    "profile": "Profile",
+    "login": "Login"
+  },
+  "home": {
+    "title": "GymPal"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "register": "Register",
+      "forgotPassword": "Forgot password?",
+      "errorInvalid": "Invalid login credentials",
+      "errorGeneral": "An error occurred during login"
+    },
+    "register": {
+      "title": "Register",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Register",
+      "backToLogin": "Back to login",
+      "errorPasswordMismatch": "Passwords do not match",
+      "errorInvalid": "Invalid registration data",
+      "errorGeneral": "An error occurred during registration"
+    },
+    "remindPassword": {
+      "title": "Reset password",
+      "email": "Email",
+      "submit": "Send email",
+      "backToLogin": "Back to login",
+      "errorInvalid": "Invalid credentials",
+      "errorGeneral": "An error occurred"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard"
+  },
+  "profile": {
+    "title": "Profile"
+  }
+}

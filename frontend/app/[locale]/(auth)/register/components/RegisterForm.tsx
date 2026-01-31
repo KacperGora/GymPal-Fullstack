@@ -5,7 +5,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { TextField, InputAdornment, IconButton, Button } from "@mui/material";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -13,8 +13,11 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from "@/features/auth/components";
+import { Link, useRouter } from "@/i18n/navigation";
 
 export default function RegisterForm() {
+  const t = useTranslations("auth.register");
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -32,14 +35,14 @@ export default function RegisterForm() {
 
     try {
       if (password !== confirmPassword) {
-        setError("Hasła nie są zgodne");
+        setError(t("errorPasswordMismatch"));
       } else if (email === "admin@example.com" && password === "1234") {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else {
-        setError("Niepoprawne dane rejestracji");
+        setError(t("errorInvalid"));
       }
     } catch {
-      setError("Wystąpił błąd podczas rejestracji");
+      setError(t("errorGeneral"));
     } finally {
       setLoading(false);
     }
@@ -49,7 +52,7 @@ export default function RegisterForm() {
     <AuthCard>
       <AuthFormLayout onSubmit={handleSubmit} error={error}>
         <TextField
-          label="Email"
+          label={t("email")}
           name="email"
           type="email"
           required
@@ -67,7 +70,7 @@ export default function RegisterForm() {
         />
 
         <TextField
-          label="Hasło"
+          label={t("password")}
           name="password"
           type={showPassword ? "text" : "password"}
           required
@@ -96,7 +99,7 @@ export default function RegisterForm() {
         />
 
         <TextField
-          label="Potwierdź hasło"
+          label={t("confirmPassword")}
           name="confirmPassword"
           type={showConfirmPassword ? "text" : "password"}
           required
@@ -124,7 +127,7 @@ export default function RegisterForm() {
           }}
         />
 
-        <AuthSubmitButton label="Zarejestruj" loading={loading} />
+        <AuthSubmitButton label={t("submit")} loading={loading} />
         <Button
           component={Link}
           href="/login"
@@ -132,7 +135,7 @@ export default function RegisterForm() {
           variant="text"
           size="small"
         >
-          Wróć do logowania
+          {t("backToLogin")}
         </Button>
       </AuthFormLayout>
     </AuthCard>
