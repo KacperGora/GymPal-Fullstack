@@ -12,5 +12,15 @@ export const loginSchema = z.object({
   password: z.string().min(8),
 });
 
+export const registerFormSchema = registerSchema
+  .extend({
+    confirmPassword: z.string().min(8),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export type RegisterDto = z.infer<typeof registerSchema>;
+export type RegisterFormDto = z.infer<typeof registerFormSchema>;
 export type LoginDto = z.infer<typeof loginSchema>;
