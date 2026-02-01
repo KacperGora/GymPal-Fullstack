@@ -1,10 +1,12 @@
 "use client";
 
+import { type RegisterFormDto, registerFormSchema } from "@gympal/shared";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { TextField, InputAdornment, IconButton, Button } from "@mui/material";
+import { AxiosError } from "axios";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -13,51 +15,45 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from "@/features/auth/components";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useRegister } from "@/features/auth/mutations/useRegister";
+import { Link } from "@/i18n/navigation";
+import { useZodForm } from "@/shared/hooks/useZodForm";
 
 export default function RegisterForm() {
   const t = useTranslations("auth.register");
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { mutate, isPending, error } = useRegister();
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useZodForm(registerFormSchema);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email")?.toString() || "";
-    const password = formData.get("password")?.toString() || "";
-    const confirmPassword = formData.get("confirmPassword")?.toString() || "";
+  const apiError = error
+    ? error instanceof AxiosError && error.response?.status === 401
+      ? t("errorInvalid")
+      : t("errorGeneral")
+    : null;
 
-    try {
-      if (password !== confirmPassword) {
-        setError(t("errorPasswordMismatch"));
-      } else if (email === "admin@example.com" && password === "1234") {
-        router.push("/dashboard");
-      } else {
-        setError(t("errorInvalid"));
-      }
-    } catch {
-      setError(t("errorGeneral"));
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = ({ confirmPassword, ...data }: RegisterFormDto) => {
+    mutate(data);
   };
 
   return (
     <AuthCard>
-      <AuthFormLayout onSubmit={handleSubmit} error={error}>
+      <AuthFormLayout onSubmit={handleSubmit(onSubmit)} error={apiError}>
         <TextField
           label={t("email")}
-          name="email"
           type="email"
           required
-          disabled={loading}
+          disabled={isPending}
           variant="outlined"
+          error={!!errors.email}
+          helperText={errors.email?.message}
+          {...register("email")}
           slotProps={{
             input: {
               startAdornment: (
@@ -71,11 +67,13 @@ export default function RegisterForm() {
 
         <TextField
           label={t("password")}
-          name="password"
           type={showPassword ? "text" : "password"}
           required
-          disabled={loading}
+          disabled={isPending}
           variant="outlined"
+          error={!!errors.password}
+          helperText={errors.password?.message}
+          {...register("password")}
           slotProps={{
             input: {
               startAdornment: (
@@ -100,11 +98,13 @@ export default function RegisterForm() {
 
         <TextField
           label={t("confirmPassword")}
-          name="confirmPassword"
           type={showConfirmPassword ? "text" : "password"}
           required
-          disabled={loading}
+          disabled={isPending}
           variant="outlined"
+          error={!!errors.confirmPassword}
+          helperText={errors.confirmPassword?.message}
+          {...register("confirmPassword")}
           slotProps={{
             input: {
               startAdornment: (
@@ -126,8 +126,28 @@ export default function RegisterForm() {
             },
           }}
         />
+        <TextField
+          label={t("firstName")}
+          type="text"
+          required
+          disabled={isPending}
+          variant="outlined"
+          error={!!errors.firstName}
+          helperText={errors.firstName?.message}
+          {...register("firstName")}
+        />
+        <TextField
+          label={t("lastName")}
+          type="text"
+          required
+          disabled={isPending}
+          variant="outlined"
+          error={!!errors.lastName}
+          helperText={errors.lastName?.message}
+          {...register("lastName")}
+        />
 
-        <AuthSubmitButton label={t("submit")} loading={loading} />
+        <AuthSubmitButton label={t("submit")} loading={isPending} />
         <Button
           component={Link}
           href="/login"
