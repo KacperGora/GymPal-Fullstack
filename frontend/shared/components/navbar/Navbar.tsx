@@ -48,7 +48,7 @@ export const Navbar = () => {
           <Button color="primary">{t("home")}</Button>
           <Button color="primary">{t("workouts")}</Button>
           <Button color="primary">{t("profile")}</Button>
-          <Button color="primary" variant="contained">
+          <Button href="/login" color="primary" variant="contained">
             {t("login")}
           </Button>
           <IconButton

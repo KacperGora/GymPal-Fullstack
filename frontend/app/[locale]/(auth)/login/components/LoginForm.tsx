@@ -1,5 +1,6 @@
 "use client";
 
+import { type LoginDto, loginSchema } from "@gympal/shared";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import Visibility from "@mui/icons-material/Visibility";
@@ -11,6 +12,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
+import { AxiosError } from "axios";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -19,46 +21,42 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from "@/features/auth/components";
-import { Link, useRouter } from "@/i18n/navigation";
+import { useLogin } from "@/features/auth/mutations/useLogin";
+import { Link } from "@/i18n/navigation";
+import { useZodForm } from "@/shared/hooks/useZodForm";
+
 export default function LoginForm() {
   const t = useTranslations("auth.login");
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { mutate, isPending, error } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useZodForm(loginSchema);
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email")?.toString() || "";
-    const password = formData.get("password")?.toString() || "";
+  const apiError = error
+    ? error instanceof AxiosError && error.response?.status === 401
+      ? t("errorInvalid")
+      : t("errorGeneral")
+    : null;
 
-    try {
-      if (email === "admin@example.com" && password === "1234") {
-        router.push("/dashboard");
-      } else {
-        setError(t("errorInvalid"));
-      }
-    } catch {
-      setError(t("errorGeneral"));
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data: LoginDto) => {
+    mutate(data);
   };
 
   return (
     <AuthCard>
-      <AuthFormLayout onSubmit={handleSubmit} error={error}>
+      <AuthFormLayout onSubmit={handleSubmit(onSubmit)} error={apiError}>
         <TextField
           label={t("email")}
-          name="email"
           type="email"
-          required
-          disabled={loading}
+          disabled={isPending}
           variant="outlined"
+          error={!!errors.email}
+          helperText={errors.email?.message}
+          {...register("email")}
           slotProps={{
             input: {
               startAdornment: (
@@ -71,11 +69,12 @@ export default function LoginForm() {
         />
         <TextField
           label={t("password")}
-          name="password"
           type={showPassword ? "text" : "password"}
-          required
-          disabled={loading}
+          disabled={isPending}
           variant="outlined"
+          error={!!errors.password}
+          helperText={errors.password?.message}
+          {...register("password")}
           slotProps={{
             input: {
               startAdornment: (
@@ -98,7 +97,7 @@ export default function LoginForm() {
           }}
         />
 
-        <AuthSubmitButton label={t("submit")} loading={loading} />
+        <AuthSubmitButton label={t("submit")} loading={isPending} />
 
         <Stack direction="row" justifyContent="space-between">
           <Button component={Link} href="/register" variant="text">
