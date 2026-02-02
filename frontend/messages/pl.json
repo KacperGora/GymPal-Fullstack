@@ -28,7 +28,10 @@
       "backToLogin": "Wróć do logowania",
       "errorPasswordMismatch": "Hasła nie są zgodne",
       "errorInvalid": "Niepoprawne dane rejestracji",
-      "errorGeneral": "Wystąpił błąd podczas rejestracji"
+      "errorGeneral": "Wystąpił błąd podczas rejestracji",
+
+      "firstName": "Imię",
+      "lastName": "Nazwisko"
     },
     "remindPassword": {
       "title": "Przypomnij hasło",
