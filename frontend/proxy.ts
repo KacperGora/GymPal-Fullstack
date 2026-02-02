@@ -24,11 +24,9 @@ export default function proxy(req: NextRequest) {
     (p) =>
       pathnameWithoutLocale === p || pathnameWithoutLocale.startsWith(`${p}/`),
   );
-  console.log(isProtected);
 
   if (isProtected) {
     const token = req.cookies.get("access_token");
-    console.log(token);
     if (!token) {
       const hasLocale = routing.locales.some(
         (l) => pathname.startsWith(`/${l}/`) || pathname === `/${l}`,
