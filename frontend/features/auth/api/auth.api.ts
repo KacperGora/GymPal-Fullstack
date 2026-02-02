@@ -2,7 +2,7 @@ import { LoginDto, RegisterDto } from "@gympal/shared";
 
 import { api } from "@/shared/api/axios";
 
-import { endpointList } from "./endpoint";
+import { endpointList } from "../../../shared/api/endpoint";
 
 export const getMe = async () => {
   const res = await api.get(endpointList.auth.getMe);

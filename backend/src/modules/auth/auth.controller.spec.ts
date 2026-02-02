@@ -91,7 +91,11 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should call authService.login', async () => {
+    const mockRes = {
+      cookie: jest.fn(),
+    } as unknown as import('express').Response;
+
+    it('should call authService.login and set cookie', async () => {
       const dto: LoginDto = {
         email: 'a@a.pl',
         password: '12345678',
@@ -103,10 +107,16 @@ describe('AuthController', () => {
         token: 'jwt',
       });
 
-      const result = await controller.login(dto);
+      const result = await controller.login(dto, mockRes);
 
       expect(mockAuthService.login).toHaveBeenCalledWith(dto);
-      expect(result).toEqual({ id: 'user-id', email: dto.email, token: 'jwt' });
+      expect(mockRes.cookie).toHaveBeenCalledWith('access_token', 'jwt', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      expect(result).toEqual({ id: 'user-id', email: dto.email });
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {
@@ -119,7 +129,7 @@ describe('AuthController', () => {
         new UnauthorizedException('Invalid credentials'),
       );
 
-      await expect(controller.login(dto)).rejects.toThrow(
+      await expect(controller.login(dto, mockRes)).rejects.toThrow(
         UnauthorizedException,
       );
       expect(mockAuthService.login).toHaveBeenCalledWith(dto);

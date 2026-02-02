@@ -5,7 +5,9 @@ import {
   UsePipes,
   Get,
   UseGuards,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import type { RegisterDto, LoginDto } from '@gympal/shared';
@@ -20,7 +22,6 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@RequestUser() user: { id: number; email: string }) {
-    console.log(user);
     return this.authService.me(user.id);
   }
 
@@ -32,7 +33,19 @@ export class AuthController {
 
   @Post('login')
   @UsePipes(new ZodValidationPipe(loginSchema))
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { token, ...user } = await this.authService.login(dto);
+
+    res.cookie('access_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return user;
   }
 }
