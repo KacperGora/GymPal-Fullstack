@@ -40,3 +40,6 @@ shared/dist/
 
 GymPal.postman_collection.json
 API_TESTING_GUIDE.md
+
+# Test results
+test-results/

@@ -10,7 +10,7 @@ export const useRegister = () => {
   return useMutation({
     mutationFn: (data: RegisterDto) => register(data),
     onSuccess: () => {
-      router.push("/welcome");
+      router.push("/login");
     },
   });
 };
