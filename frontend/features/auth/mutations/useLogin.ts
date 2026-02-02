@@ -12,7 +12,7 @@ export const useLogin = () => {
     mutationFn: (data: LoginDto) => login(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["me"] });
-      router.push("/dashboard");
+      router.push("/welcome");
     },
   });
 };
