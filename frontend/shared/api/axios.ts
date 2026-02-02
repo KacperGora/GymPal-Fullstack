@@ -8,7 +8,9 @@ export const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url ?? "";
+    const isAuthEndpoint = url.startsWith("/auth/");
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       window.location.href = "/login";
     }
     return Promise.reject(error);

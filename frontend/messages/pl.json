@@ -44,5 +44,11 @@
   },
   "profile": {
     "title": "Profil"
+  },
+  "workouts": {
+    "title": "Treningi"
+  },
+  "welcome": {
+    "title": "Witam w GymPal!"
   }
 }
