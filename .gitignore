@@ -43,3 +43,4 @@ API_TESTING_GUIDE.md
 
 # Test results
 test-results/
+playwright-report/
