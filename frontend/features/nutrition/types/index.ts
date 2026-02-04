@@ -9,7 +9,7 @@ export interface Meal {
   fats: number;
   category: MealCategory;
   date: string;
-  userId: string;
+  userId: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -27,6 +27,9 @@ export interface TdeeResponse {
   tdee: number;
   bmr: number;
   targetCalories: number;
+  targetProteins: number;
+  targetCarbs: number;
+  targetFats: number;
   goal: string;
 }
 
