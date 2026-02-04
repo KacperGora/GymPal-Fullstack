@@ -1,9 +1,8 @@
+import type { UserProfile } from '../types';
 import type { CreateUserProfileDto } from '@gympal/shared';
 
 import { api } from '@/shared/api/axios';
 import { endpointList } from '@/shared/api/endpoint';
-
-import type { UserProfile } from '../types';
 
 export const getUserProfile = async () => {
   const res = await api.get(endpointList.userProfile.get);

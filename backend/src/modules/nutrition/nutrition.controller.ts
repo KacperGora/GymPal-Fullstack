@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { NutritionService } from './nutrition.service';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
@@ -11,6 +11,14 @@ export class NutritionController {
   @Get('daily-stats')
   getDailyStats(@RequestUser('id') userId: number) {
     return this.nutritionService.calculateDailyStats(userId);
+  }
+
+  @Get('weekly-stats')
+  getWeeklyStats(
+    @RequestUser('id') userId: number,
+    @Query('date') date: string,
+  ) {
+    return this.nutritionService.getWeeklyStats(userId, date);
   }
 
   @Get('tdee')

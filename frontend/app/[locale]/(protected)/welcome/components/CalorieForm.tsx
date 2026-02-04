@@ -6,7 +6,6 @@ import {
 } from '@gympal/shared';
 import {
   Box,
-  TextField,
   Button,
   Card,
   CardContent,
@@ -16,6 +15,7 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { FitnessDataFields } from '@/features/profile/components/FitnessDataFields';
+
 import { useUpsertUserProfile } from '@/features/profile/mutations/useUpsertUserProfile';
 import { useZodForm } from '@/shared/hooks/useZodForm';
 

@@ -3,7 +3,8 @@
     "home": "Home",
     "workouts": "Workouts",
     "profile": "Profile",
-    "login": "Login"
+    "login": "Login",
+    "logout": "Logout"
   },
   "home": {
     "title": "GymPal"
@@ -28,7 +29,9 @@
       "backToLogin": "Back to login",
       "errorPasswordMismatch": "Passwords do not match",
       "errorInvalid": "Invalid registration data",
-      "errorGeneral": "An error occurred during registration"
+      "errorGeneral": "An error occurred during registration",
+      "firstName": "First name",
+      "lastName": "Last name"
     },
     "remindPassword": {
       "title": "Reset password",
@@ -42,9 +45,97 @@
   "dashboard": {
     "title": "Dashboard"
   },
+  "nutrition": {
+    "title": "Nutrition",
+    "calories": "Calories",
+    "remaining": "remaining",
+    "overLimit": "over limit",
+    "macros": "Macronutrients",
+    "proteins": "Protein",
+    "carbs": "Carbohydrates",
+    "fats": "Fats",
+    "todaysMeals": "Meals",
+    "addMeal": "Add meal",
+    "noMealsYet": "No meals yet",
+    "addFirstMeal": "Add your first meal",
+    "yourGoal": "Your goal",
+    "goal": "Goal",
+    "target": "Target",
+    "goalLose": "Lose weight",
+    "goalMaintain": "Maintain",
+    "goalGain": "Gain mass",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "mealName": "Meal name",
+    "cancel": "Cancel",
+    "add": "Add",
+    "greeting": "Hi, {name}!",
+    "trackMeals": "Track your meals",
+    "category": "Category",
+    "categories": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "water": {
+      "title": "Hydration",
+      "glasses": "glasses",
+      "goalReached": "Goal reached!"
+    },
+    "quickAdd": {
+      "title": "Quick add",
+      "subtitle": "Add meals from recent or favorites",
+      "favorites": "Favorites",
+      "recent": "Recent",
+      "empty": "No recent meals"
+    },
+    "tips": {
+      "title": "Tips",
+      "onTrack": "You're close to today's goal.",
+      "allDone": "Great job! You've hit your macros today.",
+      "overCalories": "You are over by {value} kcal.",
+      "moreProtein": "You still need about {value} g protein.",
+      "moreCarbs": "You still need about {value} g carbs.",
+      "moreFats": "You still need about {value} g fats."
+    },
+    "weekly": {
+      "title": "Last 7 days",
+      "avg": "Average",
+      "target": "Target"
+    }
+  },
   "profile": {
     "title": "Profile",
+    "personalInfo": "Personal info",
+    "fitnessData": "Fitness data",
+    "editFitnessData": "Edit fitness data",
+    "save": "Save",
+    "cancel": "Cancel",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "height": "Height",
+    "weight": "Weight",
     "age": "Age",
-    "ageYears": "{count, plural, one {# year} other {# years}}"
+    "ageYears": "{count, plural, one {# year} other {# years}}",
+    "activity": "Activity level",
+    "goal": "Goal",
+    "bmr": "BMR (Basal Metabolic Rate)",
+    "tdee": "TDEE (Total Daily Energy Expenditure)",
+    "targetCalories": "Target calories",
+    "noProfile": "No fitness data. Complete it on the welcome page.",
+    "activityLevels": {
+      "sedentary": "Sedentary lifestyle",
+      "light": "Light activity",
+      "moderate": "Moderate activity",
+      "active": "High activity",
+      "veryActive": "Very high activity"
+    },
+    "goals": {
+      "lose": "Lose weight",
+      "maintain": "Maintain weight",
+      "gain": "Gain mass"
+    }
   }
 }

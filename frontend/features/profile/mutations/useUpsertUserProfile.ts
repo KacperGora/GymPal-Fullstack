@@ -1,8 +1,9 @@
-import type { CreateUserProfileDto } from '@gympal/shared';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { upsertUserProfile } from '../api/profile.api';
 import type { UserProfile } from '../types';
+import type { CreateUserProfileDto } from '@gympal/shared';
+
+import { upsertUserProfile } from '../api/profile.api';
 
 interface UseUpsertUserProfileOptions {
   onSuccess?: (profile: UserProfile) => void;

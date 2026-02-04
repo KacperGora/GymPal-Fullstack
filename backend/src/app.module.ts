@@ -8,6 +8,8 @@ import { MealsModule } from './modules/meals/meals.module';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
 import { UserProfileModule } from './modules/user-profile/user-profile.module';
 import { WorkoutsModule } from './modules/workouts/workouts.module';
+import { WaterModule } from './modules/water/water.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { WorkoutsModule } from './modules/workouts/workouts.module';
     NutritionModule,
     UserProfileModule,
     WorkoutsModule,
+    WaterModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
