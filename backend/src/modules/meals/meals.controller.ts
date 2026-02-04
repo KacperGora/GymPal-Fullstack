@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { MealsService } from './meals.service';
@@ -29,8 +30,13 @@ export class MealsController {
   }
 
   @Get()
-  findAll(@RequestUser('id') userId: number) {
-    return this.mealsService.findAll(userId);
+  findAll(@RequestUser('id') userId: number, @Query('date') date?: string) {
+    return this.mealsService.findAll(userId, date);
+  }
+
+  @Get('recent')
+  findRecent(@RequestUser('id') userId: number) {
+    return this.mealsService.findRecent(userId);
   }
 
   @Get(':id')

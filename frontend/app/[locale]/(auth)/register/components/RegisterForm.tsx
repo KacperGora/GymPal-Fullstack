@@ -15,6 +15,7 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from '@/features/auth/components';
+
 import { useRegister } from '@/features/auth/mutations/useRegister';
 import { Link } from '@/i18n/navigation';
 import { useZodForm } from '@/shared/hooks/useZodForm';

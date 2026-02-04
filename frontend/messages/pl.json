@@ -67,11 +67,11 @@
     "targetCalories": "Docelowe kalorie",
     "noProfile": "Brak danych fitness. Uzupełnij je na stronie powitalnej.",
     "activityLevels": {
-      "1.2": "Siedzący tryb życia",
-      "1.375": "Lekka aktywność",
-      "1.55": "Umiarkowana aktywność",
-      "1.725": "Wysoka aktywność",
-      "1.9": "Bardzo wysoka aktywność"
+      "sedentary": "Siedzący tryb życia",
+      "light": "Lekka aktywność",
+      "moderate": "Umiarkowana aktywność",
+      "active": "Wysoka aktywność",
+      "veryActive": "Bardzo wysoka aktywność"
     },
     "goals": {
       "lose": "Redukcja wagi",
@@ -81,6 +81,66 @@
   },
   "workouts": {
     "title": "Treningi"
+  },
+  "nutrition": {
+    "title": "Odżywianie",
+    "calories": "Kalorie",
+    "remaining": "pozostało",
+    "overLimit": "ponad limit",
+    "macros": "Makroskładniki",
+    "proteins": "Białko",
+    "carbs": "Węglowodany",
+    "fats": "Tłuszcze",
+    "todaysMeals": "Posiłki",
+    "addMeal": "Dodaj posiłek",
+    "noMealsYet": "Brak posiłków",
+    "addFirstMeal": "Dodaj swój pierwszy posiłek",
+    "yourGoal": "Twój cel",
+    "goal": "Cel",
+    "target": "Docelowo",
+    "goalLose": "Redukcja",
+    "goalMaintain": "Utrzymanie",
+    "goalGain": "Masa",
+    "today": "Dziś",
+    "yesterday": "Wczoraj",
+    "mealName": "Nazwa posiłku",
+    "cancel": "Anuluj",
+    "add": "Dodaj",
+    "greeting": "Cześć, {name}!",
+    "trackMeals": "Śledź swoje posiłki",
+    "category": "Kategoria",
+    "categories": {
+      "breakfast": "Śniadanie",
+      "lunch": "Obiad",
+      "dinner": "Kolacja",
+      "snack": "Przekąska"
+    },
+    "water": {
+      "title": "Nawodnienie",
+      "glasses": "szklanek",
+      "goalReached": "Cel osiągnięty!"
+    },
+    "quickAdd": {
+      "title": "Szybkie dodawanie",
+      "subtitle": "Dodaj posiłek z ostatnich lub ulubionych",
+      "favorites": "Ulubione",
+      "recent": "Ostatnie",
+      "empty": "Brak ostatnich posiłków"
+    },
+    "tips": {
+      "title": "Wskazówki",
+      "onTrack": "Jesteś blisko celu na dziś.",
+      "allDone": "Świetnie! Dziś domknąłeś makroskładniki.",
+      "overCalories": "Przekroczyłeś cel o {value} kcal.",
+      "moreProtein": "Brakuje jeszcze ok. {value} g białka.",
+      "moreCarbs": "Brakuje jeszcze ok. {value} g węglowodanów.",
+      "moreFats": "Brakuje jeszcze ok. {value} g tłuszczu."
+    },
+    "weekly": {
+      "title": "Ostatnie 7 dni",
+      "avg": "Średnia",
+      "target": "Cel"
+    }
   },
   "welcome": {
     "title": "Witaj w GymPal!",

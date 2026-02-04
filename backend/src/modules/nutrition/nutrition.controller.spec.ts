@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-// Mock PrismaService before importing
 jest.mock('../../shared/db/prisma.service');
 
 import { NutritionController } from './nutrition.controller';

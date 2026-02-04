@@ -11,10 +11,11 @@ import {
 import { useTranslations } from 'next-intl';
 import { useEffect } from 'react';
 
+import type { UserProfile } from '../types';
+
 import { useZodForm } from '@/shared/hooks/useZodForm';
 
 import { useUpsertUserProfile } from '../mutations/useUpsertUserProfile';
-import type { UserProfile } from '../types';
 
 import { FitnessDataFields } from './FitnessDataFields';
 

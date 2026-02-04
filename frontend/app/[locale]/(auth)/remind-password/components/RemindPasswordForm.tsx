@@ -9,6 +9,7 @@ import {
   AuthFormLayout,
   AuthSubmitButton,
 } from '@/features/auth/components';
+
 import { Link, useRouter } from '@/i18n/navigation';
 
 export default function RemindPasswordForm() {

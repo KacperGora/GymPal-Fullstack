@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Re-export schemas without ESM syntax issues
 export const exerciseCategoryEnum = z.enum([
   'STRENGTH',
   'CARDIO',
@@ -49,7 +48,6 @@ export const workoutQuerySchema = z.object({
   limit: z.number().int().positive().optional(),
 });
 
-// Export types
 export type CreateWorkoutExerciseDto = z.infer<
   typeof createWorkoutExerciseSchema
 >;
