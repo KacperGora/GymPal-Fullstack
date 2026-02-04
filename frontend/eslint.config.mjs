@@ -22,19 +22,46 @@ const eslintConfig = defineConfig([
       'import/order': [
         'error',
         {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          groups: [
+            'builtin',
+            'external',
+            'type',
+            'internal',
+            'parent',
+            'sibling',
+            'index',
+          ],
           pathGroups: [
+            {
+              pattern: '{**/types/**,**/types,./types}',
+              group: 'type',
+              position: 'after',
+            },
+            {
+              pattern: '{**/components/**,**/components}',
+              group: 'type',
+              position: 'after',
+            },
+            {
+              pattern:
+                '{**/assets/**,**/assets,../assets/**,../../assets/**,../../../assets/**}',
+              group: 'index',
+              position: 'after',
+            },
             {
               pattern: '@/**',
               group: 'internal',
               position: 'after',
             },
+            {
+              pattern: '{**/styles}',
+              group: 'index',
+              position: 'after',
+            },
           ],
-          pathGroupsExcludedImportTypes: ['builtin'],
           'newlines-between': 'always',
           alphabetize: {
             order: 'asc',
-            caseInsensitive: true,
           },
         },
       ],

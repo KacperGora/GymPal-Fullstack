@@ -9,6 +9,7 @@ import {
   ProfileFitnessDataCard,
   ProfilePersonalInfoCard,
 } from '@/features/profile/components';
+
 import { useProfileStats } from '@/features/profile/hooks/useProfileStats';
 import { useUserProfile } from '@/features/profile/queries/useUserProfile';
 import { useRouter } from '@/i18n/navigation';

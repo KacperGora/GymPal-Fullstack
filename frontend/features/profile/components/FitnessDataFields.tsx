@@ -1,6 +1,7 @@
-import type { CreateUserProfileDto } from '@gympal/shared';
 import { MenuItem, TextField } from '@mui/material';
 import { useTranslations } from 'next-intl';
+
+import type { CreateUserProfileDto } from '@gympal/shared';
 import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 
 import { ACTIVITY_LEVELS, GOALS } from '../constants';

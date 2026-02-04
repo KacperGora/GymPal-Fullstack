@@ -1,10 +1,12 @@
-import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
-import { routing } from '@/i18n/routing';
+import type { Metadata } from 'next';
+
 import { Navbar } from '@/shared/components/navbar/Navbar';
+
+import { routing } from '@/i18n/routing';
 import ThemeRegistry from '@/shared/theme/ThemeRegistry';
 
 import './globals.css';

@@ -107,10 +107,10 @@ export const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 14, // lekko zaokrąglone, nie kwadratowe
+          borderRadius: 14,
           textTransform: 'none',
           fontWeight: 600,
-          padding: '10px 20px', // większy przycisk
+          padding: '10px 20px',
         },
         sizeLarge: {
           fontSize: '1rem',

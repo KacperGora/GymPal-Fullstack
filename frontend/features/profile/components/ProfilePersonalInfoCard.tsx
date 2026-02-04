@@ -1,6 +1,7 @@
-import type { AuthResponseUser } from '@gympal/shared';
 import { Box, Card, CardContent, Divider, Typography } from '@mui/material';
 import { useTranslations } from 'next-intl';
+
+import type { AuthResponseUser } from '@gympal/shared';
 
 interface ProfilePersonalInfoCardProps {
   user?: AuthResponseUser | null;

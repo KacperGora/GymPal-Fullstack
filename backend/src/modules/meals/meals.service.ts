@@ -13,9 +13,20 @@ export class MealsService {
     return meal;
   }
 
-  async findAll(userId: number) {
+  async findAll(userId: number, date?: string) {
+    const where: { userId: number; date?: { gte: Date; lt: Date } } = {
+      userId,
+    };
+
+    if (date) {
+      const startOfDay = new Date(date);
+      const endOfDay = new Date(date);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+      where.date = { gte: startOfDay, lt: endOfDay };
+    }
+
     const mealList = await this.prisma.meal.findMany({
-      where: { userId },
+      where,
       orderBy: { date: 'desc' },
     });
     return mealList;
@@ -55,5 +66,29 @@ export class MealsService {
       throw new NotFoundException('Meal not found or not owned by user');
     }
     return { id };
+  }
+
+  async findRecent(userId: number, limit = 6) {
+    const meals = await this.prisma.$queryRaw<
+      {
+        name: string;
+        calories: number;
+        proteins: number;
+        carbs: number;
+        fats: number;
+        category: string;
+      }[]
+    >`
+      SELECT name, calories, proteins, carbs, fats, category
+      FROM (
+        SELECT DISTINCT ON (name, calories, proteins, carbs, fats, category)
+          name, calories, proteins, carbs, fats, category, "createdAt"
+        FROM "Meal"
+        WHERE "userId" = ${userId}
+      ) AS unique_meals
+      ORDER BY "createdAt" DESC
+      LIMIT ${limit}
+    `;
+    return meals;
   }
 }

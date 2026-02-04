@@ -21,30 +21,66 @@ enum ExerciseCategory {
   HIIT
 }
 
+enum MealCategory {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
 model User {
-  id          Int              @id @unique @default(autoincrement())
-  firstName   String
-  lastName    String
-  password    String
-  email       String           @unique
-  meals       Meal[]
-  userProfile UserProfile?
-  dailyStats  DailyStat[]
-  workouts    WorkoutSession[]
+  id            Int              @id @unique @default(autoincrement())
+  firstName     String
+  lastName      String
+  password      String
+  email         String           @unique
+  meals         Meal[]
+  favoriteMeals FavoriteMeal[]
+  userProfile   UserProfile?
+  dailyStats    DailyStat[]
+  workouts      WorkoutSession[]
+  waterIntake   WaterIntake[]
+}
+
+model WaterIntake {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  glasses   Int      @default(0)
+  date      DateTime @db.Date
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
 }
 
 model Meal {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
   calories  Int
   fats      Float
   proteins  Float
   carbs     Float
+  category  MealCategory @default(SNACK)
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  date      DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
+  user      User         @relation(fields: [userId], references: [id])
+  date      DateTime     @default(now())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @default(now())
+}
+
+model FavoriteMeal {
+  id        String       @id @default(cuid())
+  name      String
+  calories  Int
+  fats      Float
+  proteins  Float
+  carbs     Float
+  category  MealCategory @default(SNACK)
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, name, calories, proteins, carbs, fats, category])
 }
 
 model UserProfile {
