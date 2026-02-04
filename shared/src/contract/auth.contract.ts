@@ -1,8 +1,9 @@
 export interface AuthResponseUser {
-  id: string;
+  id: number;
   email: string;
   firstName?: string;
   lastName?: string;
+  hasProfile?: boolean;
 }
 
 export interface LoginResponse {

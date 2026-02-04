@@ -2,6 +2,7 @@ jest.mock('../../shared/db/prisma.service');
 jest.mock('@gympal/shared', () => ({
   registerSchema: { parse: jest.fn() },
   loginSchema: { parse: jest.fn() },
+  ACCESS_TOKEN_COOKIE: 'access_token',
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';

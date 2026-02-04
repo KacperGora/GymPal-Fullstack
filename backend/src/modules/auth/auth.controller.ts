@@ -12,6 +12,12 @@ import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import type { RegisterDto, LoginDto } from '@gympal/shared';
 import { registerSchema, loginSchema } from '@gympal/shared';
+import {
+  ACCESS_TOKEN_COOKIE,
+  HAS_PROFILE_COOKIE,
+  HAS_PROFILE_FALSE,
+  HAS_PROFILE_TRUE,
+} from '@gympal/shared';
 import { JwtAuthGuard } from './jwt/jwt-auth.guard';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 
@@ -37,15 +43,41 @@ export class AuthController {
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { token, ...user } = await this.authService.login(dto);
+    const { token, hasProfile, ...user } = await this.authService.login(dto);
 
-    res.cookie('access_token', token, {
+    res.cookie(ACCESS_TOKEN_COOKIE, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    res.cookie(
+      HAS_PROFILE_COOKIE,
+      hasProfile ? HAS_PROFILE_TRUE : HAS_PROFILE_FALSE,
+      {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      },
+    );
 
-    return user;
+    return { ...user, hasProfile };
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie(ACCESS_TOKEN_COOKIE, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+    res.clearCookie(HAS_PROFILE_COOKIE, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
+    return { success: true };
   }
 }
