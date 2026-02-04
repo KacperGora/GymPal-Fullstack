@@ -1,8 +1,8 @@
-import type { CreateUserProfileDto } from "@gympal/shared";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { CreateUserProfileDto } from '@gympal/shared';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { upsertUserProfile } from "../api/profile.api";
-import type { UserProfile } from "../types";
+import { upsertUserProfile } from '../api/profile.api';
+import type { UserProfile } from '../types';
 
 interface UseUpsertUserProfileOptions {
   onSuccess?: (profile: UserProfile) => void;
@@ -16,7 +16,7 @@ export const useUpsertUserProfile = (
   return useMutation({
     mutationFn: (data: CreateUserProfileDto) => upsertUserProfile(data),
     onSuccess: (profile) => {
-      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
+      queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       options.onSuccess?.(profile);
     },
   });

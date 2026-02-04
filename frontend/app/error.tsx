@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from '@mui/material';
 
 export default function GlobalError({
   error,
@@ -12,11 +12,11 @@ export default function GlobalError({
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "calc(100vh - 64px)",
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'calc(100vh - 64px)',
         gap: 2,
       }}
     >

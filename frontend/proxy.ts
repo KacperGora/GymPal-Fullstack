@@ -2,15 +2,15 @@ import {
   HAS_PROFILE_COOKIE,
   HAS_PROFILE_FALSE,
   HAS_PROFILE_TRUE,
-} from "@gympal/shared";
-import { NextRequest, NextResponse } from "next/server";
-import createMiddleware from "next-intl/middleware";
+} from '@gympal/shared';
+import { NextRequest, NextResponse } from 'next/server';
+import createMiddleware from 'next-intl/middleware';
 
-import { routing } from "./i18n/routing";
+import { routing } from './i18n/routing';
 
 const intlMiddleware = createMiddleware(routing);
 
-const protectedPaths = ["/dashboard", "/profile", "/welcome"];
+const protectedPaths = ['/dashboard', '/profile', '/welcome'];
 
 export default function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -20,7 +20,7 @@ export default function proxy(req: NextRequest) {
       path.startsWith(`/${locale}/`)
         ? path.slice(locale.length + 1)
         : path === `/${locale}`
-          ? "/"
+          ? '/'
           : path,
     pathname,
   );
@@ -31,12 +31,12 @@ export default function proxy(req: NextRequest) {
   );
 
   if (isProtected) {
-    const token = req.cookies.get("access_token");
+    const token = req.cookies.get('access_token');
     if (!token) {
       const hasLocale = routing.locales.some(
         (l) => pathname.startsWith(`/${l}/`) || pathname === `/${l}`,
       );
-      const locale = hasLocale ? pathname.split("/")[1] : routing.defaultLocale;
+      const locale = hasLocale ? pathname.split('/')[1] : routing.defaultLocale;
       return NextResponse.redirect(new URL(`/${locale}/login`, req.url));
     }
 
@@ -46,14 +46,14 @@ export default function proxy(req: NextRequest) {
       hasProfileCookie === HAS_PROFILE_FALSE;
     const hasProfile = hasProfileCookie === HAS_PROFILE_TRUE;
     const isWelcome =
-      pathnameWithoutLocale === "/welcome" ||
-      pathnameWithoutLocale.startsWith("/welcome/");
+      pathnameWithoutLocale === '/welcome' ||
+      pathnameWithoutLocale.startsWith('/welcome/');
 
     if (isWelcome && hasProfile) {
       const hasLocale = routing.locales.some(
         (l) => pathname.startsWith(`/${l}/`) || pathname === `/${l}`,
       );
-      const locale = hasLocale ? pathname.split("/")[1] : routing.defaultLocale;
+      const locale = hasLocale ? pathname.split('/')[1] : routing.defaultLocale;
       return NextResponse.redirect(new URL(`/${locale}/profile`, req.url));
     }
 
@@ -61,7 +61,7 @@ export default function proxy(req: NextRequest) {
       const hasLocale = routing.locales.some(
         (l) => pathname.startsWith(`/${l}/`) || pathname === `/${l}`,
       );
-      const locale = hasLocale ? pathname.split("/")[1] : routing.defaultLocale;
+      const locale = hasLocale ? pathname.split('/')[1] : routing.defaultLocale;
       return NextResponse.redirect(new URL(`/${locale}/welcome`, req.url));
     }
   }
@@ -70,5 +70,5 @@ export default function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  matcher: '/((?!api|trpc|_next|_vercel|.*\\..*).*)',
 };

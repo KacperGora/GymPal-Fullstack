@@ -1,8 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from '@tanstack/react-query';
 
-import { api } from "@/shared/api/axios";
-import { endpointList } from "@/shared/api/endpoint";
-import { useAuthStore } from "@/shared/stores/auth.store";
+import { api } from '@/shared/api/axios';
+import { endpointList } from '@/shared/api/endpoint';
+import { useAuthStore } from '@/shared/stores/auth.store';
 
 export const useAuth = () => {
   const queryClient = useQueryClient();
@@ -13,8 +13,8 @@ export const useAuth = () => {
       await api.post(endpointList.auth.logout);
     } finally {
       clearUser();
-      queryClient.removeQueries({ queryKey: ["me"] });
-      queryClient.removeQueries({ queryKey: ["userProfile"] });
+      queryClient.removeQueries({ queryKey: ['me'] });
+      queryClient.removeQueries({ queryKey: ['userProfile'] });
     }
   };
 

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Button, CircularProgress } from "@mui/material";
+import { Button, CircularProgress } from '@mui/material';
 
 type Props = {
   label: string;

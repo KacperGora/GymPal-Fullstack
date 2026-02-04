@@ -1,29 +1,29 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
-import { z } from "zod";
+import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { z } from 'zod';
 
-import { useZodForm } from "../useZodForm";
+import { useZodForm } from '../useZodForm';
 
 const schema = z.object({
   email: z.email(),
   password: z.string().min(8),
 });
 
-describe("useZodForm", () => {
-  it("should initialize with default values", () => {
+describe('useZodForm', () => {
+  it('should initialize with default values', () => {
     const { result } = renderHook(() =>
       useZodForm(schema, {
-        defaultValues: { email: "", password: "" },
+        defaultValues: { email: '', password: '' },
       }),
     );
 
-    expect(result.current.getValues()).toEqual({ email: "", password: "" });
+    expect(result.current.getValues()).toEqual({ email: '', password: '' });
   });
 
-  it("should fail validation for invalid data", async () => {
+  it('should fail validation for invalid data', async () => {
     const { result } = renderHook(() =>
       useZodForm(schema, {
-        defaultValues: { email: "", password: "" },
+        defaultValues: { email: '', password: '' },
       }),
     );
 
@@ -36,10 +36,10 @@ describe("useZodForm", () => {
     expect(isValid).toBe(false);
   });
 
-  it("should pass validation with valid data", async () => {
+  it('should pass validation with valid data', async () => {
     const { result } = renderHook(() =>
       useZodForm(schema, {
-        defaultValues: { email: "test@example.com", password: "12345678" },
+        defaultValues: { email: 'test@example.com', password: '12345678' },
       }),
     );
 
@@ -54,10 +54,10 @@ describe("useZodForm", () => {
     expect(submitted).toBe(true);
   });
 
-  it("should reject password shorter than 8 characters", async () => {
+  it('should reject password shorter than 8 characters', async () => {
     const { result } = renderHook(() =>
       useZodForm(schema, {
-        defaultValues: { email: "test@example.com", password: "short" },
+        defaultValues: { email: 'test@example.com', password: 'short' },
       }),
     );
 
@@ -72,10 +72,10 @@ describe("useZodForm", () => {
     expect(submitted).toBe(false);
   });
 
-  it("should reject invalid email", async () => {
+  it('should reject invalid email', async () => {
     const { result } = renderHook(() =>
       useZodForm(schema, {
-        defaultValues: { email: "not-an-email", password: "12345678" },
+        defaultValues: { email: 'not-an-email', password: '12345678' },
       }),
     );
 

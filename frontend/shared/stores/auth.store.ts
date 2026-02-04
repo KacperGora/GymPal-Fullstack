@@ -1,5 +1,5 @@
-import { AuthResponseUser } from "@gympal/shared";
-import { create } from "zustand";
+import { AuthResponseUser } from '@gympal/shared';
+import { create } from 'zustand';
 
 interface AuthState {
   user: AuthResponseUser | null;
