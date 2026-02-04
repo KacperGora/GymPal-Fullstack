@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { Request } from 'express';
+import { ACCESS_TOKEN_COOKIE } from '@gympal/shared';
 
 interface JwtPayload {
   sub: number;
@@ -15,7 +16,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!secret) throw new Error('JWT_SECRET not set');
     super({
       jwtFromRequest: (req: Request) =>
-        (req?.cookies?.access_token as string) ?? null,
+        (req?.cookies?.[ACCESS_TOKEN_COOKIE] as string) ?? null,
       secretOrKey: secret,
     });
   }

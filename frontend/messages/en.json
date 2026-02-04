@@ -43,6 +43,8 @@
     "title": "Dashboard"
   },
   "profile": {
-    "title": "Profile"
+    "title": "Profile",
+    "age": "Age",
+    "ageYears": "{count, plural, one {# year} other {# years}}"
   }
 }
