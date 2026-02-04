@@ -66,9 +66,9 @@ export default function Nutrition() {
   );
 
   const targetCalories = tdeeData?.targetCalories ?? 2000;
-  const targetProteins = 150;
-  const targetCarbs = 200;
-  const targetFats = 65;
+  const targetProteins = tdeeData?.targetProteins ?? 150;
+  const targetCarbs = tdeeData?.targetCarbs ?? 200;
+  const targetFats = tdeeData?.targetFats ?? 65;
   const remainingProteins = targetProteins - dailyTotals.proteins;
   const remainingCarbs = targetCarbs - dailyTotals.carbs;
   const remainingFats = targetFats - dailyTotals.fats;

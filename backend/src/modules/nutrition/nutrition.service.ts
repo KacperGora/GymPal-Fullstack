@@ -101,10 +101,26 @@ export class NutritionService {
     if (profile.goal === 'LOSE') targetCalories = Math.round(tdee * 0.8);
     if (profile.goal === 'GAIN') targetCalories = Math.round(tdee * 1.15);
 
+    // Calculate personalized macro targets
+    // Protein: 2g per kg body weight (fitness-oriented)
+    const targetProteins = Math.round(profile.weight * 2);
+    const proteinCalories = targetProteins * 4;
+
+    // Fat: 25% of total calories
+    const fatCalories = targetCalories * 0.25;
+    const targetFats = Math.round(fatCalories / 9);
+
+    // Carbs: remainder of calories after protein and fat
+    const carbCalories = targetCalories - proteinCalories - fatCalories;
+    const targetCarbs = Math.round(carbCalories / 4);
+
     return {
       bmr,
       tdee,
       targetCalories,
+      targetProteins,
+      targetCarbs,
+      targetFats,
       goal: profile.goal,
     };
   }
