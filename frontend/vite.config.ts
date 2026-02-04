@@ -1,16 +1,16 @@
-import path from "path";
+import path from 'path';
 
-import { defineConfig } from "vitest/config";
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "."),
+      '@': path.resolve(__dirname, '.'),
     },
   },
   test: {
-    environment: "jsdom",
+    environment: 'jsdom',
     globals: true,
-    exclude: ["e2e/**", "node_modules/**"],
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 });

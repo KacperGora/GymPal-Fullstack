@@ -1,13 +1,13 @@
-import { useMemo } from "react";
+import { useMemo } from 'react';
 
 import {
   calculateBMR,
   calculateTargetCalories,
   calculateTDEE,
-} from "@/shared/utils";
+} from '@/shared/utils';
 
-import { ACTIVITY_LEVELS } from "../constants";
-import type { UserProfile } from "../types";
+import { ACTIVITY_LEVELS } from '../constants';
+import type { UserProfile } from '../types';
 
 interface UseProfileStatsResult {
   bmr: number;

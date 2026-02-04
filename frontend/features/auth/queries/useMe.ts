@@ -1,10 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
-import { getMe } from "@/features/auth/api/auth.api";
+import { getMe } from '@/features/auth/api/auth.api';
 
 export const useMe = () =>
   useQuery({
-    queryKey: ["me"],
+    queryKey: ['me'],
     queryFn: getMe,
     retry: false,
   });

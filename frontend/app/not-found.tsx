@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { Box, Button, Typography } from "@mui/material";
-import Link from "next/link";
+import { Box, Button, Typography } from '@mui/material';
+import Link from 'next/link';
 
 export default function NotFound() {
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "calc(100vh - 64px)",
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 'calc(100vh - 64px)',
         gap: 2,
       }}
     >

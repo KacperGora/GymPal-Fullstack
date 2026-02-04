@@ -1,1 +1,1 @@
-export * from "./nutrition.util";
+export * from './nutrition.util';
