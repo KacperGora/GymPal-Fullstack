@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { Box, Typography, Skeleton, CircularProgress } from "@mui/material";
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { Box, Typography, Skeleton, CircularProgress } from '@mui/material';
+import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 import {
   EditFitnessDataModal,
   ProfileFitnessDataCard,
   ProfilePersonalInfoCard,
-} from "@/features/profile/components";
-import { useProfileStats } from "@/features/profile/hooks/useProfileStats";
-import { useUserProfile } from "@/features/profile/queries/useUserProfile";
-import { useRouter } from "@/i18n/navigation";
-import { useAuth } from "@/shared/hooks/useAuth";
+} from '@/features/profile/components';
+import { useProfileStats } from '@/features/profile/hooks/useProfileStats';
+import { useUserProfile } from '@/features/profile/queries/useUserProfile';
+import { useRouter } from '@/i18n/navigation';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function Profile() {
-  const t = useTranslations("profile");
+  const t = useTranslations('profile');
   const { user, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -32,13 +32,13 @@ export default function Profile() {
 
   useEffect(() => {
     if (!isAuthLoading && user && !user.hasProfile) {
-      router.replace("/welcome");
+      router.replace('/welcome');
     }
   }, [isAuthLoading, router, user]);
 
   if (isAuthLoading || isProfileLoading) {
     return (
-      <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
+      <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
         <Skeleton variant="rectangular" height={400} />
       </Box>
     );
@@ -48,10 +48,10 @@ export default function Profile() {
     return (
       <Box
         sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "calc(100vh - 64px)",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: 'calc(100vh - 64px)',
           p: 2,
         }}
       >
@@ -61,9 +61,9 @@ export default function Profile() {
   }
 
   return (
-    <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>
+    <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        {t("title")}
+        {t('title')}
       </Typography>
       <EditFitnessDataModal
         open={editOpen}

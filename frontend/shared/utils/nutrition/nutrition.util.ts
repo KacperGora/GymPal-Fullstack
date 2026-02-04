@@ -8,9 +8,9 @@ export const calculateTDEE = (bmr: number, activity: number) => {
 
 export const calculateTargetCalories = (tdee: number, goal: string) => {
   switch (goal) {
-    case "lose":
+    case 'lose':
       return Math.round(tdee - 500);
-    case "gain":
+    case 'gain':
       return Math.round(tdee + 300);
     default:
       return tdee;

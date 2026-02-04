@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Box, Alert } from "@mui/material";
+import { Box, Alert } from '@mui/material';
 
 type Props = {
   children: React.ReactNode;
@@ -13,7 +13,7 @@ export function AuthFormLayout({ children, onSubmit, error }: Props) {
     <Box
       component="form"
       onSubmit={onSubmit}
-      sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
     >
       {children}
       {error && <Alert severity="error">{error}</Alert>}

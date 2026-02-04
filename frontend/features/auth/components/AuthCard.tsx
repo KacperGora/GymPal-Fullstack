@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Paper } from "@mui/material";
+import { Paper } from '@mui/material';
 
 export function AuthCard({ children }: { children: React.ReactNode }) {
   return (
@@ -8,7 +8,7 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
       variant="glass"
       sx={{
         maxWidth: 420,
-        mx: "auto",
+        mx: 'auto',
         mt: 2,
         p: 4,
       }}

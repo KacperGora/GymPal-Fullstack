@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import LanguageIcon from "@mui/icons-material/Language";
+import LanguageIcon from '@mui/icons-material/Language';
 import {
   AppBar,
   Toolbar,
@@ -12,22 +12,22 @@ import {
   MenuItem,
   ListItemText,
   Skeleton,
-} from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import { useLocale, useTranslations } from "next-intl";
-import { useState, type MouseEvent } from "react";
+} from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import { useLocale, useTranslations } from 'next-intl';
+import { useState, type MouseEvent } from 'react';
 
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { useAuth } from "@/shared/hooks/useAuth";
+import { usePathname, useRouter } from '@/i18n/navigation';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 const localeLabels: Record<string, string> = {
-  pl: "Polski",
-  en: "English",
+  pl: 'Polski',
+  en: 'English',
 };
 
 export const Navbar = () => {
   const theme = useTheme();
-  const t = useTranslations("navbar");
+  const t = useTranslations('navbar');
   const { isAuthenticated, isLoading, logout } = useAuth();
   const locale = useLocale();
   const router = useRouter();
@@ -47,17 +47,16 @@ export const Navbar = () => {
       color="transparent"
       sx={{ backgroundColor: theme.palette.background.paper }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
         <Typography variant="h6">GymPal</Typography>
-        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-          <Button color="primary">{t("home")}</Button>
-          <Button color="primary">{t("workouts")}</Button>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Button color="primary">{t('home')}</Button>
+          <Button color="primary">{t('workouts')}</Button>
           <Button href="/profile" color="primary">
-            {t("profile")}
+            {t('profile')}
           </Button>
           <Button
-            href={isAuthenticated ? undefined : "/login"}
-            disabled={isAuthenticated}
+            href={isAuthenticated ? undefined : '/login'}
             onClick={
               isAuthenticated
                 ? async () => {
@@ -66,9 +65,9 @@ export const Navbar = () => {
                   }
                 : undefined
             }
-            variant={isAuthenticated ? "outlined" : "contained"}
+            variant={isAuthenticated ? 'outlined' : 'contained'}
           >
-            {isAuthenticated ? t("logout") : t("login")}
+            {isAuthenticated ? t('logout') : t('login')}
           </Button>
           <IconButton
             onClick={(e: MouseEvent<HTMLElement>) =>

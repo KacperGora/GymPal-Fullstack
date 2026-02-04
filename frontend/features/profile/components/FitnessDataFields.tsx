@@ -1,9 +1,9 @@
-import type { CreateUserProfileDto } from "@gympal/shared";
-import { MenuItem, TextField } from "@mui/material";
-import { useTranslations } from "next-intl";
-import type { FieldErrors, UseFormRegister } from "react-hook-form";
+import type { CreateUserProfileDto } from '@gympal/shared';
+import { MenuItem, TextField } from '@mui/material';
+import { useTranslations } from 'next-intl';
+import type { FieldErrors, UseFormRegister } from 'react-hook-form';
 
-import { ACTIVITY_LEVELS, GOALS } from "../constants";
+import { ACTIVITY_LEVELS, GOALS } from '../constants';
 
 interface IProps {
   register: UseFormRegister<CreateUserProfileDto>;
@@ -18,46 +18,46 @@ export const FitnessDataFields = ({
   isPending,
   selectDefaultValue,
 }: IProps) => {
-  const t = useTranslations("welcome.form");
+  const t = useTranslations('welcome.form');
 
   return (
     <>
       <TextField
-        label={t("height")}
+        label={t('height')}
         type="number"
         required
         disabled={isPending}
         error={!!errors.height}
         helperText={errors.height?.message}
-        {...register("height", { valueAsNumber: true })}
+        {...register('height', { valueAsNumber: true })}
       />
       <TextField
-        label={t("weight")}
+        label={t('weight')}
         type="number"
         required
         disabled={isPending}
         error={!!errors.weight}
         helperText={errors.weight?.message}
-        {...register("weight", { valueAsNumber: true })}
+        {...register('weight', { valueAsNumber: true })}
       />
       <TextField
-        label={t("age")}
+        label={t('age')}
         type="number"
         required
         disabled={isPending}
         error={!!errors.age}
         helperText={errors.age?.message}
-        {...register("age", { valueAsNumber: true })}
+        {...register('age', { valueAsNumber: true })}
       />
       <TextField
-        label={t("activity")}
+        label={t('activity')}
         select
         required
         disabled={isPending}
         defaultValue={selectDefaultValue}
         error={!!errors.activity}
         helperText={errors.activity?.message}
-        {...register("activity", { valueAsNumber: true })}
+        {...register('activity', { valueAsNumber: true })}
       >
         {ACTIVITY_LEVELS.map(({ value, key }) => (
           <MenuItem key={key} value={value}>
@@ -66,14 +66,14 @@ export const FitnessDataFields = ({
         ))}
       </TextField>
       <TextField
-        label={t("goal")}
+        label={t('goal')}
         select
         required
         disabled={isPending}
         defaultValue={selectDefaultValue}
         error={!!errors.goal}
         helperText={errors.goal?.message}
-        {...register("goal")}
+        {...register('goal')}
       >
         {GOALS.map((goal) => (
           <MenuItem key={goal} value={goal}>

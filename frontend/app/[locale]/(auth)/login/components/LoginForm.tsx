@@ -1,32 +1,32 @@
-"use client";
+'use client';
 
-import { type LoginDto, loginSchema } from "@gympal/shared";
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { type LoginDto, loginSchema } from '@gympal/shared';
+import EmailIcon from '@mui/icons-material/Email';
+import LockIcon from '@mui/icons-material/Lock';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import {
   Button,
   IconButton,
   InputAdornment,
   Stack,
   TextField,
-} from "@mui/material";
-import { AxiosError } from "axios";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
+} from '@mui/material';
+import { AxiosError } from 'axios';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 import {
   AuthCard,
   AuthFormLayout,
   AuthSubmitButton,
-} from "@/features/auth/components";
-import { useLogin } from "@/features/auth/mutations/useLogin";
-import { Link } from "@/i18n/navigation";
-import { useZodForm } from "@/shared/hooks/useZodForm";
+} from '@/features/auth/components';
+import { useLogin } from '@/features/auth/mutations/useLogin';
+import { Link } from '@/i18n/navigation';
+import { useZodForm } from '@/shared/hooks/useZodForm';
 
 export default function LoginForm() {
-  const t = useTranslations("auth.login");
+  const t = useTranslations('auth.login');
   const { mutate, isPending, error } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -38,8 +38,8 @@ export default function LoginForm() {
 
   const apiError = error
     ? error instanceof AxiosError && error.response?.status === 401
-      ? t("errorInvalid")
-      : t("errorGeneral")
+      ? t('errorInvalid')
+      : t('errorGeneral')
     : null;
 
   const onSubmit = (data: LoginDto) => {
@@ -50,13 +50,13 @@ export default function LoginForm() {
     <AuthCard>
       <AuthFormLayout onSubmit={handleSubmit(onSubmit)} error={apiError}>
         <TextField
-          label={t("email")}
+          label={t('email')}
           type="email"
           disabled={isPending}
           variant="outlined"
           error={!!errors.email}
           helperText={errors.email?.message}
-          {...register("email")}
+          {...register('email')}
           slotProps={{
             input: {
               startAdornment: (
@@ -68,13 +68,13 @@ export default function LoginForm() {
           }}
         />
         <TextField
-          label={t("password")}
-          type={showPassword ? "text" : "password"}
+          label={t('password')}
+          type={showPassword ? 'text' : 'password'}
           disabled={isPending}
           variant="outlined"
           error={!!errors.password}
           helperText={errors.password?.message}
-          {...register("password")}
+          {...register('password')}
           slotProps={{
             input: {
               startAdornment: (
@@ -97,11 +97,11 @@ export default function LoginForm() {
           }}
         />
 
-        <AuthSubmitButton label={t("submit")} loading={isPending} />
+        <AuthSubmitButton label={t('submit')} loading={isPending} />
 
         <Stack direction="row" justifyContent="space-between">
           <Button component={Link} href="/register" variant="text">
-            {t("register")}
+            {t('register')}
           </Button>
           <Button
             component={Link}
@@ -110,7 +110,7 @@ export default function LoginForm() {
             variant="text"
             size="small"
           >
-            {t("forgotPassword")}
+            {t('forgotPassword')}
           </Button>
         </Stack>
       </AuthFormLayout>
