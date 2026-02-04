@@ -2,6 +2,11 @@ export const endpointList = {
   auth: {
     login: "/auth/login",
     register: "/auth/register",
-    getMe: "/auth/getMe",
+    logout: "/auth/logout",
+    getMe: "/auth/me",
+  },
+  userProfile: {
+    get: "/user-profile",
+    upsert: "/user-profile",
   },
 };

@@ -57,13 +57,13 @@ describe("auth.api", () => {
   });
 
   describe("getMe", () => {
-    it("should GET /auth/getMe and return data", async () => {
+    it("should GET /auth/me and return data", async () => {
       const responseData = { firstName: "Test", lastName: "User" };
       mockGet.mockResolvedValue({ data: responseData });
 
       const result = await getMe();
 
-      expect(mockGet).toHaveBeenCalledWith("/auth/getMe");
+      expect(mockGet).toHaveBeenCalledWith("/auth/me");
       expect(result).toEqual(responseData);
     });
   });

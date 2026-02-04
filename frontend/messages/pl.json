@@ -3,7 +3,8 @@
     "home": "Strona główna",
     "workouts": "Treningi",
     "profile": "Profil",
-    "login": "Zaloguj"
+    "login": "Zaloguj",
+    "logout": "Wyloguj"
   },
   "home": {
     "title": "GymPal"
@@ -46,12 +47,63 @@
     "title": "Dashboard"
   },
   "profile": {
-    "title": "Profil"
+    "title": "Profil",
+    "personalInfo": "Dane osobowe",
+    "fitnessData": "Dane fitness",
+    "editFitnessData": "Edytuj dane fitness",
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "email": "Email",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "height": "Wzrost",
+    "weight": "Waga",
+    "age": "Wiek",
+    "ageYears": "{count, plural, one {# rok} few {# lata} many {# lat} other {# lat}}",
+    "activity": "Poziom aktywności",
+    "goal": "Cel",
+    "bmr": "BMR (podstawowa przemiana materii)",
+    "tdee": "TDEE (całkowite zapotrzebowanie)",
+    "targetCalories": "Docelowe kalorie",
+    "noProfile": "Brak danych fitness. Uzupełnij je na stronie powitalnej.",
+    "activityLevels": {
+      "1.2": "Siedzący tryb życia",
+      "1.375": "Lekka aktywność",
+      "1.55": "Umiarkowana aktywność",
+      "1.725": "Wysoka aktywność",
+      "1.9": "Bardzo wysoka aktywność"
+    },
+    "goals": {
+      "lose": "Redukcja wagi",
+      "maintain": "Utrzymanie wagi",
+      "gain": "Przyrost masy"
+    }
   },
   "workouts": {
     "title": "Treningi"
   },
   "welcome": {
-    "title": "Witam w GymPal!"
+    "title": "Witaj w GymPal!",
+    "subtitle": "Uzupełnij swoje dane, aby obliczyć zapotrzebowanie kaloryczne",
+    "form": {
+      "height": "Wzrost (cm)",
+      "weight": "Waga (kg)",
+      "age": "Wiek",
+      "activity": "Poziom aktywności",
+      "goal": "Cel",
+      "submit": "Zapisz",
+      "activityLevels": {
+        "sedentary": "Siedzący tryb życia",
+        "light": "Lekka aktywność (1-3 dni/tydzień)",
+        "moderate": "Umiarkowana aktywność (3-5 dni/tydzień)",
+        "active": "Wysoka aktywność (6-7 dni/tydzień)",
+        "veryActive": "Bardzo wysoka aktywność"
+      },
+      "goals": {
+        "lose": "Redukcja wagi",
+        "maintain": "Utrzymanie wagi",
+        "gain": "Przyrost masy"
+      }
+    }
   }
 }

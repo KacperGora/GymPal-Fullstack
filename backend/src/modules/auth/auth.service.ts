@@ -32,23 +32,36 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        userProfile: { select: { id: true } },
+      },
     });
 
     if (!user || !(await comparePassword(dto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
     const token = this.jwtService.sign({ sub: user.id, email: user.email });
-
-    return { id: user.id, email: user.email, token };
+    const { userProfile, ...rest } = user;
+    return { ...rest, hasProfile: !!userProfile, token };
   }
   async me(id: number) {
-    console.log(id);
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
+        id: true,
+        email: true,
         firstName: true,
         lastName: true,
+        userProfile: { select: { id: true } },
       },
     });
+
+    if (!user) return null;
+
+    const { userProfile, ...rest } = user;
+    return { ...rest, hasProfile: !!userProfile };
   }
 }
