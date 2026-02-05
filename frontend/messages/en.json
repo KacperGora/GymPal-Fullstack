@@ -2,6 +2,7 @@
   "navbar": {
     "home": "Home",
     "workouts": "Workouts",
+    "exercises": "Exercises",
     "profile": "Profile",
     "login": "Login",
     "logout": "Logout"
@@ -104,6 +105,22 @@
       "avg": "Average",
       "target": "Target"
     }
+  },
+  "exercises": {
+    "title": "Exercises",
+    "subtitle": "Browse and discover exercises",
+    "searchPlaceholder": "Search exercises by name...",
+    "allBodyParts": "All",
+    "noResults": "No exercises found",
+    "tryDifferentFilter": "Try a different filter or search term",
+    "loading": "Loading...",
+    "secondaryMuscles": "Secondary muscles",
+    "instructions": "Instructions",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "bodyPart": "Body part",
+    "target": "Target muscle",
+    "equipment": "Equipment"
   },
   "profile": {
     "title": "Profile",

@@ -10,6 +10,7 @@ import { UserProfileModule } from './modules/user-profile/user-profile.module';
 import { WorkoutsModule } from './modules/workouts/workouts.module';
 import { WaterModule } from './modules/water/water.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
+import { ExercisesModule } from './modules/exercises/exercises.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
     WorkoutsModule,
     WaterModule,
     FavoritesModule,
+    ExercisesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
