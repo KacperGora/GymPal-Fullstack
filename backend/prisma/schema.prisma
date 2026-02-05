@@ -29,17 +29,18 @@ enum MealCategory {
 }
 
 model User {
-  id            Int              @id @unique @default(autoincrement())
-  firstName     String
-  lastName      String
-  password      String
-  email         String           @unique
-  meals         Meal[]
-  favoriteMeals FavoriteMeal[]
-  userProfile   UserProfile?
-  dailyStats    DailyStat[]
-  workouts      WorkoutSession[]
-  waterIntake   WaterIntake[]
+  id                Int                @id @unique @default(autoincrement())
+  firstName         String
+  lastName          String
+  password          String
+  email             String             @unique
+  meals             Meal[]
+  favoriteMeals     FavoriteMeal[]
+  userProfile       UserProfile?
+  dailyStats        DailyStat[]
+  workouts          WorkoutSession[]
+  waterIntake       WaterIntake[]
+  favoriteExercises FavoriteExercise[]
 }
 
 model WaterIntake {
@@ -148,4 +149,19 @@ model WorkoutExercise {
   notes            String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
+}
+
+model FavoriteExercise {
+  id              String   @id @default(cuid())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  wgerExerciseId  Int
+  name            String
+  category        String
+  muscles         String
+  equipment       String
+  imageUrl        String?
+  createdAt       DateTime @default(now())
+
+  @@unique([userId, wgerExerciseId])
 }

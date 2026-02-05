@@ -2,9 +2,12 @@
   "navbar": {
     "home": "Strona główna",
     "workouts": "Treningi",
+    "exercises": "Ćwiczenia",
     "profile": "Profil",
     "login": "Zaloguj",
-    "logout": "Wyloguj"
+    "logout": "Wyloguj",
+    "dashboard": "Pulpit",
+    "nutrition": "Odżywianie"
   },
   "home": {
     "title": "GymPal"
@@ -81,6 +84,22 @@
   },
   "workouts": {
     "title": "Treningi"
+  },
+  "exercises": {
+    "title": "Ćwiczenia",
+    "subtitle": "Przeglądaj i odkrywaj ćwiczenia",
+    "searchPlaceholder": "Szukaj ćwiczeń po nazwie...",
+    "allBodyParts": "Wszystkie",
+    "noResults": "Nie znaleziono ćwiczeń",
+    "tryDifferentFilter": "Spróbuj innego filtra lub wyszukiwania",
+    "loading": "Ładowanie...",
+    "secondaryMuscles": "Dodatkowe mięśnie",
+    "instructions": "Instrukcje",
+    "addToFavorites": "Dodaj do ulubionych",
+    "removeFromFavorites": "Usuń z ulubionych",
+    "bodyPart": "Partia ciała",
+    "target": "Mięsień docelowy",
+    "equipment": "Sprzęt"
   },
   "nutrition": {
     "title": "Odżywianie",
