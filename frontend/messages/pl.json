@@ -12,6 +12,135 @@
   "home": {
     "title": "GymPal"
   },
+  "landing": {
+    "hero": {
+      "badge": "Nowość",
+      "kicker": "GymPal to Twoje centrum planowania treningów",
+      "title": "Premium planowanie treningu i żywienia w jednym panelu.",
+      "subtitle": "Zaprojektowane jak produkt klasy premium: spójne, szybkie i wygodne w użyciu na co dzień. Plany, progres, cele kalorii i makra w jednym widoku, bez żonglowania aplikacjami.",
+      "primaryCta": "Zacznij plan premium",
+      "secondaryCta": "Zobacz demo premium",
+      "stats": [
+        { "label": "Planów", "value": "120+" },
+        { "label": "Ćwiczeń", "value": "600+" },
+        { "label": "Posiłków", "value": "2k+" }
+      ]
+    },
+    "workout": {
+      "eyebrow": "Dzisiejszy trening",
+      "title": "Push Day • Siła i hipertrofia",
+      "rows": [
+        { "name": "Wyciskanie sztangi", "sets": "4 x 6-8" },
+        { "name": "Wyciskanie hantli skos", "sets": "3 x 10-12" },
+        { "name": "Unoszenia bokiem", "sets": "3 x 12-15" }
+      ]
+    },
+    "features": {
+      "cards": [
+        {
+          "title": "Twój rytm",
+          "text": "Automatyczne przypomnienia, tygodniowy harmonogram i blokady nadmiernej objętości."
+        },
+        {
+          "title": "Progres w liczbach",
+          "text": "Wykresy siły, objętości i tygodniowego obciążenia mięśni."
+        },
+        {
+          "title": "Żywienie pod kontrolą",
+          "text": "Kalorie, makra, bilans tygodnia i szybkie korekty celu."
+        },
+        {
+          "title": "Szybkie posiłki",
+          "text": "Ulubione pozycje, kopiowanie dnia i błyskawiczne dodawanie."
+        }
+      ]
+    },
+    "nutrition": {
+      "chip": "Żywienie",
+      "title": "Żywienie zaprojektowane jak premium.",
+      "body": "Szybkie planowanie posiłków, automatyczne liczenie kalorii i makr oraz podsumowania tygodnia. Zero arkuszy, zero chaosu.",
+      "stats": [
+        { "label": "Kalorie", "value": "Auto" },
+        { "label": "Makra", "value": "3 klik." },
+        { "label": "Woda", "value": "Tracker" }
+      ],
+      "cards": [
+        {
+          "title": "Bilans dnia",
+          "text": "Zjedzone vs. cel kaloryczny — bez przeliczania."
+        },
+        {
+          "title": "Makra w równowadze",
+          "text": "Rozkład białka, tłuszczy i węgli w czasie dnia."
+        },
+        {
+          "title": "Szybkie dodawanie",
+          "text": "Ulubione posiłki i kopiowanie z poprzedniego dnia."
+        },
+        {
+          "title": "Nawodnienie",
+          "text": "Lekki tracker wody z przypomnieniami."
+        }
+      ]
+    },
+    "sync": {
+      "title": "Jeden panel. Trening i żywienie zsynchronizowane.",
+      "body": "Zobacz, jak plan treningowy wpływa na zapotrzebowanie kalorii i objętość posiłków w tygodniu. GymPal łączy dane w jednym miejscu.",
+      "primaryCta": "Wypróbuj żywienie",
+      "secondaryCta": "Zobacz jak działa"
+    },
+    "proofHighlights": {
+      "cards": [
+        {
+          "title": "Zweryfikowany workflow",
+          "text": "Plan treningowy i żywienie w jednym, spójnym rytmie tygodnia."
+        },
+        {
+          "title": "Mniej decyzji",
+          "text": "Presety celów i szybkie korekty bez przebudowy planu."
+        },
+        {
+          "title": "Szybciej do celu",
+          "text": "Wgląd w tygodniową objętość i bilans kalorii w 10 sekund."
+        }
+      ]
+    },
+    "proofMetrics": {
+      "title": "Proof, nie obietnice",
+      "body": "To, co widzisz, to realny workflow: plan, żywienie i monitoring w jednym rytmie tygodnia. Bez nadmiaru ekranów i bez ręcznego liczenia.",
+      "metrics": [
+        { "label": "Średni czas ułożenia planu", "value": "2:40" },
+        { "label": "Skrócenie logowania posiłków", "value": "‑38%" },
+        { "label": "Powtarzalność tygodnia", "value": "4/5 dni" },
+        { "label": "Retention 30 dni", "value": "62%" }
+      ]
+    },
+    "cta": {
+      "title": "Gotowy na plan, który rośnie razem z Tobą?",
+      "body": "Zbuduj pierwszy trening w mniej niż 3 minuty i monitoruj każdy tydzień w jednym panelu.",
+      "primaryCta": "Załóż konto",
+      "secondaryCta": "Porozmawiaj z nami"
+    },
+    "footer": {
+      "description": "Premium platforma do treningu i żywienia w jednym miejscu. Prosty workflow, realny progres.",
+      "columns": [
+        {
+          "title": "Produkt",
+          "items": ["Trening", "Żywienie", "Progres", "Plany"]
+        },
+        {
+          "title": "Wsparcie",
+          "items": ["FAQ", "Kontakt", "Poradniki", "Status"]
+        },
+        {
+          "title": "Firma",
+          "items": ["O nas", "Kariera", "Regulamin", "Prywatność"]
+        }
+      ],
+      "copyright": "© 2026 GymPal. Wszelkie prawa zastrzeżone.",
+      "tagline": "Made for consistent training."
+    }
+  },
   "auth": {
     "login": {
       "title": "Logowanie",
@@ -47,7 +176,28 @@
     }
   },
   "dashboard": {
-    "title": "Dashboard"
+    "title": "Dashboard",
+    "greeting": "Cześć, {name}!",
+    "subtitle": "Twój dzienny przegląd",
+    "calories": "Kalorie",
+    "remaining": "pozostało",
+    "overLimit": "ponad limit",
+    "macros": "Makro",
+    "proteins": "Białko",
+    "carbs": "Węgle",
+    "fats": "Tłuszcze",
+    "water": "Nawodnienie",
+    "glasses": "szklanek",
+    "waterGoalReached": "Cel osiągnięty!",
+    "goal": "Twój cel",
+    "goalLabel": "Cel",
+    "target": "Docelowo",
+    "goalLose": "Redukcja",
+    "goalMaintain": "Utrzymanie",
+    "goalGain": "Masa",
+    "weeklyTitle": "Ostatnie 7 dni",
+    "weeklyAvg": "Średnia",
+    "weeklyTarget": "Cel"
   },
   "profile": {
     "title": "Profil",

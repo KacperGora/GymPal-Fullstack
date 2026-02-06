@@ -1,19 +1,70 @@
-import { Box, Typography } from '@mui/material';
-import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
+
+import type { Metadata } from 'next';
+
+import { routing } from '@/i18n/routing';
+
+import {
+  LandingCta,
+  LandingFooter,
+  LandingHero,
+  LandingShell,
+  NutritionSection,
+  ProofHighlights,
+  ProofMetrics,
+  SyncPanel,
+} from './components/landing';
+
+const BASE_URL = 'https://gympal.app';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'landing' });
+
+  const title = `GymPal – ${t('hero.title')}`;
+  const description = t('hero.subtitle');
+
+  const alternateLanguages = Object.fromEntries(
+    routing.locales.map((l) => [l, `${BASE_URL}/${l}`]),
+  );
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${BASE_URL}/${locale}`,
+      languages: alternateLanguages,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/${locale}`,
+      siteName: 'GymPal',
+      locale,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  };
+}
 
 export default function Home() {
-  const t = useTranslations('home');
-
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 64px)',
-      }}
-    >
-      <Typography variant="h1">{t('title')}</Typography>
-    </Box>
+    <LandingShell>
+      <LandingHero />
+      <NutritionSection />
+      <SyncPanel />
+      <ProofHighlights />
+      <ProofMetrics />
+      <LandingCta />
+      <LandingFooter />
+    </LandingShell>
   );
 }
