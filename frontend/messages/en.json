@@ -5,10 +5,162 @@
     "exercises": "Exercises",
     "profile": "Profile",
     "login": "Login",
-    "logout": "Logout"
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "nutrition": "Nutrition"
   },
   "home": {
     "title": "GymPal"
+  },
+  "landing": {
+    "hero": {
+      "badge": "New",
+      "kicker": "GymPal is your training planning hub",
+      "title": "Premium workout and nutrition planning in one panel.",
+      "subtitle": "Designed like a premium product: consistent, fast, and convenient for daily use. Plans, progress, calorie goals and macros in one view — no app juggling.",
+      "primaryCta": "Start premium plan",
+      "secondaryCta": "See premium demo",
+      "stats": [
+        { "label": "Plans", "value": "120+" },
+        { "label": "Exercises", "value": "600+" },
+        { "label": "Meals", "value": "2k+" }
+      ]
+    },
+    "workout": {
+      "eyebrow": "Today's workout",
+      "title": "Push Day \u2022 Strength & hypertrophy",
+      "rows": [
+        { "name": "Barbell bench press", "sets": "4 x 6-8" },
+        { "name": "Incline dumbbell press", "sets": "3 x 10-12" },
+        { "name": "Lateral raises", "sets": "3 x 12-15" }
+      ]
+    },
+    "features": {
+      "cards": [
+        {
+          "title": "Your rhythm",
+          "text": "Automatic reminders, weekly schedule, and overvolume locks."
+        },
+        {
+          "title": "Progress in numbers",
+          "text": "Strength, volume, and weekly muscle load charts."
+        },
+        {
+          "title": "Nutrition under control",
+          "text": "Calories, macros, weekly balance and quick goal adjustments."
+        },
+        {
+          "title": "Quick meals",
+          "text": "Favorite items, day copying and instant adding."
+        }
+      ]
+    },
+    "nutrition": {
+      "chip": "Nutrition",
+      "title": "Nutrition designed like premium.",
+      "body": "Quick meal planning, automatic calorie and macro counting, and weekly summaries. Zero spreadsheets, zero chaos.",
+      "stats": [
+        { "label": "Calories", "value": "Auto" },
+        { "label": "Macros", "value": "3 clicks" },
+        { "label": "Water", "value": "Tracker" }
+      ],
+      "cards": [
+        {
+          "title": "Daily balance",
+          "text": "Eaten vs. calorie goal — no manual calculations."
+        },
+        {
+          "title": "Balanced macros",
+          "text": "Protein, fat and carb distribution throughout the day."
+        },
+        {
+          "title": "Quick adding",
+          "text": "Favorite meals and copying from the previous day."
+        },
+        {
+          "title": "Hydration",
+          "text": "Lightweight water tracker with reminders."
+        }
+      ]
+    },
+    "sync": {
+      "title": "One panel. Workout and nutrition synchronized.",
+      "body": "See how your training plan affects calorie needs and weekly meal volume. GymPal connects data in one place.",
+      "primaryCta": "Try nutrition",
+      "secondaryCta": "See how it works"
+    },
+    "proofHighlights": {
+      "cards": [
+        {
+          "title": "Verified workflow",
+          "text": "Training plan and nutrition in one consistent weekly rhythm."
+        },
+        {
+          "title": "Fewer decisions",
+          "text": "Goal presets and quick adjustments without rebuilding the plan."
+        },
+        {
+          "title": "Faster to your goal",
+          "text": "Weekly volume and calorie balance insight in 10 seconds."
+        }
+      ]
+    },
+    "proofMetrics": {
+      "title": "Proof, not promises",
+      "body": "What you see is a real workflow: plan, nutrition, and monitoring in one weekly rhythm. No extra screens and no manual counting.",
+      "metrics": [
+        { "label": "Avg plan creation time", "value": "2:40" },
+        { "label": "Meal logging reduction", "value": "\u201138%" },
+        { "label": "Weekly consistency", "value": "4/5 days" },
+        { "label": "30-day retention", "value": "62%" }
+      ]
+    },
+    "cta": {
+      "title": "Ready for a plan that grows with you?",
+      "body": "Build your first workout in less than 3 minutes and monitor every week in one panel.",
+      "primaryCta": "Create account",
+      "secondaryCta": "Talk to us"
+    },
+    "footer": {
+      "description": "Premium training and nutrition platform in one place. Simple workflow, real progress.",
+      "columns": [
+        {
+          "title": "Product",
+          "items": ["Training", "Nutrition", "Progress", "Plans"]
+        },
+        { "title": "Support", "items": ["FAQ", "Contact", "Guides", "Status"] },
+        {
+          "title": "Company",
+          "items": ["About", "Careers", "Terms", "Privacy"]
+        }
+      ],
+      "copyright": "\u00a9 2026 GymPal. All rights reserved.",
+      "tagline": "Made for consistent training."
+    }
+  },
+  "welcome": {
+    "title": "Welcome to GymPal!",
+    "subtitle": "Fill in your details to calculate calorie needs",
+    "form": {
+      "height": "Height (cm)",
+      "weight": "Weight (kg)",
+      "age": "Age",
+      "activity": "Activity level",
+      "goal": "Goal",
+      "submit": "Save",
+      "activityLevels": {
+        "sedentary": "Sedentary lifestyle",
+        "light": "Light activity (1-3 days/week)",
+        "moderate": "Moderate activity (3-5 days/week)",
+        "active": "High activity (6-7 days/week)",
+        "veryActive": "Very high activity"
+      },
+      "goals": {
+        "lose": "Lose weight",
+        "maintain": "Maintain weight",
+        "gain": "Gain mass"
+      }
+    }
   },
   "auth": {
     "login": {
@@ -44,7 +196,28 @@
     }
   },
   "dashboard": {
-    "title": "Dashboard"
+    "title": "Dashboard",
+    "greeting": "Hi, {name}!",
+    "subtitle": "Your daily overview",
+    "calories": "Calories",
+    "remaining": "remaining",
+    "overLimit": "over limit",
+    "macros": "Macros",
+    "proteins": "Protein",
+    "carbs": "Carbs",
+    "fats": "Fats",
+    "water": "Hydration",
+    "glasses": "glasses",
+    "waterGoalReached": "Goal reached!",
+    "goal": "Your goal",
+    "goalLabel": "Goal",
+    "target": "Target",
+    "goalLose": "Lose weight",
+    "goalMaintain": "Maintain",
+    "goalGain": "Gain mass",
+    "weeklyTitle": "Last 7 days",
+    "weeklyAvg": "Average",
+    "weeklyTarget": "Target"
   },
   "nutrition": {
     "title": "Nutrition",

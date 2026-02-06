@@ -17,7 +17,11 @@ export function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: 'GymPal',
+  metadataBase: new URL('https://gympal.app'),
+  title: {
+    default: 'GymPal',
+    template: '%s | GymPal',
+  },
   description: 'Your fitness companion',
 };
 
