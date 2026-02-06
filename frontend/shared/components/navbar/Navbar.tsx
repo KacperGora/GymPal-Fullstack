@@ -1,71 +1,219 @@
 'use client';
 
+import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
   Toolbar,
   Typography,
   Button,
   Box,
   Skeleton,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { useTranslations } from 'next-intl';
+import { alpha, useTheme } from '@mui/material/styles';
+import { useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 import { useRouter } from '@/i18n/navigation';
+import { usePathname } from '@/i18n/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 
 import { LanguageSelector } from '../language-selector/LanguageSelector';
+
+const NAV_ITEMS = [
+  { key: 'dashboard', path: '/dashboard' },
+  { key: 'nutrition', path: '/nutrition' },
+  { key: 'exercises', path: '/exercises' },
+  { key: 'workouts', path: '/workouts' },
+  { key: 'profile', path: '/profile' },
+] as const;
 
 export const Navbar = () => {
   const theme = useTheme();
   const t = useTranslations('navbar');
   const { isAuthenticated, isLoading, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const isHome = pathname === '/' || pathname === `/${locale}`;
+  const [isOpen, setIsOpen] = useState(false);
+  const handleNavigate = (path: string) => () => {
+    router.push(path);
+    setIsOpen(false);
+  };
 
   if (isLoading) return <Skeleton />;
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       color="transparent"
-      sx={{ backgroundColor: theme.palette.background.paper }}
+      elevation={0}
+      sx={{
+        backgroundColor: isHome
+          ? alpha(theme.palette.background.default, 0.55)
+          : theme.palette.background.paper,
+        borderBottom: isHome
+          ? `1px solid ${alpha(theme.palette.common.white, 0.08)}`
+          : `1px solid ${alpha(theme.palette.common.white, 0.05)}`,
+        backdropFilter: isHome ? 'blur(10px)' : 'none',
+      }}
     >
-      <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h6">GymPal</Typography>
-        {isAuthenticated ? (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button color="primary">{t('dashboard')}</Button>
-            <Button href="/nutrition" color="primary">
-              {t('nutrition')}
-            </Button>
-            <Button href="/exercises" color="primary">
-              {t('exercises')}
-            </Button>
-            <Button color="primary">{t('workouts')}</Button>
-            <Button href="/profile" color="primary">
-              {t('profile')}
-            </Button>
+      <Toolbar
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          maxWidth: 1200,
+          width: '100%',
+          mx: 'auto',
+        }}
+      >
+        <Button
+          onClick={handleNavigate('/')}
+          variant="text"
+          color="inherit"
+          sx={{
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            textTransform: 'none',
+            px: 0,
+            minWidth: 'unset',
+            position: 'relative',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: -2,
+              height: 2,
+              borderRadius: 999,
+              backgroundColor: alpha(theme.palette.primary.main, 0.8),
+              transform: 'scaleX(0)',
+              transformOrigin: 'left',
+              transition: 'transform 200ms ease',
+            },
+            '&:hover::after': {
+              transform: 'scaleX(1)',
+            },
+          }}
+        >
+          <Typography variant="h6" component="span">
+            GymPal
+          </Typography>
+        </Button>
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            gap: 2,
+            alignItems: 'center',
+          }}
+        >
+          {isAuthenticated ? (
+            <>
+              {NAV_ITEMS.map(({ key, path }) => (
+                <Button
+                  key={key}
+                  color="primary"
+                  onClick={handleNavigate(path)}
+                >
+                  {t(key)}
+                </Button>
+              ))}
+              <Button
+                onClick={async () => {
+                  await logout();
+                  router.refresh();
+                }}
+                variant="outlined"
+              >
+                {t('logout')}
+              </Button>
+              <LanguageSelector />
+            </>
+          ) : (
+            <>
+              <Button
+                color="primary"
+                variant="contained"
+                onClick={handleNavigate('/login')}
+              >
+                {t('login')}
+              </Button>
+              <LanguageSelector />
+            </>
+          )}
+        </Box>
+        <IconButton
+          onClick={() => setIsOpen(true)}
+          sx={{ display: { xs: 'inline-flex', md: 'none' } }}
+          aria-label="Open menu"
+        >
+          <MenuIcon />
+        </IconButton>
+      </Toolbar>
+      <Drawer
+        anchor="left"
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        sx={{
+          '& .MuiBackdrop-root': {
+            backgroundColor: alpha(theme.palette.common.black, 0.35),
+            backdropFilter: 'blur(10px)',
+            transition:
+              'backdrop-filter 240ms ease, background-color 240ms ease',
+          },
+        }}
+      >
+        <Box sx={{ width: 280, p: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+            GymPal
+          </Typography>
+          <Divider
+            sx={{ mb: 1, borderColor: alpha(theme.palette.common.white, 0.08) }}
+          />
+          <List>
+            {isAuthenticated
+              ? NAV_ITEMS.map(({ key, path }) => (
+                  <ListItemButton key={key} onClick={handleNavigate(path)}>
+                    <ListItemText primary={t(key)} />
+                  </ListItemButton>
+                ))
+              : null}
+          </List>
+          <Divider
+            sx={{ my: 1, borderColor: alpha(theme.palette.common.white, 0.08) }}
+          />
+          {isAuthenticated ? (
             <Button
-              href={'/login'}
+              fullWidth
+              variant="outlined"
               onClick={async () => {
                 await logout();
                 router.refresh();
+                setIsOpen(false);
               }}
-              variant={'outlined'}
             >
-              {isAuthenticated ? t('logout') : t('login')}
+              {t('logout')}
             </Button>
-            <LanguageSelector />
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button href="/login" color="primary" variant="contained">
+          ) : (
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleNavigate('/login')}
+            >
               {t('login')}
             </Button>
+          )}
+          <Box sx={{ mt: 1 }}>
             <LanguageSelector />
           </Box>
-        )}
-      </Toolbar>
+        </Box>
+      </Drawer>
     </AppBar>
   );
 };
