@@ -8,8 +8,10 @@ body {
   color-scheme: dark;
 }
 
-[data-theme='dark'] .MuiInputBase-input[type='number']::-webkit-inner-spin-button,
-[data-theme='dark'] .MuiInputBase-input[type='number']::-webkit-outer-spin-button {
+[data-theme='dark']
+  .MuiInputBase-input[type='number']::-webkit-inner-spin-button,
+[data-theme='dark']
+  .MuiInputBase-input[type='number']::-webkit-outer-spin-button {
   filter: invert(1) brightness(1.2);
   opacity: 1;
 }
