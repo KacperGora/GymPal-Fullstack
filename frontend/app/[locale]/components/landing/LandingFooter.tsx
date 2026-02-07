@@ -50,7 +50,7 @@ export function LandingFooter() {
                       <MuiLink
                         key={item.label}
                         component={NextLink}
-                        href={item.to}
+                        href={item.href}
                       >
                         {item.label}
                       </MuiLink>

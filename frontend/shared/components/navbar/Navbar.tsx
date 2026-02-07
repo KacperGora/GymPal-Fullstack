@@ -24,6 +24,7 @@ import { usePathname } from '@/i18n/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 
 import { LanguageSelector } from '../language-selector/LanguageSelector';
+import { ThemeToggle } from '../theme-toggle/ThemeToggle';
 
 const NAV_ITEMS = [
   { key: 'dashboard', path: '/dashboard' },
@@ -133,6 +134,7 @@ export const Navbar = () => {
               >
                 {t('logout')}
               </Button>
+              <ThemeToggle />
               <LanguageSelector />
             </>
           ) : (
@@ -144,6 +146,7 @@ export const Navbar = () => {
               >
                 {t('login')}
               </Button>
+              <ThemeToggle />
               <LanguageSelector />
             </>
           )}
@@ -173,6 +176,8 @@ export const Navbar = () => {
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
             GymPal
           </Typography>
+          <ThemeToggle />
+
           <Divider
             sx={{ mb: 1, borderColor: alpha(theme.palette.common.white, 0.08) }}
           />
@@ -210,6 +215,7 @@ export const Navbar = () => {
             </Button>
           )}
           <Box sx={{ mt: 1 }}>
+            <ThemeToggle />
             <LanguageSelector />
           </Box>
         </Box>

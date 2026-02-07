@@ -1,4 +1,10 @@
 {
+  "common": {
+    "theme": "Motyw",
+    "themeLight": "Jasny",
+    "themeDark": "Ciemny",
+    "themeSystem": "Systemowy"
+  },
   "navbar": {
     "home": "Strona główna",
     "workouts": "Treningi",
@@ -126,15 +132,30 @@
       "columns": [
         {
           "title": "Produkt",
-          "items": ["Trening", "Żywienie", "Progres", "Plany"]
+          "items": [
+            { "label": "Trening", "href": "/exercises" },
+            { "label": "Żywienie", "href": "/nutrition" },
+            { "label": "Progres", "href": "/dashboard" },
+            { "label": "Plany", "href": "/welcome" }
+          ]
         },
         {
           "title": "Wsparcie",
-          "items": ["FAQ", "Kontakt", "Poradniki", "Status"]
+          "items": [
+            { "label": "FAQ", "href": "/" },
+            { "label": "Kontakt", "href": "/" },
+            { "label": "Poradniki", "href": "/" },
+            { "label": "Status", "href": "/" }
+          ]
         },
         {
           "title": "Firma",
-          "items": ["O nas", "Kariera", "Regulamin", "Prywatność"]
+          "items": [
+            { "label": "O nas", "href": "/" },
+            { "label": "Kariera", "href": "/" },
+            { "label": "Regulamin", "href": "/" },
+            { "label": "Prywatność", "href": "/" }
+          ]
         }
       ],
       "copyright": "© 2026 GymPal. Wszelkie prawa zastrzeżone.",
