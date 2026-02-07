@@ -3,6 +3,10 @@ jest.mock('@gympal/shared', () => ({
   registerSchema: { parse: jest.fn() },
   loginSchema: { parse: jest.fn() },
   ACCESS_TOKEN_COOKIE: 'access_token',
+  REFRESH_TOKEN_COOKIE: 'refresh_token',
+  HAS_PROFILE_COOKIE: 'has_profile',
+  HAS_PROFILE_TRUE: '1',
+  HAS_PROFILE_FALSE: '0',
 }));
 
 import { Test, TestingModule } from '@nestjs/testing';
@@ -28,6 +32,8 @@ describe('AuthController', () => {
   const mockAuthService = {
     register: jest.fn(),
     login: jest.fn(),
+    refresh: jest.fn(),
+    revokeRefreshToken: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -96,6 +102,12 @@ describe('AuthController', () => {
       cookie: jest.fn(),
     } as unknown as import('express').Response;
 
+    const mockReq = {
+      headers: { 'user-agent': 'test-agent' },
+      ip: '127.0.0.1',
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as import('express').Request;
+
     it('should call authService.login and set cookie', async () => {
       const dto: LoginDto = {
         email: 'a@a.pl',
@@ -106,18 +118,42 @@ describe('AuthController', () => {
         id: 'user-id',
         email: dto.email,
         token: 'jwt',
+        refreshToken: 'refresh',
+        hasProfile: false,
       });
 
-      const result = await controller.login(dto, mockRes);
+      const result = await controller.login(dto, mockReq, mockRes);
 
-      expect(mockAuthService.login).toHaveBeenCalledWith(dto);
+      expect(mockAuthService.login).toHaveBeenCalledWith(dto, {
+        userAgent: 'test-agent',
+        ipAddress: '127.0.0.1',
+      });
       expect(mockRes.cookie).toHaveBeenCalledWith('access_token', 'jwt', {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60 * 1000,
+      });
+      expect(mockRes.cookie).toHaveBeenCalledWith('refresh_token', 'refresh', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+      expect(mockRes.cookie).toHaveBeenCalledWith('has_profile', '0', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-      expect(result).toEqual({ id: 'user-id', email: dto.email });
+      expect(result).toEqual({
+        id: 'user-id',
+        email: dto.email,
+        hasProfile: false,
+      });
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {
@@ -130,10 +166,117 @@ describe('AuthController', () => {
         new UnauthorizedException('Invalid credentials'),
       );
 
-      await expect(controller.login(dto, mockRes)).rejects.toThrow(
+      await expect(controller.login(dto, mockReq, mockRes)).rejects.toThrow(
         UnauthorizedException,
       );
-      expect(mockAuthService.login).toHaveBeenCalledWith(dto);
+      expect(mockAuthService.login).toHaveBeenCalledWith(dto, {
+        userAgent: 'test-agent',
+        ipAddress: '127.0.0.1',
+      });
+    });
+  });
+
+  describe('refresh', () => {
+    const mockRes = {
+      cookie: jest.fn(),
+    } as unknown as import('express').Response;
+
+    it('should set new cookies on refresh', async () => {
+      const mockReq = {
+        cookies: { refresh_token: 'refresh' },
+        headers: { 'user-agent': 'test-agent' },
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' },
+      } as unknown as import('express').Request;
+
+      mockAuthService.refresh.mockResolvedValue({
+        accessToken: 'new-jwt',
+        refreshToken: 'new-refresh',
+        hasProfile: true,
+      });
+
+      const result = await controller.refresh(mockReq, mockRes);
+
+      expect(mockAuthService.refresh).toHaveBeenCalledWith('refresh', {
+        userAgent: 'test-agent',
+        ipAddress: '127.0.0.1',
+      });
+      expect(mockRes.cookie).toHaveBeenCalledWith('access_token', 'new-jwt', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60 * 1000,
+      });
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'new-refresh',
+        {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+        },
+      );
+      expect(mockRes.cookie).toHaveBeenCalledWith('has_profile', '1', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      expect(result).toEqual({ success: true });
+    });
+
+    it('should throw UnauthorizedException when refresh token missing', async () => {
+      const mockReq = {
+        cookies: {},
+        headers: {},
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' },
+      } as unknown as import('express').Request;
+
+      await expect(controller.refresh(mockReq, mockRes)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('logout', () => {
+    const mockRes = {
+      clearCookie: jest.fn(),
+    } as unknown as import('express').Response;
+
+    it('should revoke refresh token and clear cookies', async () => {
+      const mockReq = {
+        cookies: { refresh_token: 'refresh' },
+      } as unknown as import('express').Request;
+
+      const result = await controller.logout(mockReq, mockRes);
+
+      expect(mockAuthService.revokeRefreshToken).toHaveBeenCalledWith(
+        'refresh',
+      );
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+      });
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('refresh_token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+      });
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('has_profile', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        path: '/',
+      });
+      expect(result).toEqual({ success: true });
     });
   });
 });
