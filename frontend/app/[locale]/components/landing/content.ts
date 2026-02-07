@@ -6,7 +6,8 @@ type Translator = {
 type Stat = { label: string; value: string };
 type Card = { title: string; text: string };
 type WorkoutRow = { name: string; sets: string };
-type FooterColumn = { title: string; items: string[] };
+type FooterLink = { label: string; href: string };
+type FooterColumn = { title: string; items: FooterLink[] };
 
 export const getHeroStats = (t: Translator) => t.raw('hero.stats') as Stat[];
 
@@ -28,24 +29,5 @@ export const getProofHighlights = (t: Translator) =>
 export const getProofMetrics = (t: Translator) =>
   t.raw('proofMetrics.metrics') as Stat[];
 
-export const getFooterColumns = (t: Translator) => {
-  const columns = t.raw('footer.columns') as FooterColumn[];
-  const columnsItems = columns.map((column) => {
-    const footerLinkMap: Record<string, string> = {
-      Trening: '/exercises',
-      Training: '/exercises',
-      Żywienie: '/nutrition',
-      Nutrition: '/nutrition',
-      Progres: '/dashboard',
-      Progress: '/dashboard',
-      Plany: '/welcome',
-      Plans: '/welcome',
-    };
-    const columnLinks = column.items.map((el) => ({
-      label: el,
-      to: footerLinkMap[el] ?? '/',
-    }));
-    return { title: column.title, items: columnLinks };
-  });
-  return columnsItems;
-};
+export const getFooterColumns = (t: Translator) =>
+  t.raw('footer.columns') as FooterColumn[];

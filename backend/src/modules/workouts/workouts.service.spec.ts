@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
 // Mock PrismaService before any imports that use it
 jest.mock('../../shared/db/prisma.service');
@@ -10,17 +10,6 @@ import { PrismaService } from '../../shared/db/prisma.service';
 describe('WorkoutsService', () => {
   let service: WorkoutsService;
   let mockPrismaService: any;
-
-  const mockExercise = {
-    id: 'exercise-1',
-    name: 'Bench Press',
-    category: 'STRENGTH',
-    muscleGroup: 'Chest',
-    equipment: 'Barbell',
-    description: 'Classic chest exercise',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
 
   const mockWorkout = {
     id: 'workout-1',
@@ -37,7 +26,9 @@ describe('WorkoutsService', () => {
   const mockWorkoutExercise = {
     id: 'workout-exercise-1',
     workoutSessionId: 'workout-1',
-    exerciseId: 'exercise-1',
+    wgerExerciseId: 123,
+    exerciseName: 'Bench Press',
+    exerciseCategory: 'STRENGTH',
     sets: 4,
     reps: 10,
     weight: 80,
@@ -49,10 +40,6 @@ describe('WorkoutsService', () => {
 
   beforeEach(async () => {
     mockPrismaService = {
-      exercise: {
-        findMany: jest.fn(),
-        findUnique: jest.fn(),
-      },
       workoutSession: {
         create: jest.fn(),
         findMany: jest.fn(),
@@ -88,56 +75,6 @@ describe('WorkoutsService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('findAllExercises', () => {
-    it('should return all exercises sorted by name', async () => {
-      const exercises = [mockExercise];
-      mockPrismaService.exercise.findMany.mockResolvedValue(exercises);
-
-      const result = await service.findAllExercises();
-
-      expect(result).toEqual(exercises);
-      expect(mockPrismaService.exercise.findMany).toHaveBeenCalledWith({
-        orderBy: { name: 'asc' },
-      });
-    });
-  });
-
-  describe('findExerciseById', () => {
-    it('should return an exercise by id', async () => {
-      mockPrismaService.exercise.findUnique.mockResolvedValue(mockExercise);
-
-      const result = await service.findExerciseById('exercise-1');
-
-      expect(result).toEqual(mockExercise);
-      expect(mockPrismaService.exercise.findUnique).toHaveBeenCalledWith({
-        where: { id: 'exercise-1' },
-      });
-    });
-
-    it('should throw NotFoundException if exercise not found', async () => {
-      mockPrismaService.exercise.findUnique.mockResolvedValue(null);
-
-      await expect(service.findExerciseById('non-existent')).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-  });
-
-  describe('findExercisesByCategory', () => {
-    it('should return exercises filtered by category', async () => {
-      const exercises = [mockExercise];
-      mockPrismaService.exercise.findMany.mockResolvedValue(exercises);
-
-      const result = await service.findExercisesByCategory('STRENGTH');
-
-      expect(result).toEqual(exercises);
-      expect(mockPrismaService.exercise.findMany).toHaveBeenCalledWith({
-        where: { category: 'STRENGTH' },
-        orderBy: { name: 'asc' },
-      });
-    });
-  });
-
   describe('createWorkoutSession', () => {
     it('should create a workout without exercises', async () => {
       const dto = {
@@ -159,11 +96,7 @@ describe('WorkoutsService', () => {
           exercises: undefined,
         },
         include: {
-          exercises: {
-            include: {
-              exercise: true,
-            },
-          },
+          exercises: true,
         },
       });
     });
@@ -175,7 +108,8 @@ describe('WorkoutsService', () => {
         caloriesBurned: 350,
         exercises: [
           {
-            exerciseId: 'exercise-1',
+            wgerExerciseId: 123,
+            exerciseName: 'Bench Press',
             sets: 4,
             reps: 10,
             weight: 80,
@@ -184,43 +118,29 @@ describe('WorkoutsService', () => {
         ],
       };
 
-      mockPrismaService.exercise.findMany.mockResolvedValue([mockExercise]);
-
       const createdWorkout = {
         ...mockWorkout,
-        exercises: [{ ...mockWorkoutExercise, exercise: mockExercise }],
+        exercises: [mockWorkoutExercise],
       };
       mockPrismaService.workoutSession.create.mockResolvedValue(createdWorkout);
 
       const result = await service.createWorkoutSession(1, dto);
 
       expect(result).toEqual(createdWorkout);
-      expect(mockPrismaService.exercise.findMany).toHaveBeenCalledWith({
-        where: { id: { in: ['exercise-1'] } },
-      });
-    });
-
-    it('should throw BadRequestException if exercise IDs are invalid', async () => {
-      const dto = {
-        name: 'Test Workout',
-        duration: 30,
-        caloriesBurned: 200,
-        exercises: [
-          {
-            exerciseId: 'invalid-id',
-            sets: 3,
-            reps: 10,
-            weight: 60,
-            restTime: 60,
+      expect(mockPrismaService.workoutSession.create).toHaveBeenCalledWith({
+        data: {
+          name: dto.name,
+          duration: dto.duration,
+          caloriesBurned: dto.caloriesBurned,
+          userId: 1,
+          exercises: {
+            create: dto.exercises,
           },
-        ],
-      };
-
-      mockPrismaService.exercise.findMany.mockResolvedValue([]);
-
-      await expect(service.createWorkoutSession(1, dto)).rejects.toThrow(
-        BadRequestException,
-      );
+        },
+        include: {
+          exercises: true,
+        },
+      });
     });
   });
 
@@ -229,7 +149,7 @@ describe('WorkoutsService', () => {
       const workouts = [
         {
           ...mockWorkout,
-          exercises: [{ ...mockWorkoutExercise, exercise: mockExercise }],
+          exercises: [mockWorkoutExercise],
         },
       ];
       mockPrismaService.workoutSession.findMany.mockResolvedValue(workouts);
@@ -240,11 +160,7 @@ describe('WorkoutsService', () => {
       expect(mockPrismaService.workoutSession.findMany).toHaveBeenCalledWith({
         where: { userId: 1 },
         include: {
-          exercises: {
-            include: {
-              exercise: true,
-            },
-          },
+          exercises: true,
         },
         orderBy: { date: 'desc' },
         take: 50,
@@ -271,11 +187,7 @@ describe('WorkoutsService', () => {
           },
         },
         include: {
-          exercises: {
-            include: {
-              exercise: true,
-            },
-          },
+          exercises: true,
         },
         orderBy: { date: 'desc' },
         take: 10,
@@ -287,7 +199,7 @@ describe('WorkoutsService', () => {
     it('should return a workout by id', async () => {
       const workout = {
         ...mockWorkout,
-        exercises: [{ ...mockWorkoutExercise, exercise: mockExercise }],
+        exercises: [mockWorkoutExercise],
       };
       mockPrismaService.workoutSession.findFirst.mockResolvedValue(workout);
 
@@ -298,9 +210,6 @@ describe('WorkoutsService', () => {
         where: { id: 'workout-1', userId: 1 },
         include: {
           exercises: {
-            include: {
-              exercise: true,
-            },
             orderBy: { createdAt: 'asc' },
           },
         },
@@ -377,7 +286,8 @@ describe('WorkoutsService', () => {
   describe('addExerciseToWorkout', () => {
     it('should add an exercise to a workout', async () => {
       const dto = {
-        exerciseId: 'exercise-1',
+        wgerExerciseId: 123,
+        exerciseName: 'Bench Press',
         sets: 3,
         reps: 12,
         weight: 60,
@@ -385,12 +295,10 @@ describe('WorkoutsService', () => {
       };
 
       mockPrismaService.workoutSession.findFirst.mockResolvedValue(mockWorkout);
-      mockPrismaService.exercise.findUnique.mockResolvedValue(mockExercise);
 
       const createdExercise = {
         ...mockWorkoutExercise,
         ...dto,
-        exercise: mockExercise,
       };
       mockPrismaService.workoutExercise.create.mockResolvedValue(
         createdExercise,
@@ -403,9 +311,6 @@ describe('WorkoutsService', () => {
         data: {
           ...dto,
           workoutSessionId: 'workout-1',
-        },
-        include: {
-          exercise: true,
         },
       });
     });

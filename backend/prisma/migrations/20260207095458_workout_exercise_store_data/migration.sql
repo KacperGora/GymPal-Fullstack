@@ -1,16 +1,32 @@
-/*
-  Warnings:
+-- Step 1: Add new columns as NULLABLE first
+ALTER TABLE "WorkoutExercise"
+ADD COLUMN "exerciseCategory" TEXT,
+ADD COLUMN "exerciseName" TEXT,
+ADD COLUMN "wgerExerciseId" INTEGER;
 
-  - You are about to drop the column `exerciseId` on the `WorkoutExercise` table. All the data in the column will be lost.
-  - Added the required column `exerciseName` to the `WorkoutExercise` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `wgerExerciseId` to the `WorkoutExercise` table without a default value. This is not possible if the table is not empty.
+-- Step 2: Backfill data from Exercise table via existing FK
+UPDATE "WorkoutExercise" we
+SET
+  "exerciseName" = e."name",
+  "exerciseCategory" = e."category"::TEXT,
+  "wgerExerciseId" = 0
+FROM "Exercise" e
+WHERE we."exerciseId" = e."id";
 
-*/
--- DropForeignKey
+-- Step 3: Set default for any remaining NULL values (orphaned records)
+UPDATE "WorkoutExercise"
+SET
+  "exerciseName" = 'Unknown Exercise',
+  "wgerExerciseId" = 0
+WHERE "exerciseName" IS NULL OR "wgerExerciseId" IS NULL;
+
+-- Step 4: Now add NOT NULL constraints
+ALTER TABLE "WorkoutExercise"
+ALTER COLUMN "exerciseName" SET NOT NULL,
+ALTER COLUMN "wgerExerciseId" SET NOT NULL;
+
+-- Step 5: Drop FK constraint
 ALTER TABLE "WorkoutExercise" DROP CONSTRAINT "WorkoutExercise_exerciseId_fkey";
 
--- AlterTable
-ALTER TABLE "WorkoutExercise" DROP COLUMN "exerciseId",
-ADD COLUMN     "exerciseCategory" TEXT,
-ADD COLUMN     "exerciseName" TEXT NOT NULL,
-ADD COLUMN     "wgerExerciseId" INTEGER NOT NULL;
+-- Step 6: Drop old column
+ALTER TABLE "WorkoutExercise" DROP COLUMN "exerciseId";
