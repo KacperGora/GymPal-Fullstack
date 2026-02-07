@@ -1,7 +1,10 @@
 'use client';
 
 import { Box, Grid, Stack, Typography } from '@mui/material';
+import { Link as MuiLink } from '@mui/material';
 import { useTranslations } from 'next-intl';
+
+import { Link as NextLink } from '@/i18n/navigation';
 
 import { Section } from './Section';
 import { getFooterColumns } from './content';
@@ -24,7 +27,10 @@ export function LandingFooter() {
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 5 }}>
             <Stack spacing={1.5}>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, fontSize: '1.25rem' }}
+              >
                 GymPal
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -41,13 +47,13 @@ export function LandingFooter() {
                       {col.title}
                     </Typography>
                     {col.items.map((item) => (
-                      <Typography
-                        key={item}
-                        variant="body2"
-                        sx={{ color: 'text.secondary' }}
+                      <MuiLink
+                        key={item.label}
+                        component={NextLink}
+                        href={item.to}
                       >
-                        {item}
-                      </Typography>
+                        {item.label}
+                      </MuiLink>
                     ))}
                   </Stack>
                 </Grid>

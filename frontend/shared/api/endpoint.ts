@@ -46,4 +46,16 @@ export const endpointList = {
     favoriteIds: '/exercises-api/favorites/ids',
     deleteFavorite: (id: string) => `/exercises-api/favorites/${id}`,
   },
+  workouts: {
+    list: '/workouts',
+    create: '/workouts',
+    get: (id: string) => `/workouts/${id}`,
+    update: (id: string) => `/workouts/${id}`,
+    delete: (id: string) => `/workouts/${id}`,
+    addExercise: (workoutId: string) => `/workouts/${workoutId}/exercises`,
+    updateExercise: (workoutId: string, exerciseId: string) =>
+      `/workouts/${workoutId}/exercises/${exerciseId}`,
+    deleteExercise: (workoutId: string, exerciseId: string) =>
+      `/workouts/${workoutId}/exercises/${exerciseId}`,
+  },
 };

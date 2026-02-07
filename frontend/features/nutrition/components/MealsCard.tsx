@@ -24,7 +24,7 @@ import { useMemo } from 'react';
 
 import type { Meal, MealCategory } from '../types';
 
-import { glassCardSx } from './glass';
+import { glassCardSx } from '@/shared/theme/glass';
 
 interface MealsCardProps {
   meals: Meal[];

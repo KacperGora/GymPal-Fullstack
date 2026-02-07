@@ -2,9 +2,13 @@ import { Box, Container } from '@mui/material';
 
 interface PageWrapperProps {
   children: React.ReactNode;
+  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
 }
 
-export const PageWrapper = ({ children }: PageWrapperProps) => {
+export const PageWrapper = ({
+  children,
+  maxWidth = 'xs',
+}: PageWrapperProps) => {
   return (
     <Box
       sx={{
@@ -17,7 +21,7 @@ export const PageWrapper = ({ children }: PageWrapperProps) => {
         minHeight: 'calc(100vh - 64px)',
       }}
     >
-      <Container maxWidth="xs">{children}</Container>
+      <Container maxWidth={maxWidth}>{children}</Container>
     </Box>
   );
 };

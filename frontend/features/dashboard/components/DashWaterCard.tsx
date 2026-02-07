@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
 
-import { glassCardSx } from './glass';
+import { glassCardSx } from '@/shared/theme/glass';
 
 interface DashWaterCardProps {
   glasses: number;

@@ -19,14 +19,14 @@ import { useTranslations } from 'next-intl';
 
 import type { FavoriteMeal, MealCategory, RecentMeal } from '../types';
 
+import { glassCardSx } from '@/shared/theme/glass';
+
 import {
   useAddFavorite,
   useRemoveFavorite,
 } from '../mutations/useFavoriteMutations';
 import { useFavorites } from '../queries/useFavorites';
 import { useRecentMeals } from '../queries/useRecentMeals';
-
-import { glassCardSx } from './glass';
 
 interface QuickMeal {
   name: string;

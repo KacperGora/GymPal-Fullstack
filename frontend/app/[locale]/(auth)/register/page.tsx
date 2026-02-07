@@ -9,7 +9,7 @@ export default function RegisterPage() {
   const t = useTranslations('auth.register');
 
   return (
-    <PageWrapper>
+    <PageWrapper maxWidth="sm">
       <Typography variant="h2">{t('title')}</Typography>
       <RegisterForm />
     </PageWrapper>
