@@ -1,18 +1,54 @@
-import axios from 'axios';
+import axios, { type AxiosRequestConfig } from 'axios';
+
+import { endpointList } from './endpoint';
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
 });
 
+let refreshPromise: Promise<void> | null = null;
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    const url = error.config?.url ?? '';
+  async (error) => {
+    const original = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const url = original?.url ?? '';
     const isAuthEndpoint = url.startsWith('/auth/');
-    if (error.response?.status === 401 && !isAuthEndpoint) {
-      window.location.href = '/login';
+
+    if (
+      error.response?.status === 401 &&
+      !isAuthEndpoint &&
+      !original?._retry
+    ) {
+      original._retry = true;
+
+      if (!refreshPromise) {
+        refreshPromise = api
+          .post(endpointList.auth.refresh)
+          .then(() => undefined)
+          .finally(() => {
+            refreshPromise = null;
+          });
+      }
+
+      try {
+        await refreshPromise;
+        return api(original);
+      } catch (refreshError) {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
     }
+
+    if (error.response?.status === 401 && isAuthEndpoint) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+
     return Promise.reject(error);
   },
 );

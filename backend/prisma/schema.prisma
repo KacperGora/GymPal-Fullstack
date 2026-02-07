@@ -34,6 +34,7 @@ model User {
   lastName          String
   password          String
   email             String             @unique
+  refreshTokens     RefreshToken[]
   meals             Meal[]
   favoriteMeals     FavoriteMeal[]
   userProfile       UserProfile?
@@ -41,6 +42,23 @@ model User {
   workouts          WorkoutSession[]
   waterIntake       WaterIntake[]
   favoriteExercises FavoriteExercise[]
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  familyId  String
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
 }
 
 model WaterIntake {

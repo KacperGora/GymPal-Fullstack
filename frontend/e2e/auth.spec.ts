@@ -26,7 +26,7 @@ test.describe('Auth flow', () => {
     await page.locator('input[name="email"]').fill(TEST_USER.email);
     await page.locator('input[name="password"]').fill(TEST_USER.password);
 
-    await page.getByRole('button', { name: 'Zaloguj' }).click();
+    await page.locator('form').getByRole('button', { name: 'Zaloguj' }).click();
 
     await expect(page).toHaveURL(/\/pl\/welcome/, { timeout: 10000 });
   });
@@ -37,7 +37,7 @@ test.describe('Auth flow', () => {
     await page.locator('input[name="email"]').fill('nonexistent@example.com');
     await page.locator('input[name="password"]').fill('wrongpassword');
 
-    await page.getByRole('button', { name: 'Zaloguj' }).click();
+    await page.locator('form').getByRole('button', { name: 'Zaloguj' }).click();
 
     await expect(page.getByText('Niepoprawne dane logowania')).toBeVisible({
       timeout: 10000,
@@ -50,7 +50,7 @@ test.describe('Auth flow', () => {
 
     await page.locator('input[name="email"]').fill('test@example.com');
 
-    await page.getByRole('button', { name: 'Zaloguj' }).click();
+    await page.locator('form').getByRole('button', { name: 'Zaloguj' }).click();
 
     await expect(
       page.getByText('Too small: expected string to have >=8 characters'),

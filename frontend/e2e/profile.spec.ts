@@ -24,7 +24,7 @@ test.describe('Profile flow', () => {
 
     await page.locator('input[name="email"]').fill(user.email);
     await page.locator('input[name="password"]').fill(user.password);
-    await page.getByRole('button', { name: 'Zaloguj' }).click();
+    await page.locator('form').getByRole('button', { name: 'Zaloguj' }).click();
 
     await expect(page).toHaveURL(/\/pl\/welcome/, { timeout: 10000 });
 
