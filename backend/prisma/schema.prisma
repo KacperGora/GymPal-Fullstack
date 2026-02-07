@@ -111,15 +111,14 @@ model DailyStat {
 }
 
 model Exercise {
-  id               String            @id @default(cuid())
-  name             String            @unique
-  category         ExerciseCategory
-  muscleGroup      String
-  equipment        String
-  description      String?
-  workoutExercises WorkoutExercise[]
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id          String           @id @default(cuid())
+  name        String           @unique
+  category    ExerciseCategory
+  muscleGroup String
+  equipment   String
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model WorkoutSession {
@@ -140,8 +139,9 @@ model WorkoutExercise {
   id               String         @id @default(cuid())
   workoutSessionId String
   workoutSession   WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
-  exerciseId       String
-  exercise         Exercise       @relation(fields: [exerciseId], references: [id])
+  wgerExerciseId   Int
+  exerciseName     String
+  exerciseCategory String?
   sets             Int
   reps             Int
   weight           Float

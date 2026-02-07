@@ -1,8 +1,8 @@
 import { alpha } from '@mui/material/styles';
 
-export const glassCardSx = (theme: {
-  palette: { background: { paper: string }; primary: { main: string } };
-}) => ({
+import type { Theme } from '@mui/material/styles';
+
+export const glassCardSx = (theme: Theme) => ({
   position: 'relative',
   overflow: 'hidden',
   border: 'none',
