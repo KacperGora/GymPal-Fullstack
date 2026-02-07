@@ -8,6 +8,7 @@ export * from "./contract/auth.contract.js";
 export * from "./constants/cookies.js";
 export {
   ACCESS_TOKEN_COOKIE,
+  REFRESH_TOKEN_COOKIE,
   HAS_PROFILE_COOKIE,
   HAS_PROFILE_TRUE,
   HAS_PROFILE_FALSE,
