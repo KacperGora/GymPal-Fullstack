@@ -20,7 +20,7 @@ import {
   useDeleteWorkoutExercise,
   useUpdateWorkout,
 } from '@/features/workouts/mutations';
-import { useWorkouts } from '@/features/workouts/queries';
+import { useWorkout, useWorkouts } from '@/features/workouts/queries';
 import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function Workouts() {
@@ -29,12 +29,13 @@ export default function Workouts() {
 
   const [addWorkoutOpen, setAddWorkoutOpen] = useState(false);
   const [editWorkout, setEditWorkout] = useState<WorkoutSession | null>(null);
-  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutSession | null>(
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(
     null,
   );
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
 
   const { data: workouts = [], isLoading: isWorkoutsLoading } = useWorkouts();
+  const { data: selectedWorkout } = useWorkout(selectedWorkoutId);
 
   const addWorkoutMutation = useAddWorkout({
     onSuccess: () => setAddWorkoutOpen(false),
@@ -71,9 +72,9 @@ export default function Workouts() {
   };
 
   const handleDeleteExercise = (exerciseId: string) => {
-    if (selectedWorkout) {
+    if (selectedWorkoutId) {
       deleteExerciseMutation.mutate({
-        workoutId: selectedWorkout.id,
+        workoutId: selectedWorkoutId,
         exerciseId,
       });
     }
@@ -102,7 +103,7 @@ export default function Workouts() {
         workouts={workouts}
         isLoading={isWorkoutsLoading}
         onAddClick={() => setAddWorkoutOpen(true)}
-        onWorkoutClick={setSelectedWorkout}
+        onWorkoutClick={(workout) => setSelectedWorkoutId(workout.id)}
         onEditWorkout={handleEditWorkout}
         onDeleteWorkout={handleDeleteWorkout}
       />
@@ -119,9 +120,9 @@ export default function Workouts() {
       />
 
       <WorkoutDetailModal
-        open={!!selectedWorkout}
-        onClose={() => setSelectedWorkout(null)}
-        workout={selectedWorkout}
+        open={!!selectedWorkoutId}
+        onClose={() => setSelectedWorkoutId(null)}
+        workout={selectedWorkout ?? null}
         onAddExercise={handleAddExercise}
         onDeleteExercise={handleDeleteExercise}
       />
@@ -130,9 +131,9 @@ export default function Workouts() {
         open={addExerciseOpen}
         onClose={() => setAddExerciseOpen(false)}
         onSubmit={(data) => {
-          if (selectedWorkout) {
+          if (selectedWorkoutId) {
             addExerciseMutation.mutate({
-              workoutId: selectedWorkout.id,
+              workoutId: selectedWorkoutId,
               data,
             });
           }

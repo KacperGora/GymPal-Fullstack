@@ -17,8 +17,19 @@ export function SyncPanel() {
         sx={(theme) => ({
           p: landingPaddings.panelResponsive,
           borderRadius: landingRadii.lg,
-          background: alpha(theme.palette.background.paper, 0.9),
-          border: `1px solid ${alpha(theme.palette.common.white, 0.1)}`,
+          background:
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.paper, 0.9)
+              : alpha(theme.palette.background.paper, 0.8),
+          border:
+            theme.palette.mode === 'dark'
+              ? `1px solid ${alpha(theme.palette.common.white, 0.1)}`
+              : `1px solid ${alpha(theme.palette.common.black, 0.06)}`,
+          backdropFilter: 'blur(10px)',
+          boxShadow:
+            theme.palette.mode === 'dark'
+              ? 'none'
+              : `0 16px 32px ${alpha(theme.palette.common.black, 0.08)}`,
         })}
       >
         <Grid container spacing={3} alignItems="center">

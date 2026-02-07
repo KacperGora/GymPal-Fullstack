@@ -20,6 +20,8 @@ import type { WorkoutSession } from '../types';
 
 import { glassCardSx } from '@/shared/theme/glass';
 
+import { formatDate, formatDuration } from '../utils/format';
+
 interface WorkoutCardProps {
   workout: WorkoutSession;
   onClick: () => void;
@@ -34,22 +36,6 @@ export const WorkoutCard = ({
   onDelete,
 }: WorkoutCardProps) => {
   const t = useTranslations('workouts');
-
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
 
   return (
     <Card sx={glassCardSx}>

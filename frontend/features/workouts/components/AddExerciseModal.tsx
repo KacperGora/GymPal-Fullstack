@@ -23,6 +23,7 @@ import type { CreateWorkoutExerciseDto } from '@gympal/shared';
 import type { WgerExercise } from '@/features/exercises/types';
 
 import { useSearchExercises } from '@/features/exercises/queries';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 
 interface AddExerciseModalProps {
   open: boolean;
@@ -50,8 +51,9 @@ export const AddExerciseModal = ({
     notes: '',
   });
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { data: exercises = [], isLoading: isSearching } =
-    useSearchExercises(searchTerm);
+    useSearchExercises(debouncedSearchTerm);
 
   const handleChange =
     (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
