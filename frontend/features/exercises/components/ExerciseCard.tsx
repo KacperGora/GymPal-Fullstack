@@ -15,7 +15,7 @@ import {
 
 import type { WgerExercise } from '../types';
 
-import { glassCardSx } from './glass';
+import { glassCardSx } from '@/shared/theme/glass';
 
 interface ExerciseCardProps {
   exercise: WgerExercise;

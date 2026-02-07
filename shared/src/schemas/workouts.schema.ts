@@ -22,7 +22,9 @@ export type ExerciseDto = z.infer<typeof exerciseSchema>;
 
 // WorkoutExercise Schemas
 export const createWorkoutExerciseSchema = z.object({
-  exerciseId: z.string().min(1, "Exercise ID is required"),
+  wgerExerciseId: z.number().int().positive("Exercise ID is required"),
+  exerciseName: z.string().min(1, "Exercise name is required"),
+  exerciseCategory: z.string().optional(),
   sets: z.number().int().positive("Sets must be positive"),
   reps: z.number().int().positive("Reps must be positive"),
   weight: z.number().nonnegative("Weight must be non-negative"),
@@ -31,7 +33,9 @@ export const createWorkoutExerciseSchema = z.object({
 });
 
 export const updateWorkoutExerciseSchema = z.object({
-  exerciseId: z.string().min(1).optional(),
+  wgerExerciseId: z.number().int().positive().optional(),
+  exerciseName: z.string().min(1).optional(),
+  exerciseCategory: z.string().optional(),
   sets: z.number().int().positive().optional(),
   reps: z.number().int().positive().optional(),
   weight: z.number().nonnegative().optional(),

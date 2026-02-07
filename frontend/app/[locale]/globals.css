@@ -2,3 +2,14 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Dark-theme friendly number input spin buttons */
+.MuiInputBase-input[type='number'] {
+  color-scheme: dark;
+}
+
+.MuiInputBase-input[type='number']::-webkit-inner-spin-button,
+.MuiInputBase-input[type='number']::-webkit-outer-spin-button {
+  filter: invert(1) brightness(1.2);
+  opacity: 1;
+}

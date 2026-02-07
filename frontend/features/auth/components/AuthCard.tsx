@@ -7,7 +7,7 @@ export function AuthCard({ children }: { children: React.ReactNode }) {
     <Paper
       variant="glass"
       sx={{
-        maxWidth: 420,
+        // maxWidth: { xs: 480, sm: 560 },
         mx: 'auto',
         mt: 2,
         p: 4,
