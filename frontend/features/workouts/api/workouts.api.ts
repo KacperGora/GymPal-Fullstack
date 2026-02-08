@@ -75,3 +75,16 @@ export const deleteWorkoutExercise = async (
 ): Promise<void> => {
   await api.delete(endpointList.workouts.deleteExercise(workoutId, exerciseId));
 };
+
+// Workout Stats
+export interface WeeklyWorkoutStats {
+  week: string;
+  workouts: number;
+}
+
+export const getWeeklyWorkoutStats = async (): Promise<
+  WeeklyWorkoutStats[]
+> => {
+  const res = await api.get(endpointList.workouts.weeklyStats);
+  return res.data as WeeklyWorkoutStats[];
+};

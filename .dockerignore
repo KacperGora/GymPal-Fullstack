@@ -1,0 +1,10 @@
+node_modules
+.git
+.env
+dist
+.next
+coverage
+.husky
+*.log
+.DS_Store
+Thumbs.db

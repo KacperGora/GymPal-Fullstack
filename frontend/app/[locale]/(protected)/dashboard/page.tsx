@@ -10,6 +10,8 @@ import {
   DashMacrosCard,
   DashWaterCard,
   DashWeeklyChart,
+  WorkoutFrequencyChart,
+  MacroBreakdownChart,
 } from '@/features/dashboard/components';
 
 import { useAddWater, useRemoveWater } from '@/features/nutrition/mutations';
@@ -19,6 +21,7 @@ import {
   useWaterIntake,
   useWeeklyStats,
 } from '@/features/nutrition/queries';
+import { useWeeklyWorkoutStats } from '@/features/workouts/queries';
 import { useAuth } from '@/shared/hooks/useAuth';
 
 export default function Dashboard() {
@@ -34,6 +37,8 @@ export default function Dashboard() {
   const { data: waterData, isLoading: isWaterLoading } = useWaterIntake(today);
   const { data: weeklyStats = [], isLoading: isWeeklyLoading } =
     useWeeklyStats(today);
+  const { data: workoutStats = [], isLoading: isWorkoutStatsLoading } =
+    useWeeklyWorkoutStats();
 
   const addWaterMutation = useAddWater(today);
   const removeWaterMutation = useRemoveWater(today);
@@ -117,6 +122,18 @@ export default function Dashboard() {
             isLoading={isWeeklyLoading}
           />
         </Box>
+
+        <WorkoutFrequencyChart
+          data={workoutStats}
+          isLoading={isWorkoutStatsLoading}
+        />
+
+        <MacroBreakdownChart
+          proteins={Math.round(dailyTotals.proteins)}
+          carbs={Math.round(dailyTotals.carbs)}
+          fats={Math.round(dailyTotals.fats)}
+          isLoading={isMealsLoading || isTdeeLoading}
+        />
       </Box>
     </Box>
   );

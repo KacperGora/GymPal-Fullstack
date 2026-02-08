@@ -168,4 +168,59 @@ export class WorkoutsService {
 
     return { id: exerciseId };
   }
+
+  async getWeeklyStats(userId: number) {
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56); // 8 weeks = 56 days
+
+    const workouts = await this.prisma.workoutSession.findMany({
+      where: {
+        userId,
+        date: {
+          gte: eightWeeksAgo,
+        },
+      },
+      select: {
+        date: true,
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
+    // Group workouts by week
+    const weeklyData = new Map<string, number>();
+
+    workouts.forEach((workout) => {
+      const date = new Date(workout.date);
+      // Get the Monday of the week
+      const monday = new Date(date);
+      const day = monday.getDay();
+      const diff = monday.getDate() - day + (day === 0 ? -6 : 1);
+      monday.setDate(diff);
+      monday.setHours(0, 0, 0, 0);
+
+      const weekKey = monday.toISOString().split('T')[0];
+      weeklyData.set(weekKey, (weeklyData.get(weekKey) || 0) + 1);
+    });
+
+    // Generate last 8 weeks with 0 for weeks with no workouts
+    const result = [];
+    for (let i = 7; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i * 7);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      date.setDate(diff);
+      date.setHours(0, 0, 0, 0);
+
+      const weekKey = date.toISOString().split('T')[0];
+      result.push({
+        week: weekKey,
+        workouts: weeklyData.get(weekKey) || 0,
+      });
+    }
+
+    return result;
+  }
 }

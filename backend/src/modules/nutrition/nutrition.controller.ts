@@ -1,19 +1,31 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiOperation } from '@nestjs/swagger';
+import { ApiResponse } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { NutritionService } from './nutrition.service';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 
+@ApiTags('nutrition')
+@ApiBearerAuth()
 @Controller('nutrition')
 @UseGuards(JwtAuthGuard)
 export class NutritionController {
   constructor(private readonly nutritionService: NutritionService) {}
 
   @Get('daily-stats')
+  @ApiOperation({ summary: 'Get daily nutrition statistics' })
+  @ApiResponse({ status: 200, description: 'Returns daily nutrition stats' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   getDailyStats(@RequestUser('id') userId: number) {
     return this.nutritionService.calculateDailyStats(userId);
   }
 
   @Get('weekly-stats')
+  @ApiOperation({ summary: 'Get weekly nutrition statistics' })
+  @ApiResponse({ status: 200, description: 'Returns weekly nutrition stats' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   getWeeklyStats(
     @RequestUser('id') userId: number,
     @Query('date') date: string,
@@ -22,6 +34,9 @@ export class NutritionController {
   }
 
   @Get('tdee')
+  @ApiOperation({ summary: 'Get Total Daily Energy Expenditure' })
+  @ApiResponse({ status: 200, description: 'Returns TDEE calculation' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   getTDEE(@RequestUser('id') userId: number) {
     return this.nutritionService.getTDEE(userId);
   }
