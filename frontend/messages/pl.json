@@ -223,7 +223,12 @@
     "goalGain": "Masa",
     "weeklyTitle": "Ostatnie 7 dni",
     "weeklyAvg": "Średnia",
-    "weeklyTarget": "Cel"
+    "weeklyTarget": "Cel",
+    "workoutFrequencyTitle": "Częstotliwość treningów",
+    "workoutFrequencyAvg": "Średnia",
+    "workoutFrequencyPerWeek": "na tydzień",
+    "workoutFrequencyWorkouts": "treningów",
+    "macroBreakdownTitle": "Dzisiejszy rozkład makro"
   },
   "profile": {
     "title": "Profil",

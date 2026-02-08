@@ -36,7 +36,9 @@ backend/dist/
 frontend/dist/
 mobile/dist/
 shared/dist/
-.env
+**/.env
+**/.env.*
+!**/.env.example
 
 GymPal.postman_collection.json
 API_TESTING_GUIDE.md

@@ -9,6 +9,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { WorkoutsService } from './workouts.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
@@ -28,12 +34,21 @@ import type {
 } from '@gympal/shared';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 
+@ApiTags('workouts')
+@ApiBearerAuth()
 @Controller('workouts')
 @UseGuards(JwtAuthGuard)
 export class WorkoutsController {
   constructor(private workoutsService: WorkoutsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new workout session' })
+  @ApiResponse({
+    status: 201,
+    description: 'Workout session created successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   createWorkout(
     @RequestUser('id') userId: number,
     @Body(new ZodValidationPipe(createWorkoutSessionSchema))
@@ -43,6 +58,9 @@ export class WorkoutsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all workout sessions' })
+  @ApiResponse({ status: 200, description: 'Returns list of workout sessions' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAllWorkouts(
     @RequestUser('id') userId: number,
     @Query(new ZodValidationPipe(workoutQuerySchema)) query?: WorkoutQueryDto,
@@ -51,11 +69,23 @@ export class WorkoutsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get a specific workout session' })
+  @ApiResponse({ status: 200, description: 'Returns workout session details' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Workout session not found' })
   findOneWorkout(@RequestUser('id') userId: number, @Param('id') id: string) {
     return this.workoutsService.findWorkoutSessionById(userId, id);
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a workout session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Workout session updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Workout session not found' })
   updateWorkout(
     @RequestUser('id') userId: number,
     @Param('id') id: string,
@@ -66,11 +96,23 @@ export class WorkoutsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete a workout session' })
+  @ApiResponse({
+    status: 200,
+    description: 'Workout session deleted successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Workout session not found' })
   removeWorkout(@RequestUser('id') userId: number, @Param('id') id: string) {
     return this.workoutsService.deleteWorkoutSession(userId, id);
   }
 
   @Post(':workoutId/exercises')
+  @ApiOperation({ summary: 'Add an exercise to a workout' })
+  @ApiResponse({ status: 201, description: 'Exercise added successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Workout session not found' })
   addExerciseToWorkout(
     @RequestUser('id') userId: number,
     @Param('workoutId') workoutId: string,
@@ -81,6 +123,11 @@ export class WorkoutsController {
   }
 
   @Patch(':workoutId/exercises/:exerciseId')
+  @ApiOperation({ summary: 'Update an exercise in a workout' })
+  @ApiResponse({ status: 200, description: 'Exercise updated successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Exercise or workout not found' })
   updateWorkoutExercise(
     @RequestUser('id') userId: number,
     @Param('workoutId') workoutId: string,
@@ -97,6 +144,10 @@ export class WorkoutsController {
   }
 
   @Delete(':workoutId/exercises/:exerciseId')
+  @ApiOperation({ summary: 'Remove an exercise from a workout' })
+  @ApiResponse({ status: 200, description: 'Exercise removed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Exercise or workout not found' })
   removeExerciseFromWorkout(
     @RequestUser('id') userId: number,
     @Param('workoutId') workoutId: string,
@@ -107,5 +158,13 @@ export class WorkoutsController {
       workoutId,
       exerciseId,
     );
+  }
+
+  @Get('stats/weekly')
+  @ApiOperation({ summary: 'Get weekly workout statistics' })
+  @ApiResponse({ status: 200, description: 'Returns weekly workout stats' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  getWeeklyStats(@RequestUser('id') userId: number) {
+    return this.workoutsService.getWeeklyStats(userId);
   }
 }

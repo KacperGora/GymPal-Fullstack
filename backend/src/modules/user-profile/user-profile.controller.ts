@@ -1,4 +1,10 @@
 import { Controller, Body, Put, Get, UseGuards, Res } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { UserProfileService } from './user-profile.service';
 import { CreateUserProfileSchema } from '@gympal/shared';
 import type { CreateUserProfileDto } from '@gympal/shared';
@@ -8,17 +14,30 @@ import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { HAS_PROFILE_COOKIE, HAS_PROFILE_TRUE } from '@gympal/shared';
 import type { Response } from 'express';
 
+@ApiTags('user-profile')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('user-profile')
 export class UserProfileController {
   constructor(private readonly userProfileService: UserProfileService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiResponse({ status: 200, description: 'Returns user profile' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Profile not found' })
   async getProfile(@RequestUser('id') userId: number) {
     return this.userProfileService.getProfile(userId);
   }
 
   @Put()
+  @ApiOperation({ summary: 'Create or update user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile created or updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async upsertProfile(
     @RequestUser('id') userId: number,
     @Body(new ZodValidationPipe(CreateUserProfileSchema))

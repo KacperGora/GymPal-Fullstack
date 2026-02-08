@@ -11,6 +11,12 @@ import {
 } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { Throttle } from '@nestjs/throttler';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import type { RegisterDto, LoginDto } from '@gympal/shared';
@@ -28,24 +34,36 @@ import { RequestUser } from '../../shared/decorators/request-user.decorator';
 const ACCESS_TOKEN_MAX_AGE_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user information' })
+  @ApiResponse({ status: 200, description: 'Returns current user data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   me(@RequestUser() user: { id: number; email: string }) {
     return this.authService.me(user.id);
   }
 
   @Post('register')
   @UsePipes(new ZodValidationPipe(registerSchema))
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiResponse({ status: 201, description: 'User successfully registered' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 409, description: 'User already exists' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
   @UsePipes(new ZodValidationPipe(loginSchema))
+  @ApiOperation({ summary: 'Login user' })
+  @ApiResponse({ status: 200, description: 'User successfully logged in' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() dto: LoginDto,
     @Req() req: Request,
@@ -89,6 +107,9 @@ export class AuthController {
 
   @Post('refresh')
   @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: 200, description: 'Token successfully refreshed' })
+  @ApiResponse({ status: 401, description: 'Invalid or missing refresh token' })
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
@@ -140,6 +161,8 @@ export class AuthController {
   }
 
   @Post('logout')
+  @ApiOperation({ summary: 'Logout user' })
+  @ApiResponse({ status: 200, description: 'User successfully logged out' })
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE] as
       | string
