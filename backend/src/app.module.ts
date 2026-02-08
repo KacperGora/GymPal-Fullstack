@@ -14,6 +14,7 @@ import { WorkoutsModule } from './modules/workouts/workouts.module';
 import { WaterModule } from './modules/water/water.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ExercisesModule } from './modules/exercises/exercises.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ExercisesModule } from './modules/exercises/exercises.module';
     WaterModule,
     FavoritesModule,
     ExercisesModule,
+    HealthModule,
   ],
   controllers: [AppController],
   providers: [

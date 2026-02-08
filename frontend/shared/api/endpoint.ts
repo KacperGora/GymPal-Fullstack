@@ -58,5 +58,6 @@ export const endpointList = {
       `/workouts/${workoutId}/exercises/${exerciseId}`,
     deleteExercise: (workoutId: string, exerciseId: string) =>
       `/workouts/${workoutId}/exercises/${exerciseId}`,
+    weeklyStats: '/workouts/stats/weekly',
   },
 };

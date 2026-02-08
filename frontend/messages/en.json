@@ -247,7 +247,12 @@
     "goalGain": "Gain mass",
     "weeklyTitle": "Last 7 days",
     "weeklyAvg": "Average",
-    "weeklyTarget": "Target"
+    "weeklyTarget": "Target",
+    "workoutFrequencyTitle": "Workout Frequency",
+    "workoutFrequencyAvg": "Average",
+    "workoutFrequencyPerWeek": "per week",
+    "workoutFrequencyWorkouts": "workouts",
+    "macroBreakdownTitle": "Today's Macro Breakdown"
   },
   "nutrition": {
     "title": "Nutrition",
