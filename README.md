@@ -3,7 +3,16 @@
 ![Node Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-Private-red)
 
-Aplikacja do śledzenia treningów, posiłków i postępów fitness.
+GymPal to aplikacja full-stackowa zorientowana na produkcję,
+zaprojektowana w celu zaprezentowania rzeczywistej architektury SaaS,
+wzorców uwierzytelniania oraz skalowalnego modelowania domeny.
+
+Ten projekt koncentruje się na:
+
+1. Architekturze sterowanej przez backend (NestJS + Prisma),
+2. bezpiecznym uwierzytelnianiu opartym na sesjach,
+3. współdzielonym bezpieczeństwie typów między frontendem a backendem,
+4. CI/CD oraz lokalnym środowisku developerskim opartym o kontenery
 
 ## Funkcjonalności
 
