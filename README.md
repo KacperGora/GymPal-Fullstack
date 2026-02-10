@@ -14,6 +14,14 @@ Ten projekt koncentruje się na:
 3. współdzielonym bezpieczeństwie typów między frontendem a backendem,
 4. CI/CD oraz lokalnym środowisku developerskim opartym o kontenery
 
+## Zakres techniczny
+
+- Modularna architektura backendu (NestJS modules per domena)
+- Autoryzacja oparta o sesje użytkownika
+- Walidacja i kontrakty API współdzielone z frontendem
+- Migracje bazy danych i seed danych testowych
+- Health checks i monitoring gotowości aplikacji
+
 ## Funkcjonalności
 
 - [x] Rejestracja i logowanie użytkowników (JWT + HTTP-only cookies)
