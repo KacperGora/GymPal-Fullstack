@@ -14,9 +14,8 @@ RUN npm ci
 FROM node:20-alpine AS build-shared
 WORKDIR /app
 
-# Copy shared source and dependencies
+# Copy shared source and hoisted dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/shared/node_modules ./shared/node_modules
 COPY shared ./shared
 
 # Build shared package
