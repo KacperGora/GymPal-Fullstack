@@ -14,8 +14,9 @@ RUN npm ci
 FROM node:20-alpine AS build-shared
 WORKDIR /app
 
-# Copy shared source
+# Copy shared source and dependencies
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/shared/node_modules ./shared/node_modules
 COPY shared ./shared
 
 # Build shared package
@@ -26,13 +27,15 @@ RUN npm run build
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Copy root package.json for workspace resolution
+COPY package.json ./
+
 # Copy all dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
 
 # Copy built shared package
-COPY --from=build-shared /app/shared/dist ./shared/dist
-COPY --from=build-shared /app/shared/package.json ./shared/
+COPY --from=build-shared /app/shared ./shared
 
 # Copy frontend source
 COPY frontend ./frontend
@@ -64,7 +67,9 @@ USER nextjs
 
 WORKDIR /app/frontend
 
-# Expose port
+# Railway assigns PORT dynamically, Next.js standalone needs HOSTNAME
+ENV HOSTNAME="0.0.0.0"
+ENV PORT=3000
 EXPOSE 3000
 
 # Start the application
