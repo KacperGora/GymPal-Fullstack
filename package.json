@@ -13,8 +13,7 @@
     "lint-staged": "^16.2.7"
   },
   "scripts": {
-    "prepare": "husky",
-    "postinstall": "npm run build -w shared || true"
+    "prepare": "husky"
   },
   "lint-staged": {
     "backend/{src,test}/**/*.ts": [

@@ -35,7 +35,7 @@ build/
 backend/dist/
 frontend/dist/
 mobile/dist/
-shared/dist/
+# shared/dist/ is committed to git for Railway deployment
 **/.env
 **/.env.*
 !**/.env.example
