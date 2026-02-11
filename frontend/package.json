@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
-    "build": "next build",
+    "build": "cd .. && npm run build -w shared && cd frontend && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
