@@ -80,7 +80,7 @@ export class AuthController {
     const cookieBase = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+      sameSite: 'lax' as const,
       path: '/',
     };
 
@@ -134,7 +134,7 @@ export class AuthController {
     const cookieBase = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+      sameSite: 'lax' as const,
       path: '/',
     };
 
@@ -173,7 +173,7 @@ export class AuthController {
     const cookieBase = {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+      sameSite: 'lax' as const,
       path: '/',
     };
 

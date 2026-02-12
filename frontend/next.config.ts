@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
       '@gympal/shared': '../shared/dist/index.js',
     },
   },
+  rewrites: async () => [
+    {
+      source: '/api/:path*',
+      destination: `${process.env.BACKEND_URL ?? 'http://localhost:4000'}/:path*`,
+    },
+  ],
 };
 
 export default withNextIntl(nextConfig);
