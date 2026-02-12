@@ -72,5 +72,5 @@ WORKDIR /app/backend
 # Expose port
 EXPOSE 4000
 
-# Start the application
-CMD ["node", "dist/main"]
+# Run migrations and start the application
+CMD ["sh", "-c", "npx prisma migrate deploy && node --max-old-space-size=768 dist/main"]
