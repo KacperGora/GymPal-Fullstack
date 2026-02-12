@@ -43,7 +43,11 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 401 && isAuthEndpoint) {
+    if (
+      error.response?.status === 401 &&
+      isAuthEndpoint &&
+      url !== '/auth/me'
+    ) {
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }

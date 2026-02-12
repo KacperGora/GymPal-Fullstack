@@ -76,28 +76,27 @@ export class AuthController {
     const { token, refreshToken, hasProfile, ...user } =
       await this.authService.login(dto, context);
 
-    res.cookie(ACCESS_TOKEN_COOKIE, token, {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieBase = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
       path: '/',
+    };
+
+    res.cookie(ACCESS_TOKEN_COOKIE, token, {
+      ...cookieBase,
       maxAge: ACCESS_TOKEN_MAX_AGE_MS,
     });
     res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+      ...cookieBase,
       maxAge: REFRESH_TOKEN_MAX_AGE_MS,
     });
     res.cookie(
       HAS_PROFILE_COOKIE,
       hasProfile ? HAS_PROFILE_TRUE : HAS_PROFILE_FALSE,
       {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
+        ...cookieBase,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       },
     );
@@ -131,28 +130,27 @@ export class AuthController {
       hasProfile,
     } = await this.authService.refresh(refreshToken, context);
 
-    res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieBase = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
       path: '/',
+    };
+
+    res.cookie(ACCESS_TOKEN_COOKIE, accessToken, {
+      ...cookieBase,
       maxAge: ACCESS_TOKEN_MAX_AGE_MS,
     });
     res.cookie(REFRESH_TOKEN_COOKIE, nextRefresh, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
+      ...cookieBase,
       maxAge: REFRESH_TOKEN_MAX_AGE_MS,
     });
     res.cookie(
       HAS_PROFILE_COOKIE,
       hasProfile ? HAS_PROFILE_TRUE : HAS_PROFILE_FALSE,
       {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        path: '/',
+        ...cookieBase,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       },
     );
@@ -171,24 +169,17 @@ export class AuthController {
       await this.authService.revokeRefreshToken(refreshToken);
     }
 
-    res.clearCookie(ACCESS_TOKEN_COOKIE, {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieBase = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
       path: '/',
-    });
-    res.clearCookie(REFRESH_TOKEN_COOKIE, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
-    res.clearCookie(HAS_PROFILE_COOKIE, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
+    };
+
+    res.clearCookie(ACCESS_TOKEN_COOKIE, cookieBase);
+    res.clearCookie(REFRESH_TOKEN_COOKIE, cookieBase);
+    res.clearCookie(HAS_PROFILE_COOKIE, cookieBase);
 
     return { success: true };
   }
