@@ -9,16 +9,22 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const corsOrigins = process.env.CORS_ORIGIN?.split(',') ?? [
+    'http://localhost:3000',
+  ];
+  console.log('CORS origins:', corsOrigins);
+
   app.use(cookieParser());
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'],
-    credentials: true,
-  });
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
     }),
   );
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
