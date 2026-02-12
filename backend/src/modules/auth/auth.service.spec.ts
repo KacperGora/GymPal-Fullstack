@@ -132,11 +132,11 @@ describe('AuthService', () => {
       expect(result).toEqual({
         id: 1,
         email: dto.email,
-        password: 'hashed',
         hasProfile: true,
         token: 'mock-jwt',
         refreshToken: 'mocked-random-token',
       });
+      expect((result as { password?: string }).password).toBeUndefined();
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: 1,
         email: dto.email,
@@ -282,29 +282,7 @@ describe('AuthService', () => {
       );
     });
 
-    it('should detect token reuse and revoke entire family', async () => {
-      (prisma.refreshToken.findUnique as jest.Mock).mockResolvedValue({
-        tokenHash: 'mocked-hash',
-        familyId: 'family-1',
-        userId: 1,
-        expiresAt: futureDate,
-        revokedAt: new Date(), // already revoked = reuse
-        user: { id: 1, email: 'jan@test.pl', userProfile: null },
-      });
-      (prisma.refreshToken.updateMany as jest.Mock).mockResolvedValue({
-        count: 3,
-      });
-
-      await expect(service.refresh('reused-token', context)).rejects.toThrow(
-        UnauthorizedException,
-      );
-      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
-        where: { familyId: 'family-1', revokedAt: null },
-        data: { revokedAt: expect.any(Date) },
-      });
-    });
-
-    it('should throw UnauthorizedException on token reuse', async () => {
+    it('should revoke family and throw on token reuse', async () => {
       (prisma.refreshToken.findUnique as jest.Mock).mockResolvedValue({
         tokenHash: 'mocked-hash',
         familyId: 'family-1',
@@ -318,8 +296,15 @@ describe('AuthService', () => {
       });
 
       await expect(service.refresh('reused-token', context)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.refresh('reused-token', context)).rejects.toThrow(
         'Token reuse detected',
       );
+      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+        where: { familyId: 'family-1', revokedAt: null },
+        data: { revokedAt: expect.any(Date) },
+      });
     });
   });
 
