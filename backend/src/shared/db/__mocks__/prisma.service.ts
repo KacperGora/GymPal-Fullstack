@@ -49,6 +49,34 @@ export const PrismaService = jest.fn().mockImplementation(() => ({
     delete: jest.fn(),
     deleteMany: jest.fn(),
   },
+  refreshToken: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    updateMany: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  waterIntake: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
+    update: jest.fn(),
+  },
+  favoriteMeal: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  favoriteExercise: {
+    findMany: jest.fn(),
+    create: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  nutritionSummary: {
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    upsert: jest.fn(),
+  },
   $connect: jest.fn(),
   $disconnect: jest.fn(),
+  $transaction: jest.fn(),
 }));
