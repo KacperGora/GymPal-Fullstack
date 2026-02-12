@@ -1,7 +1,9 @@
 # GymPal
 
-![Node Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)
-![License](https://img.shields.io/badge/license-Private-red)
+![CI](https://github.com/KacperGora/GymPal-Fullstack/actions/workflows/ci.yml/badge.svg?branch=dev)
+![Frontend CI](https://github.com/KacperGora/GymPal-Fullstack/actions/workflows/frontend-ci.yml/badge.svg?branch=dev)
+![Node Version](https://img.shields.io/badge/node-20-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
 
 GymPal to aplikacja full-stackowa zorientowana na produkcję,
 zaprojektowana w celu zaprezentowania rzeczywistej architektury SaaS,
