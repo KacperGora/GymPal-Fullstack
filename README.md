@@ -7,6 +7,18 @@ GymPal to aplikacja full-stackowa zorientowana na produkcję,
 zaprojektowana w celu zaprezentowania rzeczywistej architektury SaaS,
 wzorców uwierzytelniania oraz skalowalnego modelowania domeny.
 
+## 🌍 Live Demo
+
+🔗 https://gympal.up.railway.app/pl  
+
+## 🔐 Demo Account
+
+Możesz zalogować się testowym kontem:
+
+Email: demo@gympal.app  
+Password: Demo123!
+
+
 Ten projekt koncentruje się na:
 
 1. Architekturze sterowanej przez backend (NestJS + Prisma),
