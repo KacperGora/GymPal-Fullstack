@@ -111,7 +111,8 @@ export class AuthService {
     }
     const token = this.jwtService.sign({ sub: user.id, email: user.email });
     const refresh = await this.createRefreshToken(user.id, context);
-    const { userProfile, ...rest } = user;
+    const { userProfile, password: _password, ...rest } = user;
+    void _password;
     return {
       ...rest,
       hasProfile: !!userProfile,

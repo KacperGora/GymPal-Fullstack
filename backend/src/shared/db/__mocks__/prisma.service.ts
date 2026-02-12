@@ -78,5 +78,18 @@ export const PrismaService = jest.fn().mockImplementation(() => ({
   },
   $connect: jest.fn(),
   $disconnect: jest.fn(),
-  $transaction: jest.fn(),
+  $transaction: jest
+    .fn()
+    .mockImplementation(
+      async <T>(
+        input:
+          | ((tx: Record<string, unknown>) => T | Promise<T>)
+          | Array<Promise<T>>,
+      ): Promise<T | T[]> => {
+        if (Array.isArray(input)) {
+          return Promise.all(input);
+        }
+        return input({});
+      },
+    ),
 }));
