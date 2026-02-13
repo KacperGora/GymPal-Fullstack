@@ -13,6 +13,8 @@ import { JwtService } from '@nestjs/jwt';
 
 const REFRESH_TOKEN_TTL_DAYS = 30;
 const REFRESH_TOKEN_BYTES = 48;
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MINUTES = 15;
 
 interface TokenContext {
   userAgent?: string;
@@ -103,12 +105,73 @@ export class AuthService {
         email: true,
         password: true,
         userProfile: { select: { id: true } },
+        failedLoginAttempts: true,
+        lockedUntil: true,
       },
     });
 
-    if (!user || !(await comparePassword(dto.password, user.password))) {
+    // Clear expired locks automatically
+    if (user?.lockedUntil && user.lockedUntil <= new Date()) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { lockedUntil: null, failedLoginAttempts: 0 },
+      });
+      // Update local reference
+      user.lockedUntil = null;
+      user.failedLoginAttempts = 0;
+    }
+    // Check if account is locked
+    if (user?.lockedUntil && user.lockedUntil > new Date()) {
+      this.logger.warn(`Login attempt for locked account: ${user.email}`);
       throw new UnauthorizedException('Invalid credentials');
     }
+
+    // Verify credentials
+    const isValidPassword =
+      user && (await comparePassword(dto.password, user.password));
+
+    if (!user || !isValidPassword) {
+      // Increment failed attempts for existing user
+      if (user) {
+        const newFailedAttempts = Number(user.failedLoginAttempts) + 1;
+
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            failedLoginAttempts: newFailedAttempts,
+          },
+        });
+
+        if (newFailedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+          await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+              lockedUntil: new Date(
+                Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
+              ),
+            },
+          });
+
+          this.logger.warn(
+            `Account locked for user ${user.email} after ${newFailedAttempts} failed attempts`,
+          );
+        }
+      }
+
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Reset failed attempts on successful login
+    if (user.failedLoginAttempts > 0 || user.lockedUntil) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginAttempts: 0,
+          lockedUntil: null,
+        },
+      });
+    }
+
     const token = this.jwtService.sign({ sub: user.id, email: user.email });
     const refresh = await this.createRefreshToken(user.id, context);
     const { userProfile, password: _password, ...rest } = user;
