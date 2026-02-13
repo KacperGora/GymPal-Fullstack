@@ -5,6 +5,17 @@
     "themeDark": "Dark",
     "themeSystem": "System"
   },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "An unexpected error occurred. Try refreshing the page.",
+    "tryAgain": "Try again",
+    "refresh": "Refresh page"
+  },
+  "errors": {
+    "sessionExpired": "Session expired. Please log in again.",
+    "invalidCredentials": "Invalid login credentials",
+    "unexpectedError": "An unexpected error occurred"
+  },
   "navbar": {
     "home": "Home",
     "workouts": "Workouts",

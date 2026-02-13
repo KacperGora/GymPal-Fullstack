@@ -4,6 +4,8 @@ import { getMessages } from 'next-intl/server';
 
 import type { Metadata } from 'next';
 
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary';
+import { SnackbarManager } from '@/shared/components/SnackbarManager';
 import { Navbar } from '@/shared/components/navbar/Navbar';
 
 import { routing } from '@/i18n/routing';
@@ -46,8 +48,13 @@ export default async function LocaleLayout({
         <ThemeRegistry>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <Providers>
-              <Navbar />
-              {children}
+              <ErrorBoundary>
+                <Navbar />
+                {children}
+              </ErrorBoundary>
+              <ErrorBoundary>
+                <SnackbarManager />
+              </ErrorBoundary>
             </Providers>
           </NextIntlClientProvider>
         </ThemeRegistry>

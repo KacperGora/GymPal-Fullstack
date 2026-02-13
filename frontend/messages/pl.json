@@ -5,6 +5,17 @@
     "themeDark": "Ciemny",
     "themeSystem": "Systemowy"
   },
+  "errorBoundary": {
+    "title": "Coś poszło nie tak",
+    "description": "Wystąpił nieoczekiwany błąd. Spróbuj odświeżyć stronę.",
+    "tryAgain": "Spróbuj ponownie",
+    "refresh": "Odśwież stronę"
+  },
+  "errors": {
+    "sessionExpired": "Sesja wygasła. Zaloguj się ponownie.",
+    "invalidCredentials": "Nieprawidłowe dane logowania",
+    "unexpectedError": "Wystąpił nieoczekiwany błąd"
+  },
   "navbar": {
     "home": "Strona główna",
     "workouts": "Treningi",
