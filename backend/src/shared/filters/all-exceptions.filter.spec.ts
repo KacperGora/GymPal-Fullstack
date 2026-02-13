@@ -192,11 +192,60 @@ describe('AllExceptionsFilter', () => {
       );
     });
 
-    it('should handle other Prisma errors as 500', () => {
+    it('should handle P2002 (unique constraint violation) and return 409', () => {
       const prismaError = new MockPrismaClientKnownRequestError(
         'Unique constraint failed',
         {
           code: 'P2002',
+          clientVersion: '5.0.0',
+        },
+      );
+      prismaError.meta = { target: ['email'] };
+
+      filter.catch(prismaError, mockArgumentsHost);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.CONFLICT);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        statusCode: HttpStatus.CONFLICT,
+        message: 'Record with this email already exists',
+        error: 'Conflict',
+        timestamp: expect.any(String),
+        path: '/test-endpoint',
+      });
+      expect(Logger.prototype.warn).toHaveBeenCalledWith(
+        'Unique constraint failed - /test-endpoint',
+      );
+    });
+
+    it('should handle P2003 (foreign key constraint violation) and return 400', () => {
+      const prismaError = new MockPrismaClientKnownRequestError(
+        'Foreign key constraint failed',
+        {
+          code: 'P2003',
+          clientVersion: '5.0.0',
+        },
+      );
+
+      filter.catch(prismaError, mockArgumentsHost);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        statusCode: HttpStatus.BAD_REQUEST,
+        message: 'Invalid reference: record does not exist in related table',
+        error: 'Bad Request',
+        timestamp: expect.any(String),
+        path: '/test-endpoint',
+      });
+      expect(Logger.prototype.warn).toHaveBeenCalledWith(
+        'Foreign key constraint failed - /test-endpoint',
+      );
+    });
+
+    it('should handle unknown Prisma errors as 500', () => {
+      const prismaError = new MockPrismaClientKnownRequestError(
+        'Unknown Prisma error',
+        {
+          code: 'P9999',
           clientVersion: '5.0.0',
         },
       );
@@ -214,7 +263,7 @@ describe('AllExceptionsFilter', () => {
         path: '/test-endpoint',
       });
       expect(Logger.prototype.error).toHaveBeenCalledWith(
-        'Unique constraint failed - /test-endpoint',
+        'Unknown Prisma error - /test-endpoint',
         expect.any(String),
       );
     });
@@ -305,7 +354,7 @@ describe('AllExceptionsFilter', () => {
       const afterTimestamp = new Date().toISOString();
 
       expect(jsonCall.timestamp).toBeDefined();
-      expect(new Date(jsonCall.timestamp).toISOString()).toBe(
+      expect(new Date(jsonCall.timestamp as string).toISOString()).toBe(
         jsonCall.timestamp,
       );
       expect(jsonCall.timestamp >= beforeTimestamp).toBe(true);

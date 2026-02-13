@@ -56,10 +56,32 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = exception.message;
         error = exception.name;
       }
-    } else if (isPrismaError(exception) && exception.code === 'P2025') {
-      status = HttpStatus.NOT_FOUND;
-      message = 'Record not found';
-      error = 'Not Found';
+    } else if (isPrismaError(exception)) {
+      switch (exception.code) {
+        case 'P2025':
+          status = HttpStatus.NOT_FOUND;
+          message = 'Record not found';
+          error = 'Not Found';
+          break;
+        case 'P2002': {
+          status = HttpStatus.CONFLICT;
+          const fieldName = exception.meta?.['target']
+            ? (exception.meta['target'] as string[]).join(', ')
+            : 'field';
+          message = `Record with this ${fieldName} already exists`;
+          error = 'Conflict';
+          break;
+        }
+        case 'P2003':
+          status = HttpStatus.BAD_REQUEST;
+          message = 'Invalid reference: record does not exist in related table';
+          error = 'Bad Request';
+          break;
+        default:
+          status = HttpStatus.INTERNAL_SERVER_ERROR;
+          message = 'Internal server error';
+          error = 'Internal Server Error';
+      }
     } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = 'Internal server error';
