@@ -29,19 +29,21 @@ enum MealCategory {
 }
 
 model User {
-  id                Int                @id @unique @default(autoincrement())
-  firstName         String
-  lastName          String
-  password          String
-  email             String             @unique
-  refreshTokens     RefreshToken[]
-  meals             Meal[]
-  favoriteMeals     FavoriteMeal[]
-  userProfile       UserProfile?
-  dailyStats        DailyStat[]
-  workouts          WorkoutSession[]
-  waterIntake       WaterIntake[]
-  favoriteExercises FavoriteExercise[]
+  id                   Int                @id @unique @default(autoincrement())
+  firstName            String
+  lastName             String
+  password             String
+  email                String             @unique
+  failedLoginAttempts  Int                @default(0)
+  lockedUntil          DateTime?
+  refreshTokens        RefreshToken[]
+  meals                Meal[]
+  favoriteMeals        FavoriteMeal[]
+  userProfile          UserProfile?
+  dailyStats           DailyStat[]
+  workouts             WorkoutSession[]
+  waterIntake          WaterIntake[]
+  favoriteExercises    FavoriteExercise[]
 }
 
 model RefreshToken {

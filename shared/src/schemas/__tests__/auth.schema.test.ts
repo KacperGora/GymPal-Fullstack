@@ -6,12 +6,12 @@ import {
 } from "../auth.schema.js";
 
 describe("registerSchema", () => {
-  it("should accept valid data", () => {
+  it("should accept valid data with strong password", () => {
     const data = {
       firstName: "Jan",
       lastName: "Kowalski",
       email: "jan@test.pl",
-      password: "password123",
+      password: "Password123!",
     };
     const result = registerSchema.parse(data);
     expect(result).toEqual(data);
@@ -21,7 +21,7 @@ describe("registerSchema", () => {
     const data = {
       lastName: "Kowalski",
       email: "jan@test.pl",
-      password: "password123",
+      password: "Password123!",
     };
     expect(() => registerSchema.parse(data)).toThrow();
   });
@@ -31,7 +31,7 @@ describe("registerSchema", () => {
       firstName: "Jan",
       lastName: "Kowalski",
       email: "not-an-email",
-      password: "password123",
+      password: "Password123!",
     };
     expect(() => registerSchema.parse(data)).toThrow();
   });
@@ -41,9 +41,64 @@ describe("registerSchema", () => {
       firstName: "Jan",
       lastName: "Kowalski",
       email: "jan@test.pl",
-      password: "short",
+      password: "Pass1!",
     };
     expect(() => registerSchema.parse(data)).toThrow();
+  });
+
+  it("should reject password without uppercase letter", () => {
+    const data = {
+      firstName: "Jan",
+      lastName: "Kowalski",
+      email: "jan@test.pl",
+      password: "password123!",
+    };
+    expect(() => registerSchema.parse(data)).toThrow();
+  });
+
+  it("should reject password without lowercase letter", () => {
+    const data = {
+      firstName: "Jan",
+      lastName: "Kowalski",
+      email: "jan@test.pl",
+      password: "PASSWORD123!",
+    };
+    expect(() => registerSchema.parse(data)).toThrow();
+  });
+
+  it("should reject password without digit", () => {
+    const data = {
+      firstName: "Jan",
+      lastName: "Kowalski",
+      email: "jan@test.pl",
+      password: "Password!",
+    };
+    expect(() => registerSchema.parse(data)).toThrow();
+  });
+
+  it("should reject password without special character", () => {
+    const data = {
+      firstName: "Jan",
+      lastName: "Kowalski",
+      email: "jan@test.pl",
+      password: "Password123",
+    };
+    expect(() => registerSchema.parse(data)).toThrow();
+  });
+
+  it("should accept all valid special characters", () => {
+    const specialChars = ["@", "$", "!", "%", "*", "?", "&"];
+
+    specialChars.forEach((char) => {
+      const data = {
+        firstName: "Jan",
+        lastName: "Kowalski",
+        email: "jan@test.pl",
+        password: `Password123${char}`,
+      };
+      const result = registerSchema.parse(data);
+      expect(result).toEqual(data);
+    });
   });
 });
 
@@ -68,13 +123,13 @@ describe("loginSchema", () => {
 });
 
 describe("registerFormSchema", () => {
-  it("should accept when passwords match", () => {
+  it("should accept when strong passwords match", () => {
     const data = {
       firstName: "Jan",
       lastName: "Kowalski",
       email: "jan@test.pl",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Password123!",
+      confirmPassword: "Password123!",
     };
     const result = registerFormSchema.parse(data);
     expect(result.email).toBe("jan@test.pl");
@@ -85,8 +140,19 @@ describe("registerFormSchema", () => {
       firstName: "Jan",
       lastName: "Kowalski",
       email: "jan@test.pl",
-      password: "password123",
-      confirmPassword: "different123",
+      password: "Password123!",
+      confirmPassword: "Different123!",
+    };
+    expect(() => registerFormSchema.parse(data)).toThrow();
+  });
+
+  it("should reject weak password in confirmPassword field", () => {
+    const data = {
+      firstName: "Jan",
+      lastName: "Kowalski",
+      email: "jan@test.pl",
+      password: "Password123!",
+      confirmPassword: "weakpassword",
     };
     expect(() => registerFormSchema.parse(data)).toThrow();
   });
