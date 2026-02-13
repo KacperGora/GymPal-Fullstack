@@ -87,6 +87,9 @@ model Meal {
   date      DateTime     @default(now())
   createdAt DateTime     @default(now())
   updatedAt DateTime     @default(now())
+
+  @@index([userId])
+  @@index([date])
 }
 
 model FavoriteMeal {
@@ -153,6 +156,8 @@ model WorkoutSession {
   exercises      WorkoutExercise[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
+
+  @@index([userId])
 }
 
 model WorkoutExercise {
