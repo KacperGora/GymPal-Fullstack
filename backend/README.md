@@ -1,98 +1,196 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# GymPal Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API aplikacji GymPal do śledzenia treningów i żywienia, zbudowane z użyciem NestJS.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack technologiczny
 
-## Description
+- **Framework:** NestJS 11
+- **Baza danych:** PostgreSQL 16 + Prisma 7 ORM
+- **Autoryzacja:** JWT + HTTP-only cookies + Refresh Token Rotation
+- **Walidacja:** Zod (wspólne schematy z `@gympal/shared`, ZodValidationPipe per-endpoint)
+- **Testy:** Jest (~70% pokrycia)
+- **Dokumentacja:** Swagger/OpenAPI
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Szybki start
 
-## Project setup
+### Wymagania
+
+- Node.js 22+
+- PostgreSQL 16+
+- npm/yarn/pnpm
+
+### Instalacja
 
 ```bash
-$ npm install
+# Zainstaluj zależności
+npm install
+
+# Wygeneruj klienta Prisma
+npx prisma generate
+
+# Uruchom migracje
+npx prisma migrate dev
+
+# (Opcjonalnie) Wypełnij bazę danymi testowymi
+npx prisma db seed
 ```
 
-## Compile and run the project
+### Zmienne środowiskowe
+
+Utwórz plik `.env`:
+
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/gympal"
+JWT_SECRET="twoj-jwt-secret"
+JWT_REFRESH_SECRET="twoj-refresh-secret"
+# Lokalny dev (frontend na porcie 3000)
+CORS_ORIGIN="http://localhost:3000"
+# Docker (frontend mapowany na 3001)
+# CORS_ORIGIN="http://localhost:3001"
+PORT=4000
+```
+
+### Uruchomienie
 
 ```bash
-# development
-$ npm run start
+# Tryb deweloperski (watch mode)
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
+# Produkcja
+npm run build
+npm run start:prod
 
-# production mode
-$ npm run start:prod
+# Tryb debugowania
+npm run start:debug
 ```
 
-## Run tests
+## Dokumentacja API
+
+Swagger UI dostępny pod `/api/docs` w środowiskach nieprodukcyjnych.
+
+## Struktura projektu
+
+```
+src/
+├── main.ts                 # Punkt wejścia aplikacji
+├── app.module.ts           # Główny moduł
+├── middlewares/            # Middleware HTTP (logowanie)
+├── shared/
+│   ├── db/                 # Serwis i moduł Prisma
+│   ├── decorators/         # Własne dekoratory (@RequestUser)
+│   └── pipes/              # Pipe'y walidacyjne (ZodValidationPipe)
+├── generated/              # Wygenerowany klient Prisma
+└── modules/
+    ├── auth/               # Autoryzacja (JWT, refresh tokens)
+    ├── exercises/          # Ulubione ćwiczenia
+    ├── favorites/          # Ulubione ogólne
+    ├── health/             # Health checks (/health)
+    ├── meals/              # Śledzenie posiłków
+    ├── nutrition/          # Statystyki żywieniowe
+    ├── user-profile/       # Zarządzanie profilem
+    ├── water/              # Śledzenie wody
+    └── workouts/           # Sesje treningowe i ćwiczenia
+```
+
+## Moduły
+
+| Moduł            | Opis                                             |
+| ---------------- | ------------------------------------------------ |
+| **Auth**         | Autoryzacja JWT, rotacja tokenów, token families |
+| **Workouts**     | CRUD dla sesji treningowych i ćwiczeń            |
+| **Meals**        | Logowanie posiłków z danymi żywieniowymi         |
+| **Nutrition**    | Dzienne/tygodniowe statystyki żywieniowe         |
+| **Water**        | Śledzenie dziennego spożycia wody                |
+| **User Profile** | Preferencje, cele, pomiary użytkownika           |
+| **Exercises**    | Zarządzanie ulubionymi ćwiczeniami               |
+| **Health**       | Health checks dla Kubernetes/Railway             |
+
+## Bezpieczeństwo
+
+- **Rate Limiting:** ThrottlerGuard (100 req/min globalnie, 10 req/min dla refresh)
+- **Nagłówki HTTP:** Helmet middleware
+- **Bezpieczeństwo tokenów:**
+  - SHA256 hashowane refresh tokeny w bazie
+  - Token family tracking z wykrywaniem ponownego użycia
+  - Fingerprinting urządzeń (userAgent, IP)
+  - Automatyczne czyszczenie przez cron jobs
+- **Cookies:** HttpOnly + Secure + SameSite=Lax
+
+## Testowanie
 
 ```bash
-# unit tests
-$ npm run test
+# Testy jednostkowe
+npm run test
 
-# e2e tests
-$ npm run test:e2e
+# Tryb watch
+npm run test:watch
 
-# test coverage
-$ npm run test:cov
+# Raport pokrycia
+npm run test:cov
+
+# Testy E2E
+npm run test:e2e
 ```
 
-## Deployment
+Raporty pokrycia generowane są w katalogu `coverage/`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Baza danych
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Komendy Prisma
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+# Generuj klienta po zmianach schematu
+npx prisma generate
+
+# Utwórz migrację
+npx prisma migrate dev --name <nazwa_migracji>
+
+# Zastosuj migracje (produkcja)
+npx prisma migrate deploy
+
+# Otwórz Prisma Studio (GUI)
+npx prisma studio
+
+# Zresetuj bazę
+npx prisma migrate reset
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### Przegląd schematu
 
-## Resources
+Główne modele:
 
-Check out a few resources that may come in handy when working with NestJS:
+- `User` - Konta użytkowników z danymi autoryzacyjnymi
+- `RefreshToken` - JWT refresh tokeny z family tracking
+- `WorkoutSession` / `WorkoutExercise` - Dane treningowe
+- `Meal` - Wpisy posiłków z wartościami odżywczymi
+- `DailyStat` - Zagregowane statystyki dzienne
+- `UserProfile` - Preferencje i cele użytkownika
+- `WaterIntake` - Logi spożycia wody
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Docker
 
-## Support
+```bash
+# Zbuduj obraz
+docker build -t gympal-backend .
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Uruchom z docker-compose (z głównego katalogu)
+docker-compose up backend
+```
 
-## Stay in touch
+Dockerfile wykorzystuje multi-stage builds dla zoptymalizowanych obrazów produkcyjnych.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Jakość kodu
 
-## License
+```bash
+# Lint
+npm run lint
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Formatowanie
+npm run format
+```
+
+Pre-commit hooks (Husky + lint-staged) zapewniają jakość kodu przy każdym commicie.
+
+## Licencja
+
+Prywatny - UNLICENSED
