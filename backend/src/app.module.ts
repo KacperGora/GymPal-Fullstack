@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './shared/db/prisma.module';
@@ -15,6 +15,7 @@ import { WaterModule } from './modules/water/water.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ExercisesModule } from './modules/exercises/exercises.module';
 import { HealthModule } from './modules/health/health.module';
+import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -39,6 +40,10 @@ import { HealthModule } from './modules/health/health.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
     },
   ],
 })

@@ -69,26 +69,20 @@ export class MealsService {
   }
 
   async findRecent(userId: number, limit = 6) {
-    const meals = await this.prisma.$queryRaw<
-      {
-        name: string;
-        calories: number;
-        proteins: number;
-        carbs: number;
-        fats: number;
-        category: string;
-      }[]
-    >`
-      SELECT name, calories, proteins, carbs, fats, category
-      FROM (
-        SELECT DISTINCT ON (name, calories, proteins, carbs, fats, category)
-          name, calories, proteins, carbs, fats, category, "createdAt"
-        FROM "Meal"
-        WHERE "userId" = ${userId}
-      ) AS unique_meals
-      ORDER BY "createdAt" DESC
-      LIMIT ${limit}
-    `;
+    const meals = await this.prisma.meal.findMany({
+      where: { userId },
+      distinct: ['name', 'calories', 'proteins', 'carbs', 'fats', 'category'],
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      select: {
+        name: true,
+        calories: true,
+        proteins: true,
+        carbs: true,
+        fats: true,
+        category: true,
+      },
+    });
     return meals;
   }
 }
