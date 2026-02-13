@@ -8,6 +8,7 @@ import type {
   UpdateWorkoutSessionDto,
   CreateWorkoutExerciseDto,
   UpdateWorkoutExerciseDto,
+  PaginatedResponse,
 } from '@gympal/shared';
 
 import { api } from '@/shared/api/axios';
@@ -16,9 +17,9 @@ import { endpointList } from '@/shared/api/endpoint';
 // Workout Sessions
 export const getWorkouts = async (
   params?: WorkoutQueryParams,
-): Promise<WorkoutSession[]> => {
+): Promise<PaginatedResponse<WorkoutSession>> => {
   const res = await api.get(endpointList.workouts.list, { params });
-  return res.data as WorkoutSession[];
+  return res.data as PaginatedResponse<WorkoutSession>;
 };
 
 export const getWorkout = async (id: string): Promise<WorkoutSession> => {

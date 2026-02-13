@@ -46,6 +46,7 @@ describe('WorkoutsService', () => {
         findFirst: jest.fn(),
         updateMany: jest.fn(),
         deleteMany: jest.fn(),
+        count: jest.fn(),
       },
       workoutExercise: {
         create: jest.fn(),
@@ -145,7 +146,7 @@ describe('WorkoutsService', () => {
   });
 
   describe('findAllWorkoutSessions', () => {
-    it('should return all workouts for a user', async () => {
+    it('should return paginated workouts for a user', async () => {
       const workouts = [
         {
           ...mockWorkout,
@@ -153,17 +154,28 @@ describe('WorkoutsService', () => {
         },
       ];
       mockPrismaService.workoutSession.findMany.mockResolvedValue(workouts);
+      mockPrismaService.workoutSession.count.mockResolvedValue(1);
 
       const result = await service.findAllWorkoutSessions(1);
 
-      expect(result).toEqual(workouts);
+      expect(result).toEqual({
+        data: workouts,
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+      });
       expect(mockPrismaService.workoutSession.findMany).toHaveBeenCalledWith({
         where: { userId: 1 },
         include: {
           exercises: true,
         },
         orderBy: { date: 'desc' },
-        take: 50,
+        take: 10,
+        skip: 0,
+      });
+      expect(mockPrismaService.workoutSession.count).toHaveBeenCalledWith({
+        where: { userId: 1 },
       });
     });
 
@@ -172,12 +184,21 @@ describe('WorkoutsService', () => {
         startDate: '2026-01-01T00:00:00Z',
         endDate: '2026-01-31T23:59:59Z',
         limit: 10,
+        page: 2,
       };
 
       mockPrismaService.workoutSession.findMany.mockResolvedValue([]);
+      mockPrismaService.workoutSession.count.mockResolvedValue(15);
 
-      await service.findAllWorkoutSessions(1, query);
+      const result = await service.findAllWorkoutSessions(1, query);
 
+      expect(result).toEqual({
+        data: [],
+        total: 15,
+        page: 2,
+        limit: 10,
+        totalPages: 2,
+      });
       expect(mockPrismaService.workoutSession.findMany).toHaveBeenCalledWith({
         where: {
           userId: 1,
@@ -191,6 +212,7 @@ describe('WorkoutsService', () => {
         },
         orderBy: { date: 'desc' },
         take: 10,
+        skip: 10,
       });
     });
   });

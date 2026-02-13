@@ -56,5 +56,6 @@ export const updateWorkoutSessionSchema = z.object({
 export const workoutQuerySchema = z.object({
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
-    limit: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().max(100).optional(),
+    page: z.coerce.number().int().min(1).optional(),
 });

@@ -36,6 +36,7 @@ export interface WorkoutQueryParams {
   startDate?: string;
   endDate?: string;
   limit?: number;
+  page?: number;
 }
 
 export type WorkoutFormData = z.infer<typeof workoutFormSchema>;

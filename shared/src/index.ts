@@ -4,6 +4,7 @@ export * from "./schemas/meals.schema.js";
 export * from "./schemas/user-profile.schema.js";
 export * from "./schemas/workouts.schema.js";
 export * from "./schemas/exercises.schema.js";
+export * from "./types/pagination.js";
 export * from "./contract/auth.contract.js";
 export * from "./constants/cookies.js";
 export {
