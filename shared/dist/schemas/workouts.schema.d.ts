@@ -71,5 +71,6 @@ export declare const workoutQuerySchema: z.ZodObject<{
     startDate: z.ZodOptional<z.ZodString>;
     endDate: z.ZodOptional<z.ZodString>;
     limit: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
+    page: z.ZodOptional<z.ZodCoercedNumber<unknown>>;
 }, z.core.$strip>;
 export type WorkoutQueryDto = z.infer<typeof workoutQuerySchema>;

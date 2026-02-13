@@ -34,7 +34,14 @@ export default function Workouts() {
   );
   const [addExerciseOpen, setAddExerciseOpen] = useState(false);
 
-  const { data: workouts = [], isLoading: isWorkoutsLoading } = useWorkouts();
+  const [page, setPage] = useState(1);
+
+  const { data: workoutsData, isLoading: isWorkoutsLoading } = useWorkouts({
+    page,
+    limit: 12,
+  });
+  const workouts = workoutsData?.data ?? [];
+  const totalPages = workoutsData?.totalPages ?? 1;
   const { data: selectedWorkout } = useWorkout(selectedWorkoutId);
 
   const addWorkoutMutation = useAddWorkout({
@@ -102,6 +109,9 @@ export default function Workouts() {
       <WorkoutsGrid
         workouts={workouts}
         isLoading={isWorkoutsLoading}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
         onAddClick={() => setAddWorkoutOpen(true)}
         onWorkoutClick={(workout) => setSelectedWorkoutId(workout.id)}
         onEditWorkout={handleEditWorkout}

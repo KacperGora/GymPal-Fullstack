@@ -8,6 +8,10 @@ import {
   UpdateWorkoutExerciseDto,
   WorkoutQueryDto,
 } from '@gympal/shared';
+import {
+  getPaginationParams,
+  buildPaginatedResponse,
+} from '../../shared/lib/pagination';
 
 @Injectable()
 export class WorkoutsService {
@@ -49,14 +53,22 @@ export class WorkoutsService {
       }
     }
 
-    return this.prisma.workoutSession.findMany({
-      where,
-      include: {
-        exercises: true,
-      },
-      orderBy: { date: 'desc' },
-      take: query?.limit ?? 50,
-    });
+    const { page, limit, skip } = getPaginationParams(query);
+
+    const [data, total] = await Promise.all([
+      this.prisma.workoutSession.findMany({
+        where,
+        include: {
+          exercises: true,
+        },
+        orderBy: { date: 'desc' },
+        take: limit,
+        skip,
+      }),
+      this.prisma.workoutSession.count({ where }),
+    ]);
+
+    return buildPaginatedResponse(data, total, page, limit);
   }
 
   async findWorkoutSessionById(userId: number, id: string) {

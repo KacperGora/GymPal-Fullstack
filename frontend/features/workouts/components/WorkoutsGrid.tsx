@@ -2,7 +2,14 @@
 
 import AddIcon from '@mui/icons-material/Add';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import { Box, Button, Grid, Skeleton, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Grid,
+  Pagination,
+  Skeleton,
+  Typography,
+} from '@mui/material';
 import { useTranslations } from 'next-intl';
 
 import type { WorkoutSession } from '../types';
@@ -12,6 +19,9 @@ import { WorkoutCard } from './WorkoutCard';
 interface WorkoutsGridProps {
   workouts: WorkoutSession[];
   isLoading?: boolean;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onAddClick: () => void;
   onWorkoutClick: (workout: WorkoutSession) => void;
   onEditWorkout: (workout: WorkoutSession) => void;
@@ -21,6 +31,9 @@ interface WorkoutsGridProps {
 export const WorkoutsGrid = ({
   workouts,
   isLoading,
+  page,
+  totalPages,
+  onPageChange,
   onAddClick,
   onWorkoutClick,
   onEditWorkout,
@@ -99,6 +112,17 @@ export const WorkoutsGrid = ({
             </Grid>
           ))}
         </Grid>
+      )}
+
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(_, value) => onPageChange(value)}
+            color="primary"
+          />
+        </Box>
       )}
     </Box>
   );
