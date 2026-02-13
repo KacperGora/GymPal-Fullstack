@@ -10,11 +10,15 @@ export const getMe = async () => {
 };
 
 export const login = async (body: LoginDto) => {
-  const { data } = await api.post(endpointList.auth.login, body);
+  const { data } = await api.post(endpointList.auth.login, body, {
+    skipGlobalErrorHandler: true,
+  });
   return data;
 };
 
 export const register = async (body: RegisterDto) => {
-  const { data } = await api.post(endpointList.auth.register, body);
+  const { data } = await api.post(endpointList.auth.register, body, {
+    skipGlobalErrorHandler: true,
+  });
   return data;
 };

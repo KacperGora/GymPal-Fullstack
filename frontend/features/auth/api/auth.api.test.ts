@@ -25,7 +25,9 @@ describe('auth.api', () => {
 
       const result = await login(body);
 
-      expect(mockPost).toHaveBeenCalledWith('/auth/login', body);
+      expect(mockPost).toHaveBeenCalledWith('/auth/login', body, {
+        skipGlobalErrorHandler: true,
+      });
       expect(result).toEqual(responseData);
     });
 
@@ -51,7 +53,9 @@ describe('auth.api', () => {
 
       const result = await register(body);
 
-      expect(mockPost).toHaveBeenCalledWith('/auth/register', body);
+      expect(mockPost).toHaveBeenCalledWith('/auth/register', body, {
+        skipGlobalErrorHandler: true,
+      });
       expect(result).toEqual(responseData);
     });
   });
