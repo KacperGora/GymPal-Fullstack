@@ -1,9 +1,9 @@
 import { Typography } from '@mui/material';
 import { useTranslations } from 'next-intl';
 
-import { PageWrapper } from '@/shared/components/page-wrapper/PageWrapper';
+import { PageWrapper } from '@/shared/components';
 
-import LoginForm from './components/LoginForm';
+import { LoginForm } from './components';
 
 export default function LoginPage() {
   const t = useTranslations('auth.login');

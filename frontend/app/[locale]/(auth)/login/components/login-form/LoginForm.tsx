@@ -26,7 +26,7 @@ import { useLogin } from '@/features/auth/mutations/useLogin';
 import { Link } from '@/i18n/navigation';
 import { useZodForm } from '@/shared/hooks/useZodForm';
 
-export default function LoginForm() {
+export function LoginForm() {
   const t = useTranslations('auth.login');
   const { mutate, isPending, error } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
