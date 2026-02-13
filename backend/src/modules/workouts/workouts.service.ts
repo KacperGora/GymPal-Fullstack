@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/db/prisma.service';
+import type { Prisma } from '../../generated/prisma/client';
 import {
   CreateWorkoutSessionDto,
   UpdateWorkoutSessionDto,
@@ -36,7 +37,7 @@ export class WorkoutsService {
   }
 
   async findAllWorkoutSessions(userId: number, query?: WorkoutQueryDto) {
-    const where: any = { userId };
+    const where: Prisma.WorkoutSessionWhereInput = { userId };
 
     if (query?.startDate || query?.endDate) {
       where.date = {};
