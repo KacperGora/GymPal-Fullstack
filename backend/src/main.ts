@@ -1,4 +1,6 @@
 import 'dotenv/config';
+// Import Sentry instrumentation first
+import './instrument';
 
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
@@ -66,4 +68,4 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
