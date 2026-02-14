@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './shared/db/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LoggingMiddleware } from './middlewares/logging.middleware';
+import { CorrelationIdMiddleware } from './middlewares/correlation-id.middleware';
 import { MealsModule } from './modules/meals/meals.module';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
 import { UserProfileModule } from './modules/user-profile/user-profile.module';
@@ -16,6 +17,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ExercisesModule } from './modules/exercises/exercises.module';
 import { HealthModule } from './modules/health/health.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
+import { SentryModule } from './shared/sentry/sentry.module';
 
 @Module({
   imports: [
@@ -23,6 +25,7 @@ import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 100 }],
     }),
+    SentryModule,
     PrismaModule,
     AuthModule,
     MealsModule,
@@ -49,6 +52,6 @@ import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggingMiddleware).forRoutes('*');
+    consumer.apply(CorrelationIdMiddleware, LoggingMiddleware).forRoutes('*');
   }
 }

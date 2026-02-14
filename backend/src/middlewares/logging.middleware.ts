@@ -6,12 +6,15 @@ export class LoggingMiddleware implements NestMiddleware {
   private logger = new Logger('HTTP');
   use(req: Request, res: Response, next: NextFunction) {
     const { method, originalUrl } = req;
+    const correlationId = req.correlationId || 'no-correlation-id';
     const startTime = Date.now();
 
     res.on('finish', () => {
       const { statusCode } = res;
       const duration = Date.now() - startTime;
-      this.logger.log(`${method} ${originalUrl} ${statusCode} ${duration}`);
+      this.logger.log(
+        `[${correlationId}] ${method} ${originalUrl} ${statusCode} ${duration}ms`,
+      );
     });
     next();
   }
