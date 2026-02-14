@@ -1,23 +1,37 @@
 import 'dotenv/config';
 
 import { NestFactory } from '@nestjs/core';
+import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
   const corsOrigins = process.env.CORS_ORIGIN?.split(',') ?? [
     'http://localhost:3000',
   ];
-  console.log('CORS origins:', corsOrigins);
+  logger.log(`CORS origins: ${corsOrigins.join(', ')}`);
 
   app.use(cookieParser());
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'", 'https:'],
+          fontSrc: ["'self'", 'data:', 'https:'],
+          frameSrc: ["'self'"],
+          formAction: ["'self'"],
+        },
+      },
     }),
   );
   app.enableCors({
