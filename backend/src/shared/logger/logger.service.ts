@@ -9,19 +9,20 @@ export class CustomLoggerService implements LoggerService {
     this.context = context;
   }
 
-  log(message: any, context?: string): void {
+  log(message: string, ...optionalParams: any[]): void {
+    const context = this.extractContext(optionalParams);
     const logContext = context || this.context;
     console.log(`[LOG] [${logContext || 'App'}] ${message}`);
   }
 
-  error(message: any, trace?: string, context?: string): void {
+  error(message: string, ...optionalParams: any[]): void {
+    const { trace, context } = this.extractTraceAndContext(optionalParams);
     const logContext = context || this.context;
     console.error(`[ERROR] [${logContext || 'App'}] ${message}`, trace);
 
     // Send error to Sentry if initialized
     if (this.isSentryEnabled()) {
-      const errorToCapture =
-        message instanceof Error ? message : new Error(String(message));
+      const errorToCapture = new Error(String(message));
 
       Sentry.captureException(errorToCapture, {
         contexts: {
@@ -34,7 +35,8 @@ export class CustomLoggerService implements LoggerService {
     }
   }
 
-  warn(message: any, context?: string): void {
+  warn(message: string, ...optionalParams: any[]): void {
+    const context = this.extractContext(optionalParams);
     const logContext = context || this.context;
     console.warn(`[WARN] [${logContext || 'App'}] ${message}`);
 
@@ -51,14 +53,41 @@ export class CustomLoggerService implements LoggerService {
     }
   }
 
-  debug(message: any, context?: string): void {
+  debug(message: string, ...optionalParams: any[]): void {
+    const context = this.extractContext(optionalParams);
     const logContext = context || this.context;
     console.debug(`[DEBUG] [${logContext || 'App'}] ${message}`);
   }
 
-  verbose(message: any, context?: string): void {
+  verbose(message: string, ...optionalParams: any[]): void {
+    const context = this.extractContext(optionalParams);
     const logContext = context || this.context;
     console.log(`[VERBOSE] [${logContext || 'App'}] ${message}`);
+  }
+
+  private extractContext(optionalParams: any[]): string | undefined {
+    return optionalParams.length > 0 &&
+      typeof optionalParams[optionalParams.length - 1] === 'string'
+      ? (optionalParams[optionalParams.length - 1] as string)
+      : undefined;
+  }
+
+  private extractTraceAndContext(optionalParams: any[]): {
+    trace?: string;
+    context?: string;
+  } {
+    if (optionalParams.length === 0) return {};
+    if (optionalParams.length === 1) {
+      return typeof optionalParams[0] === 'string'
+        ? { trace: optionalParams[0] }
+        : {};
+    }
+    return {
+      trace:
+        typeof optionalParams[0] === 'string' ? optionalParams[0] : undefined,
+      context:
+        typeof optionalParams[1] === 'string' ? optionalParams[1] : undefined,
+    };
   }
 
   private isSentryEnabled(): boolean {

@@ -8,6 +8,20 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AllExceptionsFilter } from './all-exceptions.filter';
+import * as Sentry from '@sentry/nestjs';
+
+// Mock Sentry module
+jest.mock('@sentry/nestjs', () => ({
+  captureException: jest.fn(),
+  captureMessage: jest.fn(),
+  withScope: jest.fn((callback) => {
+    const mockScope = {
+      setContext: jest.fn(),
+      setUser: jest.fn(),
+    };
+    callback(mockScope);
+  }),
+}));
 
 // Mock Prisma error class
 class MockPrismaClientKnownRequestError extends Error {
@@ -369,6 +383,200 @@ describe('AllExceptionsFilter', () => {
 
       const jsonCall = mockResponse.json.mock.calls[0][0];
       expect(jsonCall.path).toBe('/api/users/123');
+    });
+  });
+
+  describe('Sentry reporting', () => {
+    let originalSentryDsn: string | undefined;
+
+    beforeEach(() => {
+      // Store original SENTRY_DSN
+      originalSentryDsn = process.env.SENTRY_DSN;
+
+      // Clear all mock calls
+      jest.clearAllMocks();
+    });
+
+    afterEach(() => {
+      // Restore original SENTRY_DSN
+      if (originalSentryDsn !== undefined) {
+        process.env.SENTRY_DSN = originalSentryDsn;
+      } else {
+        delete process.env.SENTRY_DSN;
+      }
+    });
+
+    it('should NOT report 4xx errors to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const exception = new HttpException(
+        'Bad Request',
+        HttpStatus.BAD_REQUEST,
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(Sentry.captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('should NOT report Prisma P2025 errors to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const prismaError = new MockPrismaClientKnownRequestError(
+        'Record not found',
+        { code: 'P2025', clientVersion: '5.0.0' },
+      );
+
+      filter.catch(prismaError, mockArgumentsHost);
+
+      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(Sentry.captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('should NOT report Prisma P2002 errors to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const prismaError = new MockPrismaClientKnownRequestError(
+        'Unique constraint failed',
+        { code: 'P2002', clientVersion: '5.0.0' },
+      );
+      prismaError.meta = { target: ['email'] };
+
+      filter.catch(prismaError, mockArgumentsHost);
+
+      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(Sentry.captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('should NOT report Prisma P2003 errors to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const prismaError = new MockPrismaClientKnownRequestError(
+        'Foreign key constraint failed',
+        { code: 'P2003', clientVersion: '5.0.0' },
+      );
+
+      filter.catch(prismaError, mockArgumentsHost);
+
+      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(Sentry.captureMessage).not.toHaveBeenCalled();
+    });
+
+    it('should report 5xx HttpException to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const exception = new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(Sentry.withScope).toHaveBeenCalled();
+      expect(Sentry.captureException).toHaveBeenCalledWith(exception);
+    });
+
+    it('should report unknown Prisma errors to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const prismaError = new MockPrismaClientKnownRequestError(
+        'Unknown Prisma error',
+        { code: 'P9999', clientVersion: '5.0.0' },
+      );
+
+      filter.catch(prismaError, mockArgumentsHost);
+
+      expect(Sentry.withScope).toHaveBeenCalled();
+      expect(Sentry.captureException).toHaveBeenCalledWith(prismaError);
+    });
+
+    it('should report generic errors to Sentry', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const error = new Error('Something went wrong');
+
+      filter.catch(error, mockArgumentsHost);
+
+      expect(Sentry.withScope).toHaveBeenCalled();
+      expect(Sentry.captureException).toHaveBeenCalledWith(error);
+    });
+
+    it('should report non-Error exceptions with captureMessage', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      const exception = 'String exception';
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(Sentry.withScope).toHaveBeenCalled();
+      expect(Sentry.captureMessage).toHaveBeenCalledWith(
+        'Unhandled exception: String exception',
+        { level: 'error' },
+      );
+    });
+
+    it('should NOT report to Sentry when SENTRY_DSN is not configured', () => {
+      delete process.env.SENTRY_DSN;
+      const exception = new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(Sentry.captureException).not.toHaveBeenCalled();
+      expect(Sentry.captureMessage).not.toHaveBeenCalled();
+      expect(Sentry.withScope).not.toHaveBeenCalled();
+    });
+
+    it('should set proper Sentry context when reporting', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      mockRequest.correlationId = 'test-correlation-id';
+      mockRequest.method = 'POST';
+      mockRequest.originalUrl = '/api/test';
+
+      const exception = new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(Sentry.withScope).toHaveBeenCalled();
+      const callback = (Sentry.withScope as jest.Mock).mock.calls[0][0];
+      const mockScope = {
+        setContext: jest.fn(),
+        setUser: jest.fn(),
+      };
+      callback(mockScope);
+
+      expect(mockScope.setContext).toHaveBeenCalledWith('http', {
+        method: 'POST',
+        url: '/api/test',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        correlationId: 'test-correlation-id',
+      });
+
+      expect(mockScope.setContext).toHaveBeenCalledWith('response', {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Internal Server Error',
+        error: 'HttpException',
+      });
+    });
+
+    it('should set user context in Sentry when user is available', () => {
+      process.env.SENTRY_DSN = 'https://test@sentry.io/123';
+      mockRequest.user = { id: 'user-123' };
+
+      const exception = new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
+      filter.catch(exception, mockArgumentsHost);
+
+      expect(Sentry.withScope).toHaveBeenCalled();
+      const callback = (Sentry.withScope as jest.Mock).mock.calls[0][0];
+      const mockScope = {
+        setContext: jest.fn(),
+        setUser: jest.fn(),
+      };
+      callback(mockScope);
+
+      expect(mockScope.setUser).toHaveBeenCalledWith({ id: 'user-123' });
     });
   });
 });
