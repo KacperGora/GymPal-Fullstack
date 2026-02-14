@@ -8,6 +8,9 @@ import {
 import { WaterService } from './water.service';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
+import { waterQuerySchema } from '@gympal/shared';
+import type { WaterQueryDto } from '@gympal/shared';
 
 @ApiTags('water')
 @ApiBearerAuth()
@@ -22,24 +25,30 @@ export class WaterController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getWaterIntake(
     @RequestUser('id') userId: number,
-    @Query('date') date: string,
+    @Query(new ZodValidationPipe(waterQuerySchema)) query: WaterQueryDto,
   ) {
-    return this.waterService.getWaterIntake(userId, date);
+    return this.waterService.getWaterIntake(userId, query.date);
   }
 
   @Post('add')
   @ApiOperation({ summary: 'Add a glass of water' })
   @ApiResponse({ status: 201, description: 'Glass added successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  addGlass(@RequestUser('id') userId: number, @Query('date') date: string) {
-    return this.waterService.addGlass(userId, date);
+  addGlass(
+    @RequestUser('id') userId: number,
+    @Query(new ZodValidationPipe(waterQuerySchema)) query: WaterQueryDto,
+  ) {
+    return this.waterService.addGlass(userId, query.date);
   }
 
   @Post('remove')
   @ApiOperation({ summary: 'Remove a glass of water' })
   @ApiResponse({ status: 200, description: 'Glass removed successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  removeGlass(@RequestUser('id') userId: number, @Query('date') date: string) {
-    return this.waterService.removeGlass(userId, date);
+  removeGlass(
+    @RequestUser('id') userId: number,
+    @Query(new ZodValidationPipe(waterQuerySchema)) query: WaterQueryDto,
+  ) {
+    return this.waterService.removeGlass(userId, query.date);
   }
 }

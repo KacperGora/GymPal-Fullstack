@@ -4,7 +4,7 @@ export const createTestUser = (prefix: string = 'test') => ({
   firstName: 'Test',
   lastName: 'User',
   email: `${prefix}+${crypto.randomUUID()}@example.com`,
-  password: 'TestPassword123',
+  password: 'TestPassword123!',
 });
 
 export const registerAndLogin = async (page: Page, prefix?: string) => {

@@ -85,3 +85,212 @@ jobs:
           name: frontend-dist
           path: frontend/.next
           retention-days: 7
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build shared package
+        run: npx tsc
+        working-directory: shared
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          DATABASE_URL="postgresql://gympal:gympal@localhost:5432/gympal_test?schema=public"
+          JWT_SECRET="test-jwt-secret-key-for-ci"
+          JWT_REFRESH_SECRET="test-jwt-refresh-secret-key-for-ci"
+          JWT_EXPIRES_IN="15m"
+          JWT_REFRESH_EXPIRES_IN="7d"
+          NODE_ENV="test"
+          EOF
+
+      - name: Start PostgreSQL
+        run: |
+          docker run -d \
+            --name postgres \
+            -e POSTGRES_USER=gympal \
+            -e POSTGRES_PASSWORD=gympal \
+            -e POSTGRES_DB=gympal_test \
+            -p 5432:5432 \
+            --health-cmd="pg_isready -U gympal" \
+            --health-interval=5s \
+            --health-timeout=5s \
+            --health-retries=5 \
+            postgres:16-alpine
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          RETRIES=0
+          MAX_RETRIES=30
+
+          until docker exec postgres pg_isready -U gympal; do
+            RETRIES=$((RETRIES+1))
+            if [ $RETRIES -ge $MAX_RETRIES ]; then
+              echo "PostgreSQL failed to be ready after ${MAX_RETRIES} attempts"
+              echo "=== Docker container status ==="
+              docker ps -a | grep postgres
+              echo "=== PostgreSQL logs ==="
+              docker logs postgres
+              exit 1
+            fi
+            echo "Attempt $RETRIES/$MAX_RETRIES - waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          echo "PostgreSQL is ready!"
+          docker exec postgres pg_isready -U gympal
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: backend
+
+      - name: Run database migrations
+        run: |
+          echo "Running database migrations..."
+          npx prisma migrate deploy
+          echo "Migrations completed successfully"
+
+          echo "Verifying database connection..."
+          npx prisma db execute --stdin <<EOF
+          SELECT 1;
+          EOF
+          echo "Database connection verified"
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://gympal:gympal@localhost:5432/gympal_test?schema=public
+
+      - name: Build backend
+        run: npm run build --workspace=backend
+
+      - name: Start backend server
+        run: |
+          cd backend
+          # Redirect stdout and stderr to log files for debugging
+          node dist/main.js > backend.log 2> backend.error.log &
+          BACKEND_PID=$!
+          echo $BACKEND_PID > backend.pid
+          echo "Backend started with PID: $BACKEND_PID"
+        env:
+          DATABASE_URL: postgresql://gympal:gympal@localhost:5432/gympal_test?schema=public
+          JWT_SECRET: test-jwt-secret-key-for-ci
+          JWT_REFRESH_SECRET: test-jwt-refresh-secret-key-for-ci
+          JWT_EXPIRES_IN: 15m
+          JWT_REFRESH_EXPIRES_IN: 7d
+          NODE_ENV: test
+          PORT: 4000
+
+      - name: Wait for backend
+        run: |
+          echo "Waiting for backend to be ready..."
+          RETRIES=0
+          MAX_RETRIES=30
+
+          until curl -f http://localhost:4000/health 2>/dev/null; do
+            RETRIES=$((RETRIES+1))
+            if [ $RETRIES -ge $MAX_RETRIES ]; then
+              echo "Backend failed to start after ${MAX_RETRIES} attempts"
+              echo "=== Backend stdout ==="
+              cat backend/backend.log || echo "No stdout log"
+              echo "=== Backend stderr ==="
+              cat backend/backend.error.log || echo "No stderr log"
+              echo "=== Backend process status ==="
+              if [ -f backend/backend.pid ]; then
+                PID=$(cat backend/backend.pid)
+                ps -p $PID || echo "Backend process $PID is not running"
+              fi
+              exit 1
+            fi
+            echo "Attempt $RETRIES/$MAX_RETRIES - waiting for backend..."
+            sleep 1
+          done
+
+          echo "Backend is ready!"
+          echo "Health check response:"
+          curl -f http://localhost:4000/health 2>/dev/null || true
+
+      - name: Verify backend is running before tests
+        run: |
+          echo "Verifying backend health before E2E tests..."
+          curl -f http://localhost:4000/health || {
+            echo "Backend health check failed!"
+            exit 1
+          }
+          echo "Backend process status:"
+          if [ -f backend/backend.pid ]; then
+            PID=$(cat backend/backend.pid)
+            ps -p $PID || echo "WARNING: Backend process $PID is not running"
+          fi
+
+      - name: Run Playwright tests
+        run: npm run e2e --workspace=frontend
+        env:
+          CI: true
+          BACKEND_URL: http://localhost:4000
+
+      - name: Check backend status after tests
+        if: always()
+        run: |
+          echo "=== Backend process status after tests ==="
+          if [ -f backend/backend.pid ]; then
+            PID=$(cat backend/backend.pid)
+            if ps -p $PID > /dev/null; then
+              echo "Backend process $PID is still running"
+            else
+              echo "WARNING: Backend process $PID has stopped"
+            fi
+          else
+            echo "No backend PID file found"
+          fi
+
+          echo "=== Backend stdout (last 50 lines) ==="
+          tail -50 backend/backend.log 2>/dev/null || echo "No backend stdout log"
+
+          echo "=== Backend stderr (last 50 lines) ==="
+          tail -50 backend/backend.error.log 2>/dev/null || echo "No backend stderr log"
+
+      - name: Upload backend logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-logs
+          path: |
+            backend/backend.log
+            backend/backend.error.log
+          retention-days: 7
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+      - name: Stop backend server
+        if: always()
+        run: |
+          if [ -f backend/backend.pid ]; then
+            kill $(cat backend/backend.pid) || true
+          fi
+
+      - name: Stop PostgreSQL
+        if: always()
+        run: docker stop postgres && docker rm postgres || true

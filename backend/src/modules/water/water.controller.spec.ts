@@ -34,7 +34,7 @@ describe('WaterController', () => {
     it('should call service with userId and date', async () => {
       mockWaterService.getWaterIntake.mockResolvedValue({ glasses: 5 });
 
-      const result = await controller.getWaterIntake(1, '2025-01-15');
+      const result = await controller.getWaterIntake(1, { date: '2025-01-15' });
 
       expect(result).toEqual({ glasses: 5 });
       expect(service.getWaterIntake).toHaveBeenCalledWith(1, '2025-01-15');
@@ -45,7 +45,7 @@ describe('WaterController', () => {
     it('should call service with userId and date', async () => {
       mockWaterService.addGlass.mockResolvedValue({ glasses: 3 });
 
-      const result = await controller.addGlass(1, '2025-01-15');
+      const result = await controller.addGlass(1, { date: '2025-01-15' });
 
       expect(result).toEqual({ glasses: 3 });
       expect(service.addGlass).toHaveBeenCalledWith(1, '2025-01-15');
@@ -56,7 +56,7 @@ describe('WaterController', () => {
     it('should call service with userId and date', async () => {
       mockWaterService.removeGlass.mockResolvedValue({ glasses: 2 });
 
-      const result = await controller.removeGlass(1, '2025-01-15');
+      const result = await controller.removeGlass(1, { date: '2025-01-15' });
 
       expect(result).toEqual({ glasses: 2 });
       expect(service.removeGlass).toHaveBeenCalledWith(1, '2025-01-15');
