@@ -24,7 +24,7 @@ vi.mock('@/features/auth/components', () => ({
     error,
   }: {
     children: React.ReactNode;
-    onSubmit: (e: React.FormEvent) => void;
+    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
     error?: string | null;
   }) => (
     <form onSubmit={onSubmit} data-testid="auth-form">
@@ -103,7 +103,9 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     renderWithProviders(<LoginForm />);
 
-    const submitButton = screen.getByRole('button', { name: 'submit' });
+    const submitButton = screen.getByRole('button', {
+      name: 'submit',
+    }) as HTMLButtonElement;
     await user.click(submitButton);
 
     // Wait for validation errors to appear (Zod validation messages)
@@ -125,7 +127,9 @@ describe('LoginForm', () => {
 
     const emailInput = screen.getByLabelText('email');
     const passwordInput = screen.getByLabelText('password');
-    const submitButton = screen.getByRole('button', { name: 'submit' });
+    const submitButton = screen.getByRole('button', {
+      name: 'submit',
+    }) as HTMLButtonElement;
 
     await user.type(emailInput, 'test@example.com');
     await user.type(passwordInput, 'password123');
@@ -170,5 +174,25 @@ describe('LoginForm', () => {
     expect(screen.getByTestId('error-message')).toHaveTextContent(
       'errorGeneral',
     );
+  });
+
+  it('disables form fields when mutation is pending', () => {
+    mockUseLogin.mockReturnValue({
+      mutate: mockMutate,
+      isPending: true,
+      error: null,
+    } as unknown as ReturnType<typeof useLogin>);
+
+    renderWithProviders(<LoginForm />);
+
+    const emailInput = screen.getByLabelText('email') as HTMLInputElement;
+    const passwordInput = screen.getByLabelText('password') as HTMLInputElement;
+    const submitButton = screen.getByRole('button', {
+      name: 'submit',
+    }) as HTMLButtonElement;
+
+    expect(emailInput.disabled).toBe(true);
+    expect(passwordInput.disabled).toBe(true);
+    expect(submitButton.disabled).toBe(true);
   });
 });

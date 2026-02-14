@@ -5,7 +5,16 @@ import { vi } from 'vitest';
 // Mock next-intl
 vi.mock('next-intl', () => ({
   useTranslations: () => {
-    return (key: string) => key;
+    return (key: string, params?: Record<string, unknown>) => {
+      // If params are provided, append them to the key for testing purposes
+      if (params && Object.keys(params).length > 0) {
+        const paramsStr = Object.entries(params)
+          .map(([k, v]) => `${v}`)
+          .join(' ');
+        return `${key} ${paramsStr}`;
+      }
+      return key;
+    };
   },
 }));
 
