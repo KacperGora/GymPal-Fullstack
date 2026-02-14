@@ -60,4 +60,7 @@ export const endpointList = {
       `/workouts/${workoutId}/exercises/${exerciseId}`,
     weeklyStats: '/workouts/stats/weekly',
   },
+  ai: {
+    mealSuggestions: '/ai/meal-suggestions',
+  },
 };
