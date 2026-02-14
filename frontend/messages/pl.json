@@ -349,6 +349,10 @@
     "greeting": "Cześć, {name}!",
     "trackMeals": "Śledź swoje posiłki",
     "category": "Kategoria",
+    "breakfast": "Śniadanie",
+    "lunch": "Obiad",
+    "dinner": "Kolacja",
+    "snack": "Przekąska",
     "categories": {
       "breakfast": "Śniadanie",
       "lunch": "Obiad",
@@ -367,6 +371,10 @@
       "recent": "Ostatnie",
       "empty": "Brak ostatnich posiłków"
     },
+    "aiSuggestions": "Sugestie AI",
+    "getSuggestions": "Uzyskaj sugestie AI",
+    "generating": "AI generuje...",
+    "errorGeneratingSuggestions": "Nie udało się wygenerować sugestii. Spróbuj ponownie.",
     "tips": {
       "title": "Wskazówki",
       "onTrack": "Jesteś blisko celu na dziś.",

@@ -292,6 +292,10 @@
     "greeting": "Hi, {name}!",
     "trackMeals": "Track your meals",
     "category": "Category",
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack",
     "categories": {
       "breakfast": "Breakfast",
       "lunch": "Lunch",
@@ -310,6 +314,10 @@
       "recent": "Recent",
       "empty": "No recent meals"
     },
+    "aiSuggestions": "AI Meal Suggestions",
+    "getSuggestions": "Get AI Suggestions",
+    "generating": "AI is generating...",
+    "errorGeneratingSuggestions": "Unable to generate suggestions. Try again.",
     "tips": {
       "title": "Tips",
       "onTrack": "You're close to today's goal.",
