@@ -92,9 +92,11 @@ export class OpenAiService {
       if (cacheKey) this.setCache(cacheKey, content);
       return content;
     } catch (error) {
-      this.logger.error('OpenAI API error', error);
+      const errorMessage =
+        error instanceof Error ? error.message : JSON.stringify(error);
+      this.logger.error(`OpenAI API error: ${errorMessage}`, error);
       throw new HttpException(
-        'AI service unavailable',
+        `AI service unavailable: ${errorMessage}`,
         HttpStatus.SERVICE_UNAVAILABLE,
       );
     }
