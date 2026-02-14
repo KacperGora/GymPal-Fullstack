@@ -284,6 +284,50 @@ describe('WgerService', () => {
 
       expect(result).toHaveLength(1);
     });
+
+    it('should batch exercise fetches to avoid overwhelming API', async () => {
+      const suggestions = Array.from({ length: 25 }, (_, i) => ({
+        data: {
+          id: i + 100,
+          base_id: i + 1,
+          name: `Exercise ${i + 1}`,
+          category: 'Test',
+          image: null,
+          image_thumbnail: null,
+        },
+      }));
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ suggestions }),
+      });
+
+      for (let i = 0; i < 25; i++) {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              ...mockRawExercise,
+              id: i + 1,
+              translations: [
+                {
+                  id: i + 1,
+                  name: `Exercise ${i + 1}`,
+                  description: 'Test',
+                  language: 2,
+                },
+              ],
+            }),
+        });
+      }
+
+      const startTime = Date.now();
+      const result = await service.searchExercises('test', 25, 'en');
+      const duration = Date.now() - startTime;
+
+      expect(result).toHaveLength(25);
+      expect(duration).toBeGreaterThanOrEqual(200);
+    });
   });
 
   describe('transformExercise', () => {

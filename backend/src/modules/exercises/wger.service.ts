@@ -95,6 +95,9 @@ export class WgerService {
   private readonly cache = new Map<string, CacheEntry<unknown>>();
   private readonly cacheTTL = 1000 * 60 * 60;
   private readonly staticCacheTTL = 1000 * 60 * 60 * 24;
+  private readonly maxCacheSize = 1000;
+  private readonly batchSize = 10;
+  private readonly batchDelayMs = 100;
 
   private getCached<T>(key: string): T | null {
     const entry = this.cache.get(key);
@@ -108,7 +111,31 @@ export class WgerService {
   }
 
   private setCache<T>(key: string, data: T, ttl?: number): void {
+    if (this.cache.size >= this.maxCacheSize) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey) {
+        this.cache.delete(firstKey);
+      }
+    }
     this.cache.set(key, { data, expiry: Date.now() + (ttl ?? this.cacheTTL) });
+  }
+
+  private async batchPromises<T, R>(
+    items: T[],
+    fn: (item: T) => Promise<R>,
+    batchSize: number = this.batchSize,
+    delayMs: number = this.batchDelayMs,
+  ): Promise<R[]> {
+    const results: R[] = [];
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const batchResults = await Promise.all(batch.map(fn));
+      results.push(...batchResults);
+      if (i + batchSize < items.length) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+    return results;
   }
 
   private async fetchJson<T>(url: string): Promise<T> {
@@ -305,8 +332,8 @@ export class WgerService {
 
     const ids = raw.suggestions.slice(0, limit).map((s) => s.data.base_id);
 
-    const results = await Promise.all(
-      ids.map((id) => this.fetchExerciseById(id, lang).catch(() => null)),
+    const results = await this.batchPromises(ids, (id) =>
+      this.fetchExerciseById(id, lang).catch(() => null),
     );
 
     const filtered = results.filter((r): r is WgerExercise => r !== null);
