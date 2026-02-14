@@ -124,6 +124,7 @@ export const deleteFavorite = async (id: string): Promise<void> => {
   await api.delete(endpointList.favorites.delete(id));
 };
 
+// AI Meal Suggestions
 export const getMealSuggestions = async (
   data: MealSuggestionRequest,
 ): Promise<MealSuggestionsResponse> => {
