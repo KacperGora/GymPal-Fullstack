@@ -4,7 +4,7 @@ const TEST_USER = {
   firstName: 'Test',
   lastName: 'User',
   email: `test+${Date.now()}@example.com`,
-  password: 'TestPassword123',
+  password: 'TestPassword123!',
 };
 
 test.describe('Auth flow', () => {

@@ -4,7 +4,7 @@ const createTestUser = () => ({
   firstName: 'Test',
   lastName: 'User',
   email: `profile+${Date.now()}@example.com`,
-  password: 'TestPassword123',
+  password: 'TestPassword123!',
 });
 
 test.describe('Profile flow', () => {

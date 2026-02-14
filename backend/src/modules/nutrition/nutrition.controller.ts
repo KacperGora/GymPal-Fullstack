@@ -6,6 +6,9 @@ import { ApiTags } from '@nestjs/swagger';
 import { NutritionService } from './nutrition.service';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
+import { nutritionQuerySchema } from '@gympal/shared';
+import type { NutritionQueryDto } from '@gympal/shared';
 
 @ApiTags('nutrition')
 @ApiBearerAuth()
@@ -28,9 +31,10 @@ export class NutritionController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getWeeklyStats(
     @RequestUser('id') userId: number,
-    @Query('date') date: string,
+    @Query(new ZodValidationPipe(nutritionQuerySchema))
+    query: NutritionQueryDto,
   ) {
-    return this.nutritionService.getWeeklyStats(userId, date);
+    return this.nutritionService.getWeeklyStats(userId, query.date);
   }
 
   @Get('tdee')
