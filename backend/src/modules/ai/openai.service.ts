@@ -26,7 +26,14 @@ export class OpenAiService {
       );
       return;
     }
-    this.client = new OpenAI({ apiKey });
+    try {
+      this.client = new OpenAI({ apiKey });
+      this.logger.debug(
+        `OpenAI client initialized with API key: ${apiKey.substring(0, 7)}...`,
+      );
+    } catch (error) {
+      this.logger.error('Failed to initialize OpenAI client', error);
+    }
   }
 
   private getCached<T>(key: string): T | null {
