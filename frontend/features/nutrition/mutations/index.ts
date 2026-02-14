@@ -3,3 +3,4 @@ export * from './useDeleteMeal';
 export * from './useFavoriteMutations';
 export * from './useUpdateMeal';
 export * from './useWaterMutations';
+export * from './useAiMealSuggestions';
