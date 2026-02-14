@@ -1,6 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { MealSuggestionRequest } from '@gympal/shared';
+import type {
+  MealSuggestionRequest,
+  MealSuggestionsResponse,
+} from '@gympal/shared';
 import { mealSuggestionRequestSchema } from '@gympal/shared';
 
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
@@ -21,7 +24,7 @@ export class AiController {
     @RequestUser('id') userId: number,
     @Body(new ZodValidationPipe(mealSuggestionRequestSchema))
     dto: MealSuggestionRequest,
-  ) {
+  ): Promise<MealSuggestionsResponse> {
     return this.aiService.generateMealSuggestions(userId, dto);
   }
 }
