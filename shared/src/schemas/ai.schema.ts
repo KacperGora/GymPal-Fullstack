@@ -13,7 +13,7 @@ export const mealSuggestionItemSchema = z.object({
   proteins: z.number().min(0).max(200),
   carbs: z.number().min(0).max(300),
   fats: z.number().min(0).max(100),
-  reasoning: z.string().max(150).optional(),
+  reasoning: z.string().max(500).optional(),
 });
 
 export const mealSuggestionsResponseSchema = z.object({
