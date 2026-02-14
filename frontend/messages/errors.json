@@ -1,0 +1,12 @@
+{
+  "en": {
+    "sessionExpired": "Session expired. Please log in again.",
+    "invalidCredentials": "Invalid login credentials",
+    "unexpectedError": "An unexpected error occurred"
+  },
+  "pl": {
+    "sessionExpired": "Sesja wygasła. Zaloguj się ponownie.",
+    "invalidCredentials": "Nieprawidłowe dane logowania",
+    "unexpectedError": "Wystąpił nieoczekiwany błąd"
+  }
+}

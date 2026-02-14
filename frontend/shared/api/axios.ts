@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig } from 'axios';
 
+import { errorMessages } from '../i18n/errorMessages';
 import { useSnackbarStore } from '../stores/useSnackbarStore';
 
 import { endpointList } from './endpoint';
@@ -12,27 +13,14 @@ declare module 'axios' {
 }
 
 // Simple i18n helper for non-React contexts
-const getErrorMessage = (key: keyof typeof errorMessages): string => {
+const getErrorMessage = (key: keyof (typeof errorMessages)['en']): string => {
   const locale =
     typeof document !== 'undefined'
       ? document.documentElement.lang || 'en'
       : 'en';
-  return errorMessages[key][locale as 'en' | 'pl'] || errorMessages[key].en;
-};
-
-const errorMessages = {
-  sessionExpired: {
-    en: 'Session expired. Please log in again.',
-    pl: 'Sesja wygasła. Zaloguj się ponownie.',
-  },
-  invalidCredentials: {
-    en: 'Invalid login credentials',
-    pl: 'Nieprawidłowe dane logowania',
-  },
-  unexpectedError: {
-    en: 'An unexpected error occurred',
-    pl: 'Wystąpił nieoczekiwany błąd',
-  },
+  const activeLocale =
+    (locale as 'en' | 'pl') in errorMessages ? (locale as 'en' | 'pl') : 'en';
+  return errorMessages[activeLocale][key];
 };
 
 export const api = axios.create({
@@ -41,7 +29,26 @@ export const api = axios.create({
 });
 
 let refreshPromise: Promise<void> | null = null;
+let didHandleSessionExpiry = false;
 
+// Reset session expiry flag when navigating to login to allow handling it again next time
+if (typeof window !== 'undefined') {
+  window.addEventListener('navigateToLogin', () => {
+    didHandleSessionExpiry = false;
+  });
+}
+
+/**
+ * TODO: Add comprehensive unit tests for this interceptor
+ * Tests should cover:
+ * - Single dispatch of navigateToLogin event on concurrent 401s
+ * - Snackbar shown only once per session expiration
+ * - Proper 401 handling for different endpoint types
+ * - Non-401 error handling
+ *
+ * Current challenge: axios instance needs proper mocking setup in Vitest
+ * Consider using axios mock adapter or creating integration tests instead
+ */
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -71,10 +78,13 @@ api.interceptors.response.use(
         return api(original);
       } catch (refreshError) {
         if (typeof window !== 'undefined' && !skipGlobalHandler) {
-          useSnackbarStore
-            .getState()
-            .showSnackbar(getErrorMessage('sessionExpired'), 'error');
-          window.location.href = '/login';
+          if (!didHandleSessionExpiry) {
+            didHandleSessionExpiry = true;
+            useSnackbarStore
+              .getState()
+              .showSnackbar(getErrorMessage('sessionExpired'), 'error');
+            window.dispatchEvent(new CustomEvent('navigateToLogin'));
+          }
         }
         return Promise.reject(refreshError);
       }
@@ -89,7 +99,7 @@ api.interceptors.response.use(
         useSnackbarStore
           .getState()
           .showSnackbar(getErrorMessage('invalidCredentials'), 'error');
-        window.location.href = '/login';
+        window.dispatchEvent(new CustomEvent('navigateToLogin'));
       }
     }
 
