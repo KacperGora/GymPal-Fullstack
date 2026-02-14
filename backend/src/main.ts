@@ -16,21 +16,35 @@ async function bootstrap() {
   ];
   logger.log(`CORS origins: ${corsOrigins.join(', ')}`);
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   app.use(cookieParser());
   app.use(
     helmet({
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
-          connectSrc: ["'self'", 'https:'],
-          fontSrc: ["'self'", 'data:', 'https:'],
-          frameSrc: ["'self'"],
-          formAction: ["'self'"],
-        },
+        directives: isProduction
+          ? {
+              defaultSrc: ["'self'"],
+              scriptSrc: ["'self'"],
+              styleSrc: ["'self'"],
+              imgSrc: ["'self'", 'data:'],
+              connectSrc: ["'self'", 'https://api.wger.de'],
+              fontSrc: ["'self'"],
+              frameSrc: ["'none'"],
+              formAction: ["'self'"],
+              upgradeInsecureRequests: [],
+            }
+          : {
+              defaultSrc: ["'self'"],
+              scriptSrc: ["'self'", "'unsafe-inline'"],
+              styleSrc: ["'self'", "'unsafe-inline'"],
+              imgSrc: ["'self'", 'data:', 'https:'],
+              connectSrc: ["'self'", 'https:', 'http://localhost:3000'],
+              fontSrc: ["'self'", 'data:', 'https:'],
+              frameSrc: ["'self'"],
+              formAction: ["'self'"],
+            },
       },
     }),
   );
