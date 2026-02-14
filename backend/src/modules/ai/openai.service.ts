@@ -9,15 +9,22 @@ interface CacheEntry<T> {
 @Injectable()
 export class OpenAiService {
   private readonly logger = new Logger(OpenAiService.name);
-  private readonly client: OpenAI;
+  private client: OpenAI | null = null;
   private readonly cache = new Map<string, CacheEntry<unknown>>();
   private readonly cacheTTL = 1000 * 60 * 60 * 6; // 6 hours
   private readonly maxCacheSize = 500;
 
   constructor() {
+    this.initializeClient();
+  }
+
+  private initializeClient(): void {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
+      this.logger.warn(
+        'OPENAI_API_KEY not configured - AI features will be unavailable',
+      );
+      return;
     }
     this.client = new OpenAI({ apiKey });
   }
@@ -44,6 +51,13 @@ export class OpenAiService {
     userPrompt: string,
     cacheKey?: string,
   ): Promise<string> {
+    if (!this.client) {
+      throw new HttpException(
+        'AI service not configured',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
     if (cacheKey) {
       const cached = this.getCached<string>(cacheKey);
       if (cached) return cached;
