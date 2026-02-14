@@ -6,4 +6,4 @@ import { CustomLoggerService } from '../logger/logger.service';
   providers: [CustomLoggerService],
   exports: [CustomLoggerService],
 })
-export class SentryModule {}
+export class LoggerModule {}

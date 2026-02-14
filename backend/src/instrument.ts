@@ -16,7 +16,10 @@ if (process.env.SENTRY_DSN) {
 
     // Profiling
     profilesSampleRate: isProduction ? 0.1 : 1.0,
-    integrations: [nodeProfilingIntegration()],
+    integrations: (integrations) => [
+      ...integrations,
+      nodeProfilingIntegration(),
+    ],
 
     // Release tracking
     release: process.env.SENTRY_RELEASE || undefined,
@@ -53,6 +56,6 @@ if (process.env.SENTRY_DSN) {
   });
 
   console.log(`[Sentry] Initialized for environment: ${environment}`);
-} else {
+} else if (process.env.NODE_ENV !== 'test') {
   console.log('[Sentry] Skipping initialization - SENTRY_DSN not configured');
 }

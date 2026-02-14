@@ -17,7 +17,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ExercisesModule } from './modules/exercises/exercises.module';
 import { HealthModule } from './modules/health/health.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
-import { SentryModule } from './shared/sentry/sentry.module';
+import { LoggerModule } from './shared/sentry/logger.module';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { SentryModule } from './shared/sentry/sentry.module';
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 100 }],
     }),
-    SentryModule,
+    LoggerModule,
     PrismaModule,
     AuthModule,
     MealsModule,

@@ -6,11 +6,12 @@ import { randomUUID } from 'crypto';
 @Injectable()
 export class CorrelationIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
-    // Generate or retrieve correlation ID
-    const correlationId =
-      (req.headers['x-correlation-id'] as string) ||
-      (req.headers['x-request-id'] as string) ||
-      randomUUID();
+    // Generate or retrieve correlation ID with proper header normalization
+    const headerValue =
+      req.headers['x-correlation-id'] || req.headers['x-request-id'];
+    const correlationId = Array.isArray(headerValue)
+      ? headerValue[0]
+      : headerValue || randomUUID();
 
     // Attach to request
     req.correlationId = correlationId;
@@ -18,16 +19,19 @@ export class CorrelationIdMiddleware implements NestMiddleware {
     // Add to response headers for tracing
     res.setHeader('X-Correlation-ID', correlationId);
 
-    // Set Sentry context if enabled
+    // Set Sentry context if enabled with proper scope isolation
     if (process.env.SENTRY_DSN) {
-      Sentry.setContext('request', {
-        correlationId,
-        method: req.method,
-        url: req.originalUrl,
-        userAgent: req.headers['user-agent'],
+      Sentry.withScope((scope) => {
+        scope.setContext('request', {
+          correlationId,
+          method: req.method,
+          url: req.originalUrl,
+          userAgent: req.headers['user-agent'],
+        });
+        next();
       });
+    } else {
+      next();
     }
-
-    next();
   }
 }
