@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 import {
   AddMealModal,
+  AiSuggestionsCard,
   CalorieCard,
   DayNavigation,
   GoalCard,
@@ -146,6 +147,15 @@ export default function Nutrition() {
           />
           <QuickAddMealsCard
             onQuickAdd={(meal) =>
+              addMealMutation.mutate({
+                ...meal,
+                date: mealDateIso,
+              })
+            }
+          />
+          <AiSuggestionsCard
+            selectedDate={selectedDate.toDate()}
+            onAddMeal={(meal) =>
               addMealMutation.mutate({
                 ...meal,
                 date: mealDateIso,

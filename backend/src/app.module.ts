@@ -16,6 +16,7 @@ import { WaterModule } from './modules/water/water.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ExercisesModule } from './modules/exercises/exercises.module';
 import { HealthModule } from './modules/health/health.module';
+import { AiModule } from './modules/ai/ai.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggerModule } from './shared/sentry/logger.module';
 
@@ -36,6 +37,7 @@ import { LoggerModule } from './shared/sentry/logger.module';
     FavoritesModule,
     ExercisesModule,
     HealthModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
