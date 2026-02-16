@@ -1,5 +1,10 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type {
   MealSuggestionRequest,
   MealSuggestionsResponse,
@@ -20,6 +25,26 @@ export class AiController {
 
   @Post('meal-suggestions')
   @ApiOperation({ summary: 'Generate AI meal suggestions' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Meal suggestions generated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid request body or validation error',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'User is not authenticated',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'User profile not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    description: 'AI service is unavailable',
+  })
   async getMealSuggestions(
     @RequestUser('id') userId: number,
     @Body(new ZodValidationPipe(mealSuggestionRequestSchema))

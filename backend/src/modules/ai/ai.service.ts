@@ -1,11 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import type {
   MealSuggestionRequest,
   MealSuggestionsResponse,
 } from '@gympal/shared';
 import { mealSuggestionsResponseSchema } from '@gympal/shared';
+import { ZodError } from 'zod';
 
-import { PrismaService } from '../../shared/db/prisma.service';
 import { NutritionService } from '../nutrition/nutrition.service';
 import { OpenAiService } from './openai.service';
 import { PromptBuilder } from './prompt.builder';
@@ -15,7 +15,6 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
 
   constructor(
-    private prisma: PrismaService,
     private nutrition: NutritionService,
     private openai: OpenAiService,
     private promptBuilder: PromptBuilder,
@@ -76,18 +75,32 @@ export class AiService {
       parsed = JSON.parse(rawResponse);
     } catch (error) {
       this.logger.error('Failed to parse AI response', error);
-      throw new Error('Invalid AI response format');
+      throw new HttpException(
+        'Invalid AI response format',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
-    const validated = mealSuggestionsResponseSchema.parse({
-      suggestions: parsed.suggestions,
-      context: {
-        targetCalories: tdee.targetCalories,
-        consumed,
-        remaining,
-      },
-    });
+    try {
+      const validated = mealSuggestionsResponseSchema.parse({
+        suggestions: parsed.suggestions,
+        context: {
+          targetCalories: tdee.targetCalories,
+          consumed,
+          remaining,
+        },
+      });
 
-    return validated;
+      return validated;
+    } catch (error) {
+      if (error instanceof ZodError) {
+        this.logger.error('AI response validation failed', error.issues);
+        throw new HttpException(
+          'AI response does not match expected schema',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+      throw error;
+    }
   }
 }
