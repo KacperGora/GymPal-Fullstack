@@ -19,7 +19,6 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
-import { useLocale } from 'next-intl';
 import { useState } from 'react';
 
 import type { MealCategory } from '@gympal/shared';
