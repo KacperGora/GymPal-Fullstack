@@ -323,7 +323,11 @@
       "title": "Last 7 days",
       "avg": "Average",
       "target": "Target"
-    }
+    },
+    "aiSuggestions": "AI Meal Suggestions",
+    "getSuggestions": "Get AI Suggestions",
+    "generating": "AI is generating...",
+    "errorGeneratingSuggestions": "Unable to generate suggestions. Try again."
   },
   "exercises": {
     "title": "Exercises",

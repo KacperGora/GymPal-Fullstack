@@ -380,7 +380,11 @@
       "title": "Ostatnie 7 dni",
       "avg": "Średnia",
       "target": "Cel"
-    }
+    },
+    "aiSuggestions": "Sugestie posiłków AI",
+    "getSuggestions": "Uzyskaj sugestie AI",
+    "generating": "AI generuje...",
+    "errorGeneratingSuggestions": "Nie udało się wygenerować sugestii. Spróbuj ponownie."
   },
   "welcome": {
     "title": "Witaj w GymPal!",
