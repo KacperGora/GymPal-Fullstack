@@ -5,7 +5,12 @@ import type {
   RecentMeal,
   TdeeResponse,
 } from '../types';
-import type { CreateMealDto, UpdateMealDto } from '@gympal/shared';
+import type {
+  CreateMealDto,
+  MealSuggestionRequest,
+  MealSuggestionsResponse,
+  UpdateMealDto,
+} from '@gympal/shared';
 
 import { api } from '@/shared/api/axios';
 import { endpointList } from '@/shared/api/endpoint';
@@ -117,4 +122,11 @@ export const createFavorite = async (
 
 export const deleteFavorite = async (id: string): Promise<void> => {
   await api.delete(endpointList.favorites.delete(id));
+};
+
+export const getMealSuggestions = async (
+  data: MealSuggestionRequest,
+): Promise<MealSuggestionsResponse> => {
+  const res = await api.post(endpointList.ai.mealSuggestions, data);
+  return res.data as MealSuggestionsResponse;
 };

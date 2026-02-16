@@ -1,4 +1,5 @@
 export { AddMealModal } from './AddMealModal';
+export { AiSuggestionsCard } from './AiSuggestionsCard';
 export { CalorieCard } from './CalorieCard';
 export { DayNavigation } from './DayNavigation';
 export { GoalCard } from './GoalCard';

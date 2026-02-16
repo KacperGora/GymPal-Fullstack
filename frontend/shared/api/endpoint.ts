@@ -33,6 +33,9 @@ export const endpointList = {
     create: '/favorites',
     delete: (id: string) => `/favorites/${id}`,
   },
+  ai: {
+    mealSuggestions: '/ai/meal-suggestions',
+  },
   exercisesApi: {
     list: '/exercises-api',
     categories: '/exercises-api/categories',
