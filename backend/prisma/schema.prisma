@@ -14,6 +14,13 @@ datasource db {
   provider = "postgresql"
 }
 
+model Seeder {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  runAt     DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
 enum ExerciseCategory {
   STRENGTH
   CARDIO
@@ -189,4 +196,80 @@ model FavoriteExercise {
   createdAt       DateTime @default(now())
 
   @@unique([userId, wgerExerciseId])
+}
+
+enum IngredientCategory {
+  PROTEIN
+  CARBS
+  VEGETABLES
+  FRUITS
+  DAIRY
+  FATS_OILS
+  GRAINS
+  LEGUMES
+  NUTS_SEEDS
+  BEVERAGES
+  CONDIMENTS
+  OTHER
+}
+
+enum MealDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MacroFocus {
+  HIGH_PROTEIN
+  LOW_CARB
+  BALANCED
+  HIGH_CARB
+  LOW_FAT
+}
+
+model Ingredient {
+  id          String             @id @default(cuid())
+  name        String
+  servingSize Float
+  servingUnit String
+  calories    Float
+  proteins    Float
+  carbs       Float
+  fats        Float
+  fiber       Float              @default(0)
+  category    IngredientCategory
+  verified    Boolean            @default(false)
+  source      String             @default("USDA")
+  sourceUrl   String?
+  verifiedBy  String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@unique([name, servingSize, servingUnit])
+  @@index([category])
+  @@index([verified])
+}
+
+model MealTemplate {
+  id                   String         @id @default(cuid())
+  name                 String
+  category             MealCategory
+  baseRecipe           Json
+  totalCalories        Float
+  totalProteins        Float
+  totalCarbs           Float
+  totalFats            Float
+  scaleableIngredients Json
+  minScale             Float          @default(0.5)
+  maxScale             Float          @default(2.0)
+  preparationTime      Int?
+  difficulty           MealDifficulty @default(EASY)
+  macroFocus           MacroFocus     @default(BALANCED)
+  translations         Json?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([category])
+  @@index([macroFocus])
+  @@index([totalCalories])
 }

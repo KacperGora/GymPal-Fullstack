@@ -5,6 +5,7 @@ export const mealSuggestionRequestSchema = z.object({
   category: mealCategoryEnum,
   date: z.string().datetime().optional(),
   count: z.number().int().min(1).max(5).optional().default(3),
+  language: z.enum(["en", "pl"]).optional().default("en"),
 });
 
 export const mealSuggestionItemSchema = z.object({
@@ -13,6 +14,13 @@ export const mealSuggestionItemSchema = z.object({
   proteins: z.number().min(0).max(200),
   carbs: z.number().min(0).max(300),
   fats: z.number().min(0).max(100),
+  ingredients: z.array(
+    z.object({
+      name: z.string(),
+      grams: z.number(),
+    }),
+  ),
+  steps: z.array(z.string()).optional(),
   reasoning: z.string().max(500).optional(),
 });
 
