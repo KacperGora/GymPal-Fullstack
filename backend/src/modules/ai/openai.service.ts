@@ -1,9 +1,11 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
 import OpenAI from 'openai';
 
 interface CacheEntry<T> {
   data: T;
   expiry: number;
+  lastAccess: number;
 }
 
 @Injectable()
@@ -18,6 +20,25 @@ export class OpenAiService {
     this.initializeClient();
   }
 
+  @Interval(1800000) // Run every 30 minutes
+  cleanupExpiredEntries(): void {
+    const now = Date.now();
+    let removedCount = 0;
+
+    for (const [key, entry] of this.cache.entries()) {
+      if (entry.expiry <= now) {
+        this.cache.delete(key);
+        removedCount++;
+      }
+    }
+
+    if (removedCount > 0) {
+      this.logger.debug(
+        `Periodic cache cleanup: removed ${removedCount} expired entries`,
+      );
+    }
+  }
+
   private initializeClient(): void {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -28,9 +49,7 @@ export class OpenAiService {
     }
     try {
       this.client = new OpenAI({ apiKey });
-      this.logger.debug(
-        `OpenAI client initialized with API key: ${apiKey.substring(0, 7)}...`,
-      );
+      this.logger.debug('OpenAI client initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize OpenAI client', error);
     }
@@ -39,24 +58,63 @@ export class OpenAiService {
   private getCached<T>(key: string): T | null {
     const entry = this.cache.get(key);
     if (entry && entry.expiry > Date.now()) {
+      // Update last access time for LRU
+      entry.lastAccess = Date.now();
       return entry.data as T;
     }
     if (entry) this.cache.delete(key);
     return null;
   }
 
+  private evictLRUEntry(): void {
+    const now = Date.now();
+    let keyToEvict: string | null = null;
+    let oldestAccess = Number.POSITIVE_INFINITY;
+
+    // First, try to evict expired entries
+    for (const [key, entry] of this.cache.entries()) {
+      if (entry.expiry <= now) {
+        this.cache.delete(key);
+        this.logger.debug(`Evicted expired cache entry: ${key}`);
+        return;
+      }
+    }
+
+    // If no expired entries, evict least recently used (LRU)
+    for (const [key, entry] of this.cache.entries()) {
+      if (entry.lastAccess < oldestAccess) {
+        oldestAccess = entry.lastAccess;
+        keyToEvict = key;
+      }
+    }
+
+    if (keyToEvict) {
+      this.cache.delete(keyToEvict);
+      this.logger.debug(`Evicted LRU cache entry: ${keyToEvict}`);
+    }
+  }
+
   private setCache<T>(key: string, data: T): void {
     if (this.cache.size >= this.maxCacheSize) {
-      const firstKey = this.cache.keys().next().value;
-      if (firstKey) this.cache.delete(firstKey);
+      this.evictLRUEntry();
     }
-    this.cache.set(key, { data, expiry: Date.now() + this.cacheTTL });
+    const now = Date.now();
+    this.cache.set(key, {
+      data,
+      expiry: now + this.cacheTTL,
+      lastAccess: now,
+    });
   }
 
   async chat(
     systemPrompt: string,
     userPrompt: string,
-    cacheKey?: string,
+    options?: {
+      cacheKey?: string;
+      temperature?: number;
+      model?: string;
+      maxRetries?: number;
+    },
   ): Promise<string> {
     if (!this.client) {
       throw new HttpException(
@@ -65,20 +123,31 @@ export class OpenAiService {
       );
     }
 
+    const cacheKey = options?.cacheKey;
+    const temperature = options?.temperature ?? 0.2;
+    const model = options?.model ?? 'gpt-4o-mini';
+
     if (cacheKey) {
       const cached = this.getCached<string>(cacheKey);
-      if (cached) return cached;
+      if (cached) {
+        this.logger.debug(`Cache hit for key: ${cacheKey}`);
+        return cached;
+      }
     }
 
     try {
+      this.logger.debug(
+        `Calling OpenAI API: model=${model}, temperature=${temperature}`,
+      );
+
       const completion = await this.client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.7,
+        temperature,
       });
 
       const content = completion.choices[0]?.message?.content;
@@ -89,12 +158,27 @@ export class OpenAiService {
         );
       }
 
+      try {
+        JSON.parse(content);
+      } catch {
+        this.logger.error(`Invalid JSON response from OpenAI: ${content}`);
+        throw new HttpException(
+          'AI returned invalid JSON',
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
+
       if (cacheKey) this.setCache(cacheKey, content);
       return content;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : JSON.stringify(error);
       this.logger.error(`OpenAI API error: ${errorMessage}`, error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       throw new HttpException(
         `AI service unavailable: ${errorMessage}`,
         HttpStatus.SERVICE_UNAVAILABLE,

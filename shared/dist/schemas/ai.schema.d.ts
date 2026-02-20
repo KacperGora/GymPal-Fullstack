@@ -9,6 +9,14 @@ export declare const mealSuggestionRequestSchema: z.ZodObject<
     }>;
     date: z.ZodOptional<z.ZodString>;
     count: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    language: z.ZodDefault<
+      z.ZodOptional<
+        z.ZodEnum<{
+          en: "en";
+          pl: "pl";
+        }>
+      >
+    >;
   },
   z.core.$strip
 >;
@@ -19,6 +27,16 @@ export declare const mealSuggestionItemSchema: z.ZodObject<
     proteins: z.ZodNumber;
     carbs: z.ZodNumber;
     fats: z.ZodNumber;
+    ingredients: z.ZodArray<
+      z.ZodObject<
+        {
+          name: z.ZodString;
+          grams: z.ZodNumber;
+        },
+        z.core.$strip
+      >
+    >;
+    steps: z.ZodOptional<z.ZodArray<z.ZodString>>;
     reasoning: z.ZodOptional<z.ZodString>;
   },
   z.core.$strip
@@ -33,6 +51,16 @@ export declare const mealSuggestionsResponseSchema: z.ZodObject<
           proteins: z.ZodNumber;
           carbs: z.ZodNumber;
           fats: z.ZodNumber;
+          ingredients: z.ZodArray<
+            z.ZodObject<
+              {
+                name: z.ZodString;
+                grams: z.ZodNumber;
+              },
+              z.core.$strip
+            >
+          >;
+          steps: z.ZodOptional<z.ZodArray<z.ZodString>>;
           reasoning: z.ZodOptional<z.ZodString>;
         },
         z.core.$strip

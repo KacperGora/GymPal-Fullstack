@@ -19,6 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useState } from 'react';
 
 import type { MealCategory } from '@gympal/shared';
@@ -44,6 +45,7 @@ export const AiSuggestionsCard = ({
   onAddMeal,
 }: AiSuggestionsCardProps) => {
   const t = useTranslations('nutrition');
+  const locale = useLocale();
   const [category, setCategory] = useState<MealCategory>('LUNCH');
   const { mutate, data, isPending, isError, error } = useAiMealSuggestions();
 
@@ -52,6 +54,7 @@ export const AiSuggestionsCard = ({
       category,
       date: selectedDate.toISOString(),
       count: 3,
+      language: locale as 'en' | 'pl',
     });
   };
 
