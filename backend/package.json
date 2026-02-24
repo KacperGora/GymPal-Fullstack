@@ -40,7 +40,7 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.4",
     "helmet": "^8.1.0",
-    "openai": "^4.73.0",
+    "openai": "^6.24.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "path-to-regexp": "^8.3.0",
