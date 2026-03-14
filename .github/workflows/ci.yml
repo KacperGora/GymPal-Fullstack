@@ -39,6 +39,8 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Run backend ESLint
         run: npm run lint --workspace=backend
@@ -74,6 +76,8 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Run shared tests
         run: npx vitest run
@@ -113,6 +117,8 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://dummy:dummy@localhost:5432/dummy
 
       - name: Build backend
         run: npm run build --workspace=backend
