@@ -161,6 +161,8 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
         working-directory: backend
+        env:
+          DATABASE_URL: postgresql://gympal:gympal@localhost:5432/gympal_test?schema=public
 
       - name: Run database migrations
         run: |
