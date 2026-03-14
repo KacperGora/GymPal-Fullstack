@@ -2,6 +2,7 @@ import 'dotenv/config';
 // Import Sentry instrumentation first
 import './instrument';
 import { execSync } from 'child_process';
+import * as path from 'path';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
@@ -14,8 +15,10 @@ async function bootstrap() {
 
   try {
     logger.log('Running database migrations...');
+    const backendDir = path.resolve(__dirname, '..');
+    logger.log(`Backend dir: ${backendDir}`);
     const result = execSync('npx prisma migrate deploy', {
-      cwd: '/app/backend',
+      cwd: backendDir,
       env: {
         ...process.env,
         DATABASE_URL: process.env.DATABASE_URL ?? '',
@@ -24,8 +27,17 @@ async function bootstrap() {
     logger.log(`Migration output: ${result.toString()}`);
     logger.log('Migrations completed successfully');
   } catch (error: any) {
-    logger.error(`Migration failed: ${error.stdout?.toString()}`);
-    logger.error(`Migration stderr: ${error.stderr?.toString()}`);
+    const stdout =
+      error.stdout instanceof Buffer
+        ? error.stdout.toString()
+        : (error.stdout ?? 'no stdout');
+    const stderr =
+      error.stderr instanceof Buffer
+        ? error.stderr.toString()
+        : (error.stderr ?? 'no stderr');
+    logger.error(`Migration failed: ${stdout}`);
+    logger.error(`Migration stderr: ${stderr}`);
+    logger.error(`Migration error message: ${error.message ?? 'unknown'}`);
     process.exit(1);
   }
 
