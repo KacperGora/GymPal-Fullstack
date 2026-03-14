@@ -18,18 +18,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build
+      - name: Build, push and deploy via Cloud Build
         run: gcloud builds submit --config cloudbuild.yaml .
         env:
           CLOUDSDK_CORE_PROJECT: gympal-kacper-2026
-
-      - name: Deploy
-        run: |
-          gcloud run deploy gympal-backend \
-            --image gcr.io/gympal-kacper-2026/gympal-backend \
-            --region europe-west3 \
-            --platform managed \
-            --allow-unauthenticated \
-            --port 4000 \
-            --add-cloudsql-instances=gympal-kacper-2026:europe-west3:gympal-db \
-            --set-env-vars="NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},JWT_SECRET=${{ secrets.JWT_SECRET }}"

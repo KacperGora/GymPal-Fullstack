@@ -16,17 +16,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/gympal-backend']
 
-  # Deploy backend to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud
-    args:
-      - run
-      - services
-      - update
-      - gympal-backend
-      - --image=gcr.io/$PROJECT_ID/gympal-backend
-      - --region=europe-west3
-
   # Build frontend
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -44,16 +33,35 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/gympal-frontend']
 
+  # Deploy backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - gympal-backend
+      - --image=gcr.io/$PROJECT_ID/gympal-backend
+      - --region=europe-west3
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=4000
+      - --add-cloudsql-instances=$PROJECT_ID:europe-west3:gympal-db
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest
+      - --set-env-vars=NODE_ENV=production
+
   # Deploy frontend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
       - run
-      - services
-      - update
+      - deploy
       - gympal-frontend
       - --image=gcr.io/$PROJECT_ID/gympal-frontend
       - --region=europe-west3
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=3000
+      - --set-env-vars=NODE_ENV=production
 
 images:
   - 'gcr.io/$PROJECT_ID/gympal-backend'
