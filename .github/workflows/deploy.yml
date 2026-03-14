@@ -18,7 +18,35 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build, push and deploy via Cloud Build
-        run: gcloud builds submit --config cloudbuild.yaml .
-        env:
-          CLOUDSDK_CORE_PROJECT: gympal-kacper-2026
+      - name: Submit Cloud Build (async)
+        run: |
+          BUILD_ID=$(gcloud builds submit \
+            --config cloudbuild.yaml . \
+            --async \
+            --format='value(id)' \
+            --project gympal-kacper-2026)
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
+          echo "Submitted Cloud Build: $BUILD_ID"
+
+      - name: Wait for Cloud Build to complete
+        run: |
+          echo "Polling build $BUILD_ID ..."
+          while true; do
+            STATUS=$(gcloud builds describe "$BUILD_ID" \
+              --project gympal-kacper-2026 \
+              --format='value(status)')
+            echo "Status: $STATUS"
+            case "$STATUS" in
+              SUCCESS)
+                echo "Build succeeded!"
+                exit 0
+                ;;
+              FAILURE|CANCELLED|TIMEOUT|INTERNAL_ERROR|EXPIRED)
+                echo "Build failed with status: $STATUS"
+                exit 1
+                ;;
+              *)
+                sleep 30
+                ;;
+            esac
+          done
