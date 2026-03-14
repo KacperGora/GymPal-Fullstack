@@ -42,6 +42,7 @@ mobile/dist/
 !**/.env.example
 
 GymPal.postman_collection.json
+cloud-sql-proxy
 API_TESTING_GUIDE.md
 
 # Test results

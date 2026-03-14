@@ -159,13 +159,10 @@ export class AiService {
 
       // Get steps (with translation if available)
       let steps: string[] | undefined = undefined;
-      if (template.baseRecipe && (template.baseRecipe as any).steps) {
-        steps = (template.baseRecipe as any).steps;
-        if (template.translations && language !== 'en') {
-          const translations = template.translations as Record<string, any>;
-          if (translations[language]?.steps) {
-            steps = translations[language].steps;
-          }
+      if (template.translations && language !== 'en') {
+        const translations = template.translations as Record<string, any>;
+        if (translations[language]?.steps) {
+          steps = translations[language].steps;
         }
       }
 

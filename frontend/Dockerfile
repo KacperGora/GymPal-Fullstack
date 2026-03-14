@@ -31,7 +31,6 @@ COPY package.json ./
 
 # Copy all dependencies
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/frontend/node_modules ./frontend/node_modules
 
 # Copy built shared package
 COPY --from=build-shared /app/shared ./shared
@@ -41,6 +40,8 @@ COPY frontend ./frontend
 
 # Build Next.js application
 WORKDIR /app/frontend
+ARG BACKEND_URL=http://localhost:4000
+ENV BACKEND_URL=$BACKEND_URL
 RUN npm run build
 
 # Stage 4: Production

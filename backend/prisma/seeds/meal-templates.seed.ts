@@ -1,5 +1,6 @@
 import {
   PrismaClient,
+  Prisma,
   MealCategory,
   MealDifficulty,
   MacroFocus,
@@ -13,18 +14,21 @@ const connectionString = process.env.DATABASE_URL;
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
+interface IngredientEntry {
+  name: string;
+  grams: number;
+  scaleable: boolean;
+  sortOrder?: number;
+}
+
 interface MealTemplateData {
   name: string;
   category: MealCategory;
-  baseRecipe: {
-    ingredients: Array<{ name: string; grams: number }>;
-    instructions?: string;
-  };
+  ingredients: IngredientEntry[];
   totalCalories: number;
   totalProteins: number;
   totalCarbs: number;
   totalFats: number;
-  scaleableIngredients: string[];
   minScale: number;
   maxScale: number;
   preparationTime?: number;
@@ -40,21 +44,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Classic Oatmeal with Berries',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Oatmeal (cooked)', grams: 200 },
-        { name: 'Blueberries', grams: 50 },
-        { name: 'Banana', grams: 100 },
-        { name: 'Almonds', grams: 14 },
-        { name: 'Honey', grams: 10 },
-      ],
-      instructions: 'Cook oatmeal, top with berries, sliced banana, and almonds. Drizzle with honey.',
-    },
+    ingredients: [
+      { name: 'Oatmeal (cooked)', grams: 200, scaleable: true },
+      { name: 'Blueberries', grams: 50, scaleable: true },
+      { name: 'Banana', grams: 100, scaleable: true },
+      { name: 'Almonds', grams: 14, scaleable: true },
+      { name: 'Honey', grams: 10, scaleable: false },
+    ],
     totalCalories: 395,
     totalProteins: 10.5,
     totalCarbs: 71.5,
     totalFats: 9.1,
-    scaleableIngredients: ['Oatmeal (cooked)', 'Blueberries', 'Banana', 'Almonds'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 10,
@@ -70,20 +70,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Protein Pancakes',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Egg (whole, large)', grams: 150 },
-        { name: 'Banana', grams: 100 },
-        { name: 'Oatmeal (cooked)', grams: 100 },
-        { name: 'Blueberries', grams: 50 },
-      ],
-      instructions: 'Blend eggs, banana, and oats. Cook as pancakes. Top with blueberries.',
-    },
+    ingredients: [
+      { name: 'Egg (whole, large)', grams: 150, scaleable: true },
+      { name: 'Banana', grams: 100, scaleable: true },
+      { name: 'Oatmeal (cooked)', grams: 100, scaleable: true },
+      { name: 'Blueberries', grams: 50, scaleable: false },
+    ],
     totalCalories: 450,
     totalProteins: 23.9,
     totalCarbs: 58.5,
     totalFats: 15.1,
-    scaleableIngredients: ['Egg (whole, large)', 'Banana', 'Oatmeal (cooked)'],
     minScale: 0.6,
     maxScale: 2.0,
     preparationTime: 15,
@@ -98,21 +94,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Greek Yogurt Parfait',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Greek Yogurt (nonfat, plain)', grams: 200 },
-        { name: 'Strawberries', grams: 100 },
-        { name: 'Blueberries', grams: 50 },
-        { name: 'Almonds', grams: 28 },
-        { name: 'Honey', grams: 21 },
-      ],
-      instructions: 'Layer yogurt with berries and almonds. Drizzle with honey.',
-    },
+    ingredients: [
+      { name: 'Greek Yogurt (nonfat, plain)', grams: 200, scaleable: true },
+      { name: 'Strawberries', grams: 100, scaleable: true },
+      { name: 'Blueberries', grams: 50, scaleable: true },
+      { name: 'Almonds', grams: 28, scaleable: false },
+      { name: 'Honey', grams: 21, scaleable: false },
+    ],
     totalCalories: 400,
     totalProteins: 24.7,
     totalCarbs: 53.3,
     totalFats: 15.8,
-    scaleableIngredients: ['Greek Yogurt (nonfat, plain)', 'Strawberries', 'Blueberries'],
     minScale: 0.6,
     maxScale: 1.5,
     preparationTime: 5,
@@ -127,20 +119,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Scrambled Eggs with Avocado Toast',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Egg (whole, large)', grams: 150 },
-        { name: 'Whole Wheat Bread', grams: 56 },
-        { name: 'Avocado', grams: 50 },
-        { name: 'Tomato (raw)', grams: 50 },
-      ],
-      instructions: 'Scramble eggs. Toast bread and top with mashed avocado. Serve with tomato slices.',
-    },
+    ingredients: [
+      { name: 'Egg (whole, large)', grams: 150, scaleable: true },
+      { name: 'Whole Wheat Bread', grams: 56, scaleable: true },
+      { name: 'Avocado', grams: 50, scaleable: true },
+      { name: 'Tomato (raw)', grams: 50, scaleable: false },
+    ],
     totalCalories: 413,
     totalProteins: 21.9,
     totalCarbs: 31.3,
     totalFats: 22.1,
-    scaleableIngredients: ['Egg (whole, large)', 'Whole Wheat Bread', 'Avocado'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 10,
@@ -155,20 +143,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Cottage Cheese Bowl',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Cottage Cheese (low fat)', grams: 200 },
-        { name: 'Banana', grams: 100 },
-        { name: 'Strawberries', grams: 50 },
-        { name: 'Walnuts', grams: 28 },
-      ],
-      instructions: 'Combine cottage cheese with fresh fruits and chopped walnuts.',
-    },
+    ingredients: [
+      { name: 'Cottage Cheese (low fat)', grams: 200, scaleable: true },
+      { name: 'Banana', grams: 100, scaleable: true },
+      { name: 'Strawberries', grams: 50, scaleable: true },
+      { name: 'Walnuts', grams: 28, scaleable: false },
+    ],
     totalCalories: 431,
     totalProteins: 29.5,
     totalCarbs: 42.1,
     totalFats: 19.6,
-    scaleableIngredients: ['Cottage Cheese (low fat)', 'Banana', 'Strawberries'],
     minScale: 0.6,
     maxScale: 1.7,
     preparationTime: 5,
@@ -183,21 +167,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Egg White Omelette',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Egg White', grams: 165 },
-        { name: 'Spinach (cooked)', grams: 50 },
-        { name: 'Mushrooms (cooked)', grams: 50 },
-        { name: 'Bell Pepper (raw)', grams: 50 },
-        { name: 'Whole Wheat Bread', grams: 56 },
-      ],
-      instructions: 'Cook egg whites with vegetables. Serve with whole wheat toast.',
-    },
+    ingredients: [
+      { name: 'Egg White', grams: 165, scaleable: true },
+      { name: 'Spinach (cooked)', grams: 50, scaleable: true },
+      { name: 'Mushrooms (cooked)', grams: 50, scaleable: true },
+      { name: 'Bell Pepper (raw)', grams: 50, scaleable: false },
+      { name: 'Whole Wheat Bread', grams: 56, scaleable: false },
+    ],
     totalCalories: 276,
     totalProteins: 26.9,
     totalCarbs: 36.9,
     totalFats: 3.5,
-    scaleableIngredients: ['Egg White', 'Spinach (cooked)', 'Mushrooms (cooked)'],
     minScale: 0.7,
     maxScale: 2.0,
     preparationTime: 12,
@@ -212,20 +192,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Peanut Butter Banana Smoothie',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Banana', grams: 150 },
-        { name: 'Peanut Butter', grams: 32 },
-        { name: 'Milk (skim)', grams: 250 },
-        { name: 'Oatmeal (cooked)', grams: 50 },
-      ],
-      instructions: 'Blend all ingredients until smooth.',
-    },
+    ingredients: [
+      { name: 'Banana', grams: 150, scaleable: true },
+      { name: 'Peanut Butter', grams: 32, scaleable: true },
+      { name: 'Milk (skim)', grams: 250, scaleable: true },
+      { name: 'Oatmeal (cooked)', grams: 50, scaleable: false },
+    ],
     totalCalories: 449,
     totalProteins: 18.8,
     totalCarbs: 59.8,
     totalFats: 16.6,
-    scaleableIngredients: ['Banana', 'Peanut Butter', 'Milk (skim)'],
     minScale: 0.6,
     maxScale: 1.8,
     preparationTime: 5,
@@ -240,20 +216,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Turkey Bacon and Eggs',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Egg (whole, large)', grams: 100 },
-        { name: 'Turkey Breast (cooked)', grams: 50 },
-        { name: 'Whole Wheat Bread', grams: 56 },
-        { name: 'Avocado', grams: 30 },
-      ],
-      instructions: 'Cook eggs and turkey. Serve with toast and sliced avocado.',
-    },
+    ingredients: [
+      { name: 'Egg (whole, large)', grams: 100, scaleable: true },
+      { name: 'Turkey Breast (cooked)', grams: 50, scaleable: true },
+      { name: 'Whole Wheat Bread', grams: 56, scaleable: false },
+      { name: 'Avocado', grams: 30, scaleable: false },
+    ],
     totalCalories: 395,
     totalProteins: 32.1,
     totalCarbs: 27.7,
     totalFats: 15.8,
-    scaleableIngredients: ['Egg (whole, large)', 'Turkey Breast (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 10,
@@ -268,21 +240,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Chia Pudding',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chia Seeds', grams: 28 },
-        { name: 'Milk (skim)', grams: 250 },
-        { name: 'Blueberries', grams: 50 },
-        { name: 'Strawberries', grams: 50 },
-        { name: 'Honey', grams: 10 },
-      ],
-      instructions: 'Mix chia seeds with milk. Refrigerate overnight. Top with berries and honey.',
-    },
+    ingredients: [
+      { name: 'Chia Seeds', grams: 28, scaleable: true },
+      { name: 'Milk (skim)', grams: 250, scaleable: true },
+      { name: 'Blueberries', grams: 50, scaleable: true },
+      { name: 'Strawberries', grams: 50, scaleable: false },
+      { name: 'Honey', grams: 10, scaleable: false },
+    ],
     totalCalories: 309,
     totalProteins: 15.2,
     totalCarbs: 42.4,
     totalFats: 9.4,
-    scaleableIngredients: ['Chia Seeds', 'Milk (skim)', 'Blueberries'],
     minScale: 0.6,
     maxScale: 1.5,
     preparationTime: 5,
@@ -297,20 +265,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Whole Grain Toast with Almond Butter',
     category: MealCategory.BREAKFAST,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Whole Wheat Bread', grams: 84 },
-        { name: 'Peanut Butter', grams: 32 },
-        { name: 'Banana', grams: 100 },
-        { name: 'Honey', grams: 10 },
-      ],
-      instructions: 'Toast bread, spread peanut butter, top with banana slices and honey.',
-    },
+    ingredients: [
+      { name: 'Whole Wheat Bread', grams: 84, scaleable: true },
+      { name: 'Peanut Butter', grams: 32, scaleable: true },
+      { name: 'Banana', grams: 100, scaleable: true },
+      { name: 'Honey', grams: 10, scaleable: false },
+    ],
     totalCalories: 458,
     totalProteins: 16.7,
     totalCarbs: 67.9,
     totalFats: 17.9,
-    scaleableIngredients: ['Whole Wheat Bread', 'Peanut Butter', 'Banana'],
     minScale: 0.6,
     maxScale: 1.7,
     preparationTime: 5,
@@ -327,22 +291,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Grilled Chicken Salad',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chicken Breast (skinless, cooked)', grams: 150 },
-        { name: 'Lettuce (raw)', grams: 100 },
-        { name: 'Tomato (raw)', grams: 100 },
-        { name: 'Cucumber (raw)', grams: 100 },
-        { name: 'Olive Oil', grams: 14 },
-        { name: 'Whole Wheat Bread', grams: 56 },
-      ],
-      instructions: 'Grill chicken. Combine with fresh vegetables. Dress with olive oil. Serve with bread.',
-    },
+    ingredients: [
+      { name: 'Chicken Breast (skinless, cooked)', grams: 150, scaleable: true },
+      { name: 'Lettuce (raw)', grams: 100, scaleable: true },
+      { name: 'Tomato (raw)', grams: 100, scaleable: true },
+      { name: 'Cucumber (raw)', grams: 100, scaleable: false },
+      { name: 'Olive Oil', grams: 14, scaleable: false },
+      { name: 'Whole Wheat Bread', grams: 56, scaleable: false },
+    ],
     totalCalories: 555,
     totalProteins: 53.5,
     totalCarbs: 37.9,
     totalFats: 19.8,
-    scaleableIngredients: ['Chicken Breast (skinless, cooked)', 'Lettuce (raw)', 'Tomato (raw)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 20,
@@ -357,21 +317,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Salmon with Quinoa',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Salmon (Atlantic, cooked)', grams: 150 },
-        { name: 'Quinoa (cooked)', grams: 150 },
-        { name: 'Broccoli (cooked)', grams: 100 },
-        { name: 'Asparagus (cooked)', grams: 100 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Bake salmon. Serve with quinoa and steamed vegetables drizzled with olive oil.',
-    },
+    ingredients: [
+      { name: 'Salmon (Atlantic, cooked)', grams: 150, scaleable: true },
+      { name: 'Quinoa (cooked)', grams: 150, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 100, scaleable: true },
+      { name: 'Asparagus (cooked)', grams: 100, scaleable: false },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 605,
     totalProteins: 46.2,
     totalCarbs: 49.6,
     totalFats: 25.0,
-    scaleableIngredients: ['Salmon (Atlantic, cooked)', 'Quinoa (cooked)', 'Broccoli (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 25,
@@ -386,22 +342,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Turkey Wrap',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Turkey Breast (cooked)', grams: 100 },
-        { name: 'Whole Wheat Bread', grams: 84 },
-        { name: 'Lettuce (raw)', grams: 50 },
-        { name: 'Tomato (raw)', grams: 50 },
-        { name: 'Avocado', grams: 50 },
-        { name: 'Mustard', grams: 10 },
-      ],
-      instructions: 'Layer turkey, vegetables, and avocado on bread. Roll into a wrap.',
-    },
+    ingredients: [
+      { name: 'Turkey Breast (cooked)', grams: 100, scaleable: true },
+      { name: 'Whole Wheat Bread', grams: 84, scaleable: true },
+      { name: 'Avocado', grams: 50, scaleable: true },
+      { name: 'Lettuce (raw)', grams: 50, scaleable: false },
+      { name: 'Tomato (raw)', grams: 50, scaleable: false },
+      { name: 'Mustard', grams: 10, scaleable: false },
+    ],
     totalCalories: 452,
     totalProteins: 42.2,
     totalCarbs: 42.8,
     totalFats: 10.8,
-    scaleableIngredients: ['Turkey Breast (cooked)', 'Whole Wheat Bread', 'Avocado'],
     minScale: 0.6,
     maxScale: 1.8,
     preparationTime: 10,
@@ -416,22 +368,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Beef Stir-Fry with Rice',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Ground Beef (90% lean, cooked)', grams: 120 },
-        { name: 'Brown Rice (cooked)', grams: 150 },
-        { name: 'Broccoli (cooked)', grams: 100 },
-        { name: 'Bell Pepper (raw)', grams: 100 },
-        { name: 'Soy Sauce', grams: 15 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Stir-fry beef with vegetables in olive oil. Add soy sauce. Serve over brown rice.',
-    },
+    ingredients: [
+      { name: 'Ground Beef (90% lean, cooked)', grams: 120, scaleable: true },
+      { name: 'Brown Rice (cooked)', grams: 150, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 100, scaleable: true },
+      { name: 'Bell Pepper (raw)', grams: 100, scaleable: false },
+      { name: 'Soy Sauce', grams: 15, scaleable: false },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 565,
     totalProteins: 38.5,
     totalCarbs: 57.9,
     totalFats: 19.6,
-    scaleableIngredients: ['Ground Beef (90% lean, cooked)', 'Brown Rice (cooked)', 'Broccoli (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 20,
@@ -446,22 +394,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Tuna Salad Bowl',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Tuna (canned in water)', grams: 150 },
-        { name: 'Chickpeas (cooked)', grams: 100 },
-        { name: 'Lettuce (raw)', grams: 100 },
-        { name: 'Cucumber (raw)', grams: 100 },
-        { name: 'Tomato (raw)', grams: 100 },
-        { name: 'Olive Oil', grams: 14 },
-      ],
-      instructions: 'Mix tuna and chickpeas with fresh vegetables. Dress with olive oil.',
-    },
+    ingredients: [
+      { name: 'Tuna (canned in water)', grams: 150, scaleable: true },
+      { name: 'Chickpeas (cooked)', grams: 100, scaleable: true },
+      { name: 'Lettuce (raw)', grams: 100, scaleable: true },
+      { name: 'Cucumber (raw)', grams: 100, scaleable: false },
+      { name: 'Tomato (raw)', grams: 100, scaleable: false },
+      { name: 'Olive Oil', grams: 14, scaleable: false },
+    ],
     totalCalories: 497,
     totalProteins: 51.8,
     totalCarbs: 38.7,
     totalFats: 15.5,
-    scaleableIngredients: ['Tuna (canned in water)', 'Chickpeas (cooked)', 'Lettuce (raw)'],
     minScale: 0.6,
     maxScale: 1.7,
     preparationTime: 10,
@@ -476,21 +420,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Chicken Pasta',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chicken Breast (skinless, cooked)', grams: 120 },
-        { name: 'Whole Wheat Pasta (cooked)', grams: 150 },
-        { name: 'Tomato (raw)', grams: 100 },
-        { name: 'Spinach (cooked)', grams: 50 },
-        { name: 'Olive Oil', grams: 14 },
-      ],
-      instructions: 'Cook pasta. Sauté chicken with tomatoes and spinach in olive oil. Mix together.',
-    },
+    ingredients: [
+      { name: 'Chicken Breast (skinless, cooked)', grams: 120, scaleable: true },
+      { name: 'Whole Wheat Pasta (cooked)', grams: 150, scaleable: true },
+      { name: 'Tomato (raw)', grams: 100, scaleable: false },
+      { name: 'Spinach (cooked)', grams: 50, scaleable: false },
+      { name: 'Olive Oil', grams: 14, scaleable: false },
+    ],
     totalCalories: 569,
     totalProteins: 48.0,
     totalCarbs: 57.1,
     totalFats: 17.7,
-    scaleableIngredients: ['Chicken Breast (skinless, cooked)', 'Whole Wheat Pasta (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 20,
@@ -505,22 +445,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Vegetarian Buddha Bowl',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Quinoa (cooked)', grams: 150 },
-        { name: 'Chickpeas (cooked)', grams: 150 },
-        { name: 'Sweet Potato (baked)', grams: 100 },
-        { name: 'Kale (cooked)', grams: 50 },
-        { name: 'Avocado', grams: 50 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Arrange quinoa, roasted chickpeas, sweet potato, kale, and avocado in a bowl. Drizzle with olive oil.',
-    },
+    ingredients: [
+      { name: 'Quinoa (cooked)', grams: 150, scaleable: true },
+      { name: 'Chickpeas (cooked)', grams: 150, scaleable: true },
+      { name: 'Sweet Potato (baked)', grams: 100, scaleable: true },
+      { name: 'Kale (cooked)', grams: 50, scaleable: false },
+      { name: 'Avocado', grams: 50, scaleable: false },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 629,
     totalProteins: 22.7,
     totalCarbs: 92.6,
     totalFats: 22.2,
-    scaleableIngredients: ['Quinoa (cooked)', 'Chickpeas (cooked)', 'Sweet Potato (baked)'],
     minScale: 0.6,
     maxScale: 1.7,
     preparationTime: 25,
@@ -535,21 +471,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Shrimp Tacos',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Shrimp (cooked)', grams: 150 },
-        { name: 'Whole Wheat Bread', grams: 84 },
-        { name: 'Lettuce (raw)', grams: 50 },
-        { name: 'Tomato (raw)', grams: 50 },
-        { name: 'Avocado', grams: 50 },
-      ],
-      instructions: 'Season and cook shrimp. Serve in bread with lettuce, tomato, and avocado.',
-    },
+    ingredients: [
+      { name: 'Shrimp (cooked)', grams: 150, scaleable: true },
+      { name: 'Whole Wheat Bread', grams: 84, scaleable: true },
+      { name: 'Avocado', grams: 50, scaleable: true },
+      { name: 'Lettuce (raw)', grams: 50, scaleable: false },
+      { name: 'Tomato (raw)', grams: 50, scaleable: false },
+    ],
     totalCalories: 450,
     totalProteins: 43.2,
     totalCarbs: 39.5,
     totalFats: 11.7,
-    scaleableIngredients: ['Shrimp (cooked)', 'Whole Wheat Bread', 'Avocado'],
     minScale: 0.6,
     maxScale: 1.8,
     preparationTime: 15,
@@ -564,22 +496,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Tofu Stir-Fry',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Tofu (firm)', grams: 150 },
-        { name: 'Brown Rice (cooked)', grams: 150 },
-        { name: 'Broccoli (cooked)', grams: 100 },
-        { name: 'Bell Pepper (raw)', grams: 100 },
-        { name: 'Soy Sauce', grams: 15 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Stir-fry tofu and vegetables with soy sauce. Serve over brown rice.',
-    },
+    ingredients: [
+      { name: 'Tofu (firm)', grams: 150, scaleable: true },
+      { name: 'Brown Rice (cooked)', grams: 150, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 100, scaleable: true },
+      { name: 'Bell Pepper (raw)', grams: 100, scaleable: false },
+      { name: 'Soy Sauce', grams: 15, scaleable: false },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 591,
     totalProteins: 28.4,
     totalCarbs: 70.0,
     totalFats: 22.9,
-    scaleableIngredients: ['Tofu (firm)', 'Brown Rice (cooked)', 'Broccoli (cooked)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 20,
@@ -594,20 +522,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Grilled Pork with Sweet Potato',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Pork Loin (lean, cooked)', grams: 150 },
-        { name: 'Sweet Potato (baked)', grams: 200 },
-        { name: 'Green Beans (cooked)', grams: 100 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Grill pork loin. Serve with baked sweet potato and green beans drizzled with olive oil.',
-    },
+    ingredients: [
+      { name: 'Pork Loin (lean, cooked)', grams: 150, scaleable: true },
+      { name: 'Sweet Potato (baked)', grams: 200, scaleable: true },
+      { name: 'Green Beans (cooked)', grams: 100, scaleable: true },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 585,
     totalProteins: 44.0,
     totalCarbs: 64.4,
     totalFats: 13.3,
-    scaleableIngredients: ['Pork Loin (lean, cooked)', 'Sweet Potato (baked)', 'Green Beans (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 25,
@@ -624,21 +548,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Grilled Salmon with Vegetables',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Salmon (Atlantic, cooked)', grams: 180 },
-        { name: 'Asparagus (cooked)', grams: 150 },
-        { name: 'Broccoli (cooked)', grams: 100 },
-        { name: 'Sweet Potato (baked)', grams: 150 },
-        { name: 'Olive Oil', grams: 14 },
-      ],
-      instructions: 'Grill salmon. Roast vegetables with olive oil. Serve together.',
-    },
+    ingredients: [
+      { name: 'Salmon (Atlantic, cooked)', grams: 180, scaleable: true },
+      { name: 'Asparagus (cooked)', grams: 150, scaleable: true },
+      { name: 'Sweet Potato (baked)', grams: 150, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 100, scaleable: false },
+      { name: 'Olive Oil', grams: 14, scaleable: false },
+    ],
     totalCalories: 655,
     totalProteins: 50.6,
     totalCarbs: 53.7,
     totalFats: 28.9,
-    scaleableIngredients: ['Salmon (Atlantic, cooked)', 'Asparagus (cooked)', 'Sweet Potato (baked)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 30,
@@ -653,22 +573,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Chicken Stir-Fry with Brown Rice',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chicken Breast (skinless, cooked)', grams: 150 },
-        { name: 'Brown Rice (cooked)', grams: 200 },
-        { name: 'Broccoli (cooked)', grams: 100 },
-        { name: 'Bell Pepper (raw)', grams: 100 },
-        { name: 'Soy Sauce', grams: 15 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Stir-fry chicken with vegetables. Season with soy sauce. Serve over brown rice.',
-    },
+    ingredients: [
+      { name: 'Chicken Breast (skinless, cooked)', grams: 150, scaleable: true },
+      { name: 'Brown Rice (cooked)', grams: 200, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 100, scaleable: true },
+      { name: 'Bell Pepper (raw)', grams: 100, scaleable: false },
+      { name: 'Soy Sauce', grams: 15, scaleable: false },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 619,
     totalProteins: 53.3,
     totalCarbs: 68.0,
     totalFats: 13.4,
-    scaleableIngredients: ['Chicken Breast (skinless, cooked)', 'Brown Rice (cooked)', 'Broccoli (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 25,
@@ -683,21 +599,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Beef and Vegetable Stew',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Ground Beef (90% lean, cooked)', grams: 150 },
-        { name: 'Potato (baked with skin)', grams: 200 },
-        { name: 'Carrot (raw)', grams: 100 },
-        { name: 'Onion (raw)', grams: 50 },
-        { name: 'Tomato (raw)', grams: 100 },
-      ],
-      instructions: 'Brown beef with onions. Add vegetables and simmer until tender.',
-    },
+    ingredients: [
+      { name: 'Ground Beef (90% lean, cooked)', grams: 150, scaleable: true },
+      { name: 'Potato (baked with skin)', grams: 200, scaleable: true },
+      { name: 'Carrot (raw)', grams: 100, scaleable: true },
+      { name: 'Onion (raw)', grams: 50, scaleable: false },
+      { name: 'Tomato (raw)', grams: 100, scaleable: false },
+    ],
     totalCalories: 618,
     totalProteins: 45.9,
     totalCarbs: 77.8,
     totalFats: 13.1,
-    scaleableIngredients: ['Ground Beef (90% lean, cooked)', 'Potato (baked with skin)', 'Carrot (raw)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 40,
@@ -712,21 +624,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Turkey Meatballs with Pasta',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Turkey Breast (cooked)', grams: 150 },
-        { name: 'Whole Wheat Pasta (cooked)', grams: 200 },
-        { name: 'Tomato (raw)', grams: 150 },
-        { name: 'Spinach (cooked)', grams: 50 },
-        { name: 'Olive Oil', grams: 14 },
-      ],
-      instructions: 'Form turkey into meatballs and bake. Cook pasta. Make tomato sauce with spinach. Combine.',
-    },
+    ingredients: [
+      { name: 'Turkey Breast (cooked)', grams: 150, scaleable: true },
+      { name: 'Whole Wheat Pasta (cooked)', grams: 200, scaleable: true },
+      { name: 'Tomato (raw)', grams: 150, scaleable: true },
+      { name: 'Spinach (cooked)', grams: 50, scaleable: false },
+      { name: 'Olive Oil', grams: 14, scaleable: false },
+    ],
     totalCalories: 677,
     totalProteins: 58.5,
     totalCarbs: 78.8,
     totalFats: 16.6,
-    scaleableIngredients: ['Turkey Breast (cooked)', 'Whole Wheat Pasta (cooked)', 'Tomato (raw)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 35,
@@ -741,21 +649,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Baked Cod with Quinoa',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Cod (cooked)', grams: 180 },
-        { name: 'Quinoa (cooked)', grams: 150 },
-        { name: 'Zucchini (cooked)', grams: 150 },
-        { name: 'Tomato (raw)', grams: 100 },
-        { name: 'Olive Oil', grams: 14 },
-      ],
-      instructions: 'Bake cod with herbs. Serve with quinoa and roasted vegetables.',
-    },
+    ingredients: [
+      { name: 'Cod (cooked)', grams: 180, scaleable: true },
+      { name: 'Quinoa (cooked)', grams: 150, scaleable: true },
+      { name: 'Zucchini (cooked)', grams: 150, scaleable: true },
+      { name: 'Tomato (raw)', grams: 100, scaleable: false },
+      { name: 'Olive Oil', grams: 14, scaleable: false },
+    ],
     totalCalories: 565,
     totalProteins: 50.6,
     totalCarbs: 53.1,
     totalFats: 17.4,
-    scaleableIngredients: ['Cod (cooked)', 'Quinoa (cooked)', 'Zucchini (cooked)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 30,
@@ -770,20 +674,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Chicken Thigh with Sweet Potato',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chicken Thigh (skinless, cooked)', grams: 150 },
-        { name: 'Sweet Potato (baked)', grams: 200 },
-        { name: 'Broccoli (cooked)', grams: 150 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Roast chicken thighs. Bake sweet potato. Steam broccoli. Drizzle with olive oil.',
-    },
+    ingredients: [
+      { name: 'Chicken Thigh (skinless, cooked)', grams: 150, scaleable: true },
+      { name: 'Sweet Potato (baked)', grams: 200, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 150, scaleable: true },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 585,
     totalProteins: 43.5,
     totalCarbs: 62.9,
     totalFats: 17.9,
-    scaleableIngredients: ['Chicken Thigh (skinless, cooked)', 'Sweet Potato (baked)', 'Broccoli (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 35,
@@ -798,22 +698,18 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Shrimp and Vegetable Stir-Fry',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Shrimp (cooked)', grams: 200 },
-        { name: 'Brown Rice (cooked)', grams: 200 },
-        { name: 'Broccoli (cooked)', grams: 100 },
-        { name: 'Bell Pepper (raw)', grams: 100 },
-        { name: 'Soy Sauce', grams: 15 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Stir-fry shrimp and vegetables with soy sauce. Serve over brown rice.',
-    },
+    ingredients: [
+      { name: 'Shrimp (cooked)', grams: 200, scaleable: true },
+      { name: 'Brown Rice (cooked)', grams: 200, scaleable: true },
+      { name: 'Broccoli (cooked)', grams: 100, scaleable: true },
+      { name: 'Bell Pepper (raw)', grams: 100, scaleable: false },
+      { name: 'Soy Sauce', grams: 15, scaleable: false },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 621,
     totalProteins: 49.2,
     totalCarbs: 76.1,
     totalFats: 12.7,
-    scaleableIngredients: ['Shrimp (cooked)', 'Brown Rice (cooked)', 'Broccoli (cooked)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 20,
@@ -828,20 +724,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Pork Chops with Mashed Potatoes',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Pork Loin (lean, cooked)', grams: 150 },
-        { name: 'Potato (baked with skin)', grams: 250 },
-        { name: 'Green Beans (cooked)', grams: 150 },
-        { name: 'Butter', grams: 14 },
-      ],
-      instructions: 'Grill pork chops. Mash potatoes with butter. Steam green beans.',
-    },
+    ingredients: [
+      { name: 'Pork Loin (lean, cooked)', grams: 150, scaleable: true },
+      { name: 'Potato (baked with skin)', grams: 250, scaleable: true },
+      { name: 'Green Beans (cooked)', grams: 150, scaleable: true },
+      { name: 'Butter', grams: 14, scaleable: false },
+    ],
     totalCalories: 678,
     totalProteins: 48.3,
     totalCarbs: 74.2,
     totalFats: 19.6,
-    scaleableIngredients: ['Pork Loin (lean, cooked)', 'Potato (baked with skin)', 'Green Beans (cooked)'],
     minScale: 0.7,
     maxScale: 1.9,
     preparationTime: 30,
@@ -856,21 +748,17 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Lentil Curry with Rice',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Lentils (cooked)', grams: 200 },
-        { name: 'Brown Rice (cooked)', grams: 150 },
-        { name: 'Tomato (raw)', grams: 100 },
-        { name: 'Spinach (cooked)', grams: 50 },
-        { name: 'Coconut Oil', grams: 14 },
-      ],
-      instructions: 'Cook lentils with curry spices and tomatoes. Add spinach. Serve over brown rice.',
-    },
+    ingredients: [
+      { name: 'Lentils (cooked)', grams: 200, scaleable: true },
+      { name: 'Brown Rice (cooked)', grams: 150, scaleable: true },
+      { name: 'Tomato (raw)', grams: 100, scaleable: true },
+      { name: 'Spinach (cooked)', grams: 50, scaleable: false },
+      { name: 'Coconut Oil', grams: 14, scaleable: false },
+    ],
     totalCalories: 603,
     totalProteins: 22.4,
     totalCarbs: 89.9,
     totalFats: 16.9,
-    scaleableIngredients: ['Lentils (cooked)', 'Brown Rice (cooked)', 'Tomato (raw)'],
     minScale: 0.6,
     maxScale: 1.7,
     preparationTime: 30,
@@ -885,20 +773,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Grilled Mackerel with Vegetables',
     category: MealCategory.DINNER,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Mackerel (cooked)', grams: 150 },
-        { name: 'Sweet Potato (baked)', grams: 200 },
-        { name: 'Asparagus (cooked)', grams: 150 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Grill mackerel. Roast sweet potato and asparagus with olive oil.',
-    },
+    ingredients: [
+      { name: 'Mackerel (cooked)', grams: 150, scaleable: true },
+      { name: 'Sweet Potato (baked)', grams: 200, scaleable: true },
+      { name: 'Asparagus (cooked)', grams: 150, scaleable: true },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 703,
     totalProteins: 42.5,
     totalCarbs: 58.4,
     totalFats: 31.4,
-    scaleableIngredients: ['Mackerel (cooked)', 'Sweet Potato (baked)', 'Asparagus (cooked)'],
     minScale: 0.7,
     maxScale: 1.8,
     preparationTime: 25,
@@ -915,19 +799,15 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Protein Shake',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Milk (skim)', grams: 250 },
-        { name: 'Banana', grams: 100 },
-        { name: 'Peanut Butter', grams: 16 },
-      ],
-      instructions: 'Blend milk, banana, and peanut butter until smooth.',
-    },
+    ingredients: [
+      { name: 'Milk (skim)', grams: 250, scaleable: true },
+      { name: 'Banana', grams: 100, scaleable: true },
+      { name: 'Peanut Butter', grams: 16, scaleable: true },
+    ],
     totalCalories: 296,
     totalProteins: 13.4,
     totalCarbs: 39.8,
     totalFats: 8.5,
-    scaleableIngredients: ['Milk (skim)', 'Banana', 'Peanut Butter'],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 5,
@@ -942,19 +822,15 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Greek Yogurt with Honey',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Greek Yogurt (nonfat, plain)', grams: 150 },
-        { name: 'Honey', grams: 21 },
-        { name: 'Almonds', grams: 14 },
-      ],
-      instructions: 'Top yogurt with honey and chopped almonds.',
-    },
+    ingredients: [
+      { name: 'Greek Yogurt (nonfat, plain)', grams: 150, scaleable: true },
+      { name: 'Honey', grams: 21, scaleable: true },
+      { name: 'Almonds', grams: 14, scaleable: false },
+    ],
     totalCalories: 229,
     totalProteins: 17.3,
     totalCarbs: 26.4,
     totalFats: 7.5,
-    scaleableIngredients: ['Greek Yogurt (nonfat, plain)', 'Honey'],
     minScale: 0.5,
     maxScale: 1.8,
     preparationTime: 3,
@@ -969,18 +845,14 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Apple with Almond Butter',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Apple', grams: 150 },
-        { name: 'Peanut Butter', grams: 16 },
-      ],
-      instructions: 'Slice apple and serve with almond butter for dipping.',
-    },
+    ingredients: [
+      { name: 'Apple', grams: 150, scaleable: true },
+      { name: 'Peanut Butter', grams: 16, scaleable: true },
+    ],
     totalCalories: 172,
     totalProteins: 4.3,
     totalCarbs: 28.7,
     totalFats: 8.0,
-    scaleableIngredients: ['Apple', 'Peanut Butter'],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 3,
@@ -995,20 +867,16 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Hummus with Vegetables',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chickpeas (cooked)', grams: 100 },
-        { name: 'Carrot (raw)', grams: 100 },
-        { name: 'Cucumber (raw)', grams: 100 },
-        { name: 'Olive Oil', grams: 7 },
-      ],
-      instructions: 'Blend chickpeas with olive oil to make hummus. Serve with sliced vegetables.',
-    },
+    ingredients: [
+      { name: 'Chickpeas (cooked)', grams: 100, scaleable: true },
+      { name: 'Carrot (raw)', grams: 100, scaleable: true },
+      { name: 'Cucumber (raw)', grams: 100, scaleable: true },
+      { name: 'Olive Oil', grams: 7, scaleable: false },
+    ],
     totalCalories: 257,
     totalProteins: 10.7,
     totalCarbs: 35.9,
     totalFats: 9.7,
-    scaleableIngredients: ['Chickpeas (cooked)', 'Carrot (raw)', 'Cucumber (raw)'],
     minScale: 0.5,
     maxScale: 1.8,
     preparationTime: 10,
@@ -1023,19 +891,15 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Cottage Cheese with Berries',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Cottage Cheese (low fat)', grams: 150 },
-        { name: 'Blueberries', grams: 50 },
-        { name: 'Strawberries', grams: 50 },
-      ],
-      instructions: 'Mix cottage cheese with fresh berries.',
-    },
+    ingredients: [
+      { name: 'Cottage Cheese (low fat)', grams: 150, scaleable: true },
+      { name: 'Blueberries', grams: 50, scaleable: true },
+      { name: 'Strawberries', grams: 50, scaleable: true },
+    ],
     totalCalories: 156,
     totalProteins: 19.3,
     totalCarbs: 14.1,
     totalFats: 1.6,
-    scaleableIngredients: ['Cottage Cheese (low fat)', 'Blueberries', 'Strawberries'],
     minScale: 0.5,
     maxScale: 1.8,
     preparationTime: 3,
@@ -1050,18 +914,14 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Hard-Boiled Eggs',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Egg (whole, large)', grams: 100 },
-        { name: 'Whole Wheat Bread', grams: 28 },
-      ],
-      instructions: 'Boil eggs. Serve with whole wheat toast.',
-    },
+    ingredients: [
+      { name: 'Egg (whole, large)', grams: 100, scaleable: true },
+      { name: 'Whole Wheat Bread', grams: 28, scaleable: true },
+    ],
     totalCalories: 213,
     totalProteins: 15.9,
     totalCarbs: 12.0,
     totalFats: 10.8,
-    scaleableIngredients: ['Egg (whole, large)', 'Whole Wheat Bread'],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 10,
@@ -1076,19 +936,15 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Trail Mix',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Almonds', grams: 28 },
-        { name: 'Walnuts', grams: 14 },
-        { name: 'Raisins', grams: 40 },
-      ],
-      instructions: 'Mix nuts and dried fruit.',
-    },
+    ingredients: [
+      { name: 'Almonds', grams: 28, scaleable: true },
+      { name: 'Walnuts', grams: 14, scaleable: true },
+      { name: 'Raisins', grams: 40, scaleable: false },
+    ],
     totalCalories: 284,
     totalProteins: 8.2,
     totalCarbs: 32.4,
     totalFats: 16.4,
-    scaleableIngredients: ['Almonds', 'Walnuts'],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 2,
@@ -1103,18 +959,14 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Edamame',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Edamame (cooked)', grams: 150 },
-        { name: 'Soy Sauce', grams: 5 },
-      ],
-      instructions: 'Steam edamame and lightly salt or add soy sauce.',
-    },
+    ingredients: [
+      { name: 'Edamame (cooked)', grams: 150, scaleable: true },
+      { name: 'Soy Sauce', grams: 5, scaleable: false },
+    ],
     totalCalories: 186,
     totalProteins: 18.3,
     totalCarbs: 13.8,
     totalFats: 7.8,
-    scaleableIngredients: ['Edamame (cooked)'],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 5,
@@ -1129,18 +981,14 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Banana with Peanut Butter',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Banana', grams: 100 },
-        { name: 'Peanut Butter', grams: 16 },
-      ],
-      instructions: 'Slice banana and spread with peanut butter.',
-    },
+    ingredients: [
+      { name: 'Banana', grams: 100, scaleable: true },
+      { name: 'Peanut Butter', grams: 16, scaleable: true },
+    ],
     totalCalories: 183,
     totalProteins: 4.9,
     totalCarbs: 26.8,
     totalFats: 8.3,
-    scaleableIngredients: ['Banana', 'Peanut Butter'],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 3,
@@ -1155,18 +1003,14 @@ const mealTemplates: MealTemplateData[] = [
   {
     name: 'Tuna Snack',
     category: MealCategory.SNACK,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Tuna (canned in water)', grams: 100 },
-        { name: 'Whole Wheat Bread', grams: 28 },
-      ],
-      instructions: 'Drain tuna and serve on whole wheat crackers or toast.',
-    },
+    ingredients: [
+      { name: 'Tuna (canned in water)', grams: 100, scaleable: true },
+      { name: 'Whole Wheat Bread', grams: 28, scaleable: true },
+    ],
     totalCalories: 185,
     totalProteins: 28.6,
     totalCarbs: 11.6,
     totalFats: 2.0,
-    scaleableIngredients: ['Tuna (canned in water)', 'Whole Wheat Bread'],
     minScale: 0.5,
     maxScale: 1.8,
     preparationTime: 3,
@@ -1183,20 +1027,91 @@ const mealTemplates: MealTemplateData[] = [
 async function seedMealTemplates() {
   console.log('Seeding meal templates...');
 
-  for (const template of mealTemplates) {
+  // Pre-load all ingredients into a name→id map to avoid N+1 lookups
+  const allIngredients = await prisma.ingredient.findMany({
+    select: { id: true, name: true },
+  });
+  const ingredientMap = new Map<string, string>(
+    allIngredients.map((ing) => [ing.name, ing.id]),
+  );
+
+  let seededCount = 0;
+
+  for (const templateData of mealTemplates) {
+    const templateId = templateData.name.toLowerCase().replace(/\s+/g, '-');
+
+    // Upsert the template row (without ingredients)
     await prisma.mealTemplate.upsert({
-      where: {
-        id: template.name.toLowerCase().replace(/\s+/g, '-'),
+      where: { id: templateId },
+      update: {
+        name: templateData.name,
+        category: templateData.category,
+        totalCalories: templateData.totalCalories,
+        totalProteins: templateData.totalProteins,
+        totalCarbs: templateData.totalCarbs,
+        totalFats: templateData.totalFats,
+        minScale: templateData.minScale,
+        maxScale: templateData.maxScale,
+        preparationTime: templateData.preparationTime ?? null,
+        difficulty: templateData.difficulty,
+        macroFocus: templateData.macroFocus,
+        translations: templateData.translations ?? Prisma.JsonNull,
       },
-      update: template,
       create: {
-        id: template.name.toLowerCase().replace(/\s+/g, '-'),
-        ...template,
+        id: templateId,
+        name: templateData.name,
+        category: templateData.category,
+        totalCalories: templateData.totalCalories,
+        totalProteins: templateData.totalProteins,
+        totalCarbs: templateData.totalCarbs,
+        totalFats: templateData.totalFats,
+        minScale: templateData.minScale,
+        maxScale: templateData.maxScale,
+        preparationTime: templateData.preparationTime ?? null,
+        difficulty: templateData.difficulty,
+        macroFocus: templateData.macroFocus,
+        translations: templateData.translations ?? Prisma.JsonNull,
       },
     });
+
+    // Upsert each MealTemplateIngredient
+    for (let i = 0; i < templateData.ingredients.length; i++) {
+      const entry = templateData.ingredients[i];
+      const ingredientId = ingredientMap.get(entry.name);
+
+      if (!ingredientId) {
+        console.warn(
+          `  [WARN] Ingredient not found: "${entry.name}" (template: "${templateData.name}") — skipping`,
+        );
+        continue;
+      }
+
+      await prisma.mealTemplateIngredient.upsert({
+        where: {
+          templateId_ingredientId: {
+            templateId,
+            ingredientId,
+          },
+        },
+        update: {
+          grams: entry.grams,
+          scaleable: entry.scaleable,
+          sortOrder: entry.sortOrder ?? i,
+        },
+        create: {
+          templateId,
+          ingredientId,
+          grams: entry.grams,
+          scaleable: entry.scaleable,
+          sortOrder: entry.sortOrder ?? i,
+        },
+      });
+    }
+
+    seededCount++;
   }
 
-  console.log(`Seeded ${mealTemplates.length} meal templates successfully!`);
+  console.log(`Seeded ${seededCount} meal templates successfully!`);
 }
 
 seedMealTemplates()

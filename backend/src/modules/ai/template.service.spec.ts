@@ -17,17 +17,30 @@ describe('TemplateService', () => {
     id: 'test-id',
     name: 'Chicken Rice',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [
-        { name: 'Chicken', grams: 150 },
-        { name: 'Rice', grams: 100 },
-      ],
-    },
     totalCalories: 500,
     totalProteins: 40,
     totalCarbs: 60,
     totalFats: 10,
-    scaleableIngredients: ['Chicken', 'Rice'],
+    ingredients: [
+      {
+        id: 'ti-1',
+        templateId: 'test-id',
+        ingredientId: 'ing-1',
+        grams: 150,
+        scaleable: true,
+        sortOrder: 0,
+        ingredient: { id: 'ing-1', name: 'Chicken' },
+      },
+      {
+        id: 'ti-2',
+        templateId: 'test-id',
+        ingredientId: 'ing-2',
+        grams: 100,
+        scaleable: true,
+        sortOrder: 1,
+        ingredient: { id: 'ing-2', name: 'Rice' },
+      },
+    ],
     minScale: 0.5,
     maxScale: 2.0,
     preparationTime: 30,
@@ -97,6 +110,12 @@ describe('TemplateService', () => {
           totalCalories: 'asc',
         },
         take: 8,
+        include: {
+          ingredients: {
+            include: { ingredient: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
       });
     });
 
@@ -185,6 +204,10 @@ describe('TemplateService', () => {
         expect.objectContaining({
           totalCalories: 500,
           totalProteins: 40,
+          ingredients: [
+            { name: 'Chicken', grams: 150, scaleable: true },
+            { name: 'Rice', grams: 100, scaleable: true },
+          ],
         }),
         1.5,
       );
@@ -225,6 +248,12 @@ describe('TemplateService', () => {
         where: { category: MealCategory.LUNCH },
         orderBy: { totalCalories: 'asc' },
         take: 3,
+        include: {
+          ingredients: {
+            include: { ingredient: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
       });
     });
   });
@@ -248,6 +277,12 @@ describe('TemplateService', () => {
       expect(result).toHaveLength(3);
       expect(prisma.mealTemplate.findMany).toHaveBeenCalledWith({
         orderBy: [{ category: 'asc' }, { totalCalories: 'asc' }],
+        include: {
+          ingredients: {
+            include: { ingredient: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+        },
       });
     });
   });

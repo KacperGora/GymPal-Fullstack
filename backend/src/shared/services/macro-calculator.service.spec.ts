@@ -175,14 +175,11 @@ describe('MacroCalculatorService', () => {
       totalProteins: 40,
       totalCarbs: 50,
       totalFats: 15,
-      scaleableIngredients: ['Chicken Breast', 'Brown Rice'],
-      baseRecipe: {
-        ingredients: [
-          { name: 'Chicken Breast', grams: 150 },
-          { name: 'Brown Rice', grams: 100 },
-          { name: 'Olive Oil', grams: 10 },
-        ],
-      },
+      ingredients: [
+        { name: 'Chicken Breast', grams: 150, scaleable: true },
+        { name: 'Brown Rice', grams: 100, scaleable: true },
+        { name: 'Olive Oil', grams: 10, scaleable: false },
+      ],
     };
 
     it('should scale template by factor 1.5', () => {
@@ -258,7 +255,10 @@ describe('MacroCalculatorService', () => {
     it('should handle template with no scaleable ingredients', () => {
       const templateNoScaleable: MealTemplateForScaling = {
         ...template,
-        scaleableIngredients: [],
+        ingredients: template.ingredients.map((ing) => ({
+          ...ing,
+          scaleable: false,
+        })),
       };
 
       const result = service.scaleTemplate(templateNoScaleable, 2);
@@ -266,9 +266,7 @@ describe('MacroCalculatorService', () => {
       // Calories calculated from macros: 80*4 + 100*4 + 30*9 = 990
       expect(result.calories).toBe(990);
       result.ingredients.forEach((ing) => {
-        const original = template.baseRecipe.ingredients.find(
-          (i) => i.name === ing.name,
-        );
+        const original = template.ingredients.find((i) => i.name === ing.name);
         expect(ing.grams).toBe(original?.grams);
       });
     });

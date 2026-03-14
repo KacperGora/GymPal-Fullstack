@@ -23,10 +23,7 @@ export interface MealTemplateForScaling {
   totalProteins: number;
   totalCarbs: number;
   totalFats: number;
-  scaleableIngredients: string[];
-  baseRecipe: {
-    ingredients: Array<{ name: string; grams: number }>;
-  };
+  ingredients: Array<{ name: string; grams: number; scaleable: boolean }>;
 }
 
 export interface MacroIntegrityResult {
@@ -89,12 +86,8 @@ export class MacroCalculatorService {
 
     const scaledIngredients: IngredientWithGrams[] = [];
 
-    for (const ingredient of template.baseRecipe.ingredients) {
-      const isScaleable = template.scaleableIngredients.includes(
-        ingredient.name,
-      );
-
-      const multiplier = isScaleable ? scaleFactor : 1;
+    for (const ingredient of template.ingredients) {
+      const multiplier = ingredient.scaleable ? scaleFactor : 1;
 
       scaledIngredients.push({
         name: ingredient.name,

@@ -13,7 +13,7 @@
     "lint-staged": "^16.2.7"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "lint-staged": {
     "backend/{src,test}/**/*.ts": [

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 // Import Sentry instrumentation first
 import './instrument';
-
+import { execSync } from 'child_process';
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
@@ -11,15 +11,30 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create(AppModule);
 
+  try {
+    logger.log('Running database migrations...');
+    const result = execSync('npx prisma migrate deploy', {
+      cwd: '/app/backend',
+      env: {
+        ...process.env,
+        DATABASE_URL: process.env.DATABASE_URL ?? '',
+      },
+    });
+    logger.log(`Migration output: ${result.toString()}`);
+    logger.log('Migrations completed successfully');
+  } catch (error: any) {
+    logger.error(`Migration failed: ${error.stdout?.toString()}`);
+    logger.error(`Migration stderr: ${error.stderr?.toString()}`);
+    process.exit(1);
+  }
+
+  const app = await NestFactory.create(AppModule);
   const corsOrigins = process.env.CORS_ORIGIN?.split(',') ?? [
     'http://localhost:3000',
   ];
   logger.log(`CORS origins: ${corsOrigins.join(', ')}`);
-
   const isProduction = process.env.NODE_ENV === 'production';
-
   app.use(cookieParser());
   app.use(
     helmet({
@@ -54,7 +69,6 @@ async function bootstrap() {
     origin: corsOrigins,
     credentials: true,
   });
-
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('GymPal API')
@@ -65,7 +79,6 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api/docs', app, document);
   }
-
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

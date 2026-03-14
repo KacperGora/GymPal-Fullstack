@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   transpilePackages: ['@gympal/shared'],
   turbopack: {
+    root: '..',
     resolveAlias: {
       '@gympal/shared': '../shared/dist/index.js',
     },

@@ -10,14 +10,13 @@ describe('CacheService', () => {
     id: 'test-id',
     name: 'Test Meal',
     category: MealCategory.LUNCH,
-    baseRecipe: {
-      ingredients: [{ name: 'Test', grams: 100 }],
-    },
     totalCalories: 500,
     totalProteins: 40,
     totalCarbs: 60,
     totalFats: 10,
-    scaleableIngredients: ['Test'],
+    ingredients: [
+      { id: 'ti-1', name: 'Test', grams: 100, scaleable: true, sortOrder: 0 },
+    ],
     minScale: 0.5,
     maxScale: 2.0,
   };

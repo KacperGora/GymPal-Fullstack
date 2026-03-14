@@ -36,21 +36,21 @@ enum MealCategory {
 }
 
 model User {
-  id                   Int                @id @unique @default(autoincrement())
-  firstName            String
-  lastName             String
-  password             String
-  email                String             @unique
-  failedLoginAttempts  Int                @default(0)
-  lockedUntil          DateTime?
-  refreshTokens        RefreshToken[]
-  meals                Meal[]
-  favoriteMeals        FavoriteMeal[]
-  userProfile          UserProfile?
-  dailyStats           DailyStat[]
-  workouts             WorkoutSession[]
-  waterIntake          WaterIntake[]
-  favoriteExercises    FavoriteExercise[]
+  id                  Int                @id @unique @default(autoincrement())
+  firstName           String
+  lastName            String
+  password            String
+  email               String             @unique
+  failedLoginAttempts Int                @default(0)
+  lockedUntil         DateTime?
+  refreshTokens       RefreshToken[]
+  meals               Meal[]
+  favoriteMeals       FavoriteMeal[]
+  userProfile         UserProfile?
+  dailyStats          DailyStat[]
+  workouts            WorkoutSession[]
+  waterIntake         WaterIntake[]
+  favoriteExercises   FavoriteExercise[]
 }
 
 model RefreshToken {
@@ -184,16 +184,16 @@ model WorkoutExercise {
 }
 
 model FavoriteExercise {
-  id              String   @id @default(cuid())
-  userId          Int
-  user            User     @relation(fields: [userId], references: [id])
-  wgerExerciseId  Int
-  name            String
-  category        String
-  muscles         String
-  equipment       String
-  imageUrl        String?
-  createdAt       DateTime @default(now())
+  id             String   @id @default(cuid())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+  wgerExerciseId Int
+  name           String
+  category       String
+  muscles        String
+  equipment      String
+  imageUrl       String?
+  createdAt      DateTime @default(now())
 
   @@unique([userId, wgerExerciseId])
 }
@@ -228,22 +228,23 @@ enum MacroFocus {
 }
 
 model Ingredient {
-  id          String             @id @default(cuid())
-  name        String
-  servingSize Float
-  servingUnit String
-  calories    Float
-  proteins    Float
-  carbs       Float
-  fats        Float
-  fiber       Float              @default(0)
-  category    IngredientCategory
-  verified    Boolean            @default(false)
-  source      String             @default("USDA")
-  sourceUrl   String?
-  verifiedBy  String?
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
+  id                    String                  @id @default(cuid())
+  name                  String
+  servingSize           Float
+  servingUnit           String
+  calories              Float
+  proteins              Float
+  carbs                 Float
+  fats                  Float
+  fiber                 Float                   @default(0)
+  category              IngredientCategory
+  verified              Boolean                 @default(false)
+  source                String                  @default("USDA")
+  sourceUrl             String?
+  verifiedBy            String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  mealTemplateIngredients MealTemplateIngredient[]
 
   @@unique([name, servingSize, servingUnit])
   @@index([category])
@@ -251,25 +252,48 @@ model Ingredient {
 }
 
 model MealTemplate {
-  id                   String         @id @default(cuid())
-  name                 String
-  category             MealCategory
-  baseRecipe           Json
-  totalCalories        Float
-  totalProteins        Float
-  totalCarbs           Float
-  totalFats            Float
-  scaleableIngredients Json
-  minScale             Float          @default(0.5)
-  maxScale             Float          @default(2.0)
-  preparationTime      Int?
-  difficulty           MealDifficulty @default(EASY)
-  macroFocus           MacroFocus     @default(BALANCED)
-  translations         Json?
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
+  id              String                   @id @default(cuid())
+  name            String
+  category        MealCategory
+  totalCalories   Float
+  totalProteins   Float
+  totalCarbs      Float
+  totalFats       Float
+  minScale        Float                    @default(0.5)
+  maxScale        Float                    @default(2.0)
+  preparationTime Int?
+  difficulty      MealDifficulty           @default(EASY)
+  macroFocus      MacroFocus               @default(BALANCED)
+  translations    Json?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  ingredients     MealTemplateIngredient[]
 
   @@index([category])
   @@index([macroFocus])
   @@index([totalCalories])
+}
+
+model MealTemplateIngredient {
+  id           String       @id @default(cuid())
+  templateId   String
+  ingredientId String
+  grams        Float
+  scaleable    Boolean      @default(true)
+  sortOrder    Int          @default(0)
+  template     MealTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient   @relation(fields: [ingredientId], references: [id])
+
+  @@unique([templateId, ingredientId])
+  @@index([templateId])
+  @@index([ingredientId])
+}
+
+model CacheEntry {
+  key       String   @id
+  value     Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
 }

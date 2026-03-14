@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { MealTemplate as PrismaMealTemplate } from '../../generated/prisma/client';
 import { MealCategory } from '../../generated/prisma/enums';
 import { PrismaService } from '../../shared/db/prisma.service';
 import type {
@@ -12,14 +11,17 @@ export interface MealTemplate {
   id: string;
   name: string;
   category: MealCategory;
-  baseRecipe: {
-    ingredients: Array<{ name: string; grams: number }>;
-  };
   totalCalories: number;
   totalProteins: number;
   totalCarbs: number;
   totalFats: number;
-  scaleableIngredients: string[];
+  ingredients: Array<{
+    id: string;
+    name: string;
+    grams: number;
+    scaleable: boolean;
+    sortOrder: number;
+  }>;
   minScale: number;
   maxScale: number;
   preparationTime?: number;
@@ -50,20 +52,25 @@ export class TemplateService {
       `Fetching templates for category=${category}, targetCalories=${targetCalories}, language=${language}, range=[${minCalories}, ${maxCalories}]`,
     );
 
-    const templates: PrismaMealTemplate[] =
-      await this.prisma.mealTemplate.findMany({
-        where: {
-          category,
-          totalCalories: {
-            gte: minCalories,
-            lte: maxCalories,
-          },
+    const templates = await this.prisma.mealTemplate.findMany({
+      where: {
+        category,
+        totalCalories: {
+          gte: minCalories,
+          lte: maxCalories,
         },
-        orderBy: {
-          totalCalories: 'asc',
+      },
+      orderBy: {
+        totalCalories: 'asc',
+      },
+      take: 8,
+      include: {
+        ingredients: {
+          include: { ingredient: true },
+          orderBy: { sortOrder: 'asc' },
         },
-        take: 8,
-      });
+      },
+    });
 
     const sorted = [...templates]
       .sort(
@@ -79,11 +86,22 @@ export class TemplateService {
 
     return sorted.map(
       (template): MealTemplate => ({
-        ...template,
-        baseRecipe: template.baseRecipe as {
-          ingredients: Array<{ name: string; grams: number }>;
-        },
-        scaleableIngredients: template.scaleableIngredients as string[],
+        id: template.id,
+        name: template.name,
+        category: template.category,
+        totalCalories: template.totalCalories,
+        totalProteins: template.totalProteins,
+        totalCarbs: template.totalCarbs,
+        totalFats: template.totalFats,
+        ingredients: template.ingredients.map((ti) => ({
+          id: ti.id,
+          name: ti.ingredient.name,
+          grams: ti.grams,
+          scaleable: ti.scaleable,
+          sortOrder: ti.sortOrder,
+        })),
+        minScale: template.minScale,
+        maxScale: template.maxScale,
         preparationTime: template.preparationTime ?? undefined,
         difficulty: template.difficulty ?? undefined,
         macroFocus: template.macroFocus ?? undefined,
@@ -103,6 +121,12 @@ export class TemplateService {
 
     const template = await this.prisma.mealTemplate.findUnique({
       where: { id: templateId },
+      include: {
+        ingredients: {
+          include: { ingredient: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
     });
 
     if (!template) {
@@ -114,10 +138,11 @@ export class TemplateService {
       totalProteins: template.totalProteins,
       totalCarbs: template.totalCarbs,
       totalFats: template.totalFats,
-      scaleableIngredients: template.scaleableIngredients as string[],
-      baseRecipe: template.baseRecipe as {
-        ingredients: Array<{ name: string; grams: number }>;
-      },
+      ingredients: template.ingredients.map((ti) => ({
+        name: ti.ingredient.name,
+        grams: ti.grams,
+        scaleable: ti.scaleable,
+      })),
     };
 
     return this.macroCalculator.scaleTemplate(templateForScaling, scaleFactor);
@@ -131,20 +156,36 @@ export class TemplateService {
       `Fetching top ${limit} popular templates for category=${category}`,
     );
 
-    const templates: PrismaMealTemplate[] =
-      await this.prisma.mealTemplate.findMany({
-        where: { category },
-        orderBy: { totalCalories: 'asc' },
-        take: limit,
-      });
+    const templates = await this.prisma.mealTemplate.findMany({
+      where: { category },
+      orderBy: { totalCalories: 'asc' },
+      take: limit,
+      include: {
+        ingredients: {
+          include: { ingredient: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
 
     return templates.map(
       (template): MealTemplate => ({
-        ...template,
-        baseRecipe: template.baseRecipe as {
-          ingredients: Array<{ name: string; grams: number }>;
-        },
-        scaleableIngredients: template.scaleableIngredients as string[],
+        id: template.id,
+        name: template.name,
+        category: template.category,
+        totalCalories: template.totalCalories,
+        totalProteins: template.totalProteins,
+        totalCarbs: template.totalCarbs,
+        totalFats: template.totalFats,
+        ingredients: template.ingredients.map((ti) => ({
+          id: ti.id,
+          name: ti.ingredient.name,
+          grams: ti.grams,
+          scaleable: ti.scaleable,
+          sortOrder: ti.sortOrder,
+        })),
+        minScale: template.minScale,
+        maxScale: template.maxScale,
         preparationTime: template.preparationTime ?? undefined,
         difficulty: template.difficulty ?? undefined,
         macroFocus: template.macroFocus ?? undefined,
@@ -157,18 +198,34 @@ export class TemplateService {
   async getAllTemplates(): Promise<MealTemplate[]> {
     this.logger.debug('Fetching all templates (admin/debug)');
 
-    const templates: PrismaMealTemplate[] =
-      await this.prisma.mealTemplate.findMany({
-        orderBy: [{ category: 'asc' }, { totalCalories: 'asc' }],
-      });
+    const templates = await this.prisma.mealTemplate.findMany({
+      orderBy: [{ category: 'asc' }, { totalCalories: 'asc' }],
+      include: {
+        ingredients: {
+          include: { ingredient: true },
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
 
     return templates.map(
       (template): MealTemplate => ({
-        ...template,
-        baseRecipe: template.baseRecipe as {
-          ingredients: Array<{ name: string; grams: number }>;
-        },
-        scaleableIngredients: template.scaleableIngredients as string[],
+        id: template.id,
+        name: template.name,
+        category: template.category,
+        totalCalories: template.totalCalories,
+        totalProteins: template.totalProteins,
+        totalCarbs: template.totalCarbs,
+        totalFats: template.totalFats,
+        ingredients: template.ingredients.map((ti) => ({
+          id: ti.id,
+          name: ti.ingredient.name,
+          grams: ti.grams,
+          scaleable: ti.scaleable,
+          sortOrder: ti.sortOrder,
+        })),
+        minScale: template.minScale,
+        maxScale: template.maxScale,
         preparationTime: template.preparationTime ?? undefined,
         difficulty: template.difficulty ?? undefined,
         macroFocus: template.macroFocus ?? undefined,

@@ -10,5 +10,6 @@
     "isolatedModules": true,
     "target": "es2020"
   },
-  "include": ["src", "test"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }
