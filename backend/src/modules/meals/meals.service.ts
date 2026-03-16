@@ -1,15 +1,27 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/db/prisma.service';
+import { NutritionStatsProducer } from '../jobs/nutrition-stats.producer';
 import { CreateMealDto, UpdateMealDto } from '@gympal/shared';
 
 @Injectable()
 export class MealsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly statsProducer: NutritionStatsProducer,
+  ) {}
+
+  private toDateString(date: Date | string): string {
+    return new Date(date).toISOString().split('T')[0];
+  }
 
   async create(userId: number, dto: CreateMealDto) {
     const meal = await this.prisma.meal.create({
       data: { ...dto, userId },
     });
+    await this.statsProducer.scheduleRecalculation(
+      userId,
+      this.toDateString(meal.date),
+    );
     return meal;
   }
 
@@ -44,7 +56,7 @@ export class MealsService {
   }
 
   async update(userId: number, id: string, dto: UpdateMealDto) {
-    return this.prisma.$transaction(async (tx) => {
+    const updated = await this.prisma.$transaction(async (tx) => {
       const meal = await tx.meal.findFirst({
         where: { userId, id },
       });
@@ -56,15 +68,23 @@ export class MealsService {
         data: dto,
       });
     });
+    await this.statsProducer.scheduleRecalculation(
+      userId,
+      this.toDateString(updated.date),
+    );
+    return updated;
   }
 
   async remove(userId: number, id: string) {
-    const deleted = await this.prisma.meal.deleteMany({
-      where: { userId, id },
-    });
-    if (deleted.count === 0) {
+    const meal = await this.prisma.meal.findFirst({ where: { userId, id } });
+    if (!meal) {
       throw new NotFoundException('Meal not found or not owned by user');
     }
+    await this.prisma.meal.delete({ where: { id } });
+    await this.statsProducer.scheduleRecalculation(
+      userId,
+      this.toDateString(meal.date),
+    );
     return { id };
   }
 

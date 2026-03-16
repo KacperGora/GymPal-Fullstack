@@ -1,10 +1,12 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { BullModule } from '@nestjs/bullmq';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './shared/db/prisma.module';
+import { RedisModule } from './shared/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { LoggingMiddleware } from './middlewares/logging.middleware';
 import { CorrelationIdMiddleware } from './middlewares/correlation-id.middleware';
@@ -17,6 +19,7 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ExercisesModule } from './modules/exercises/exercises.module';
 import { HealthModule } from './modules/health/health.module';
 import { AiModule } from './modules/ai/ai.module';
+import { JobsModule } from './modules/jobs/jobs.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggerModule } from './shared/sentry/logger.module';
 
@@ -26,7 +29,14 @@ import { LoggerModule } from './shared/sentry/logger.module';
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 60000, limit: 100 }],
     }),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+      },
+    }),
     LoggerModule,
+    RedisModule,
     PrismaModule,
     AuthModule,
     MealsModule,
@@ -38,6 +48,7 @@ import { LoggerModule } from './shared/sentry/logger.module';
     ExercisesModule,
     HealthModule,
     AiModule,
+    JobsModule,
   ],
   controllers: [AppController],
   providers: [

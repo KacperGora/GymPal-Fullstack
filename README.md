@@ -2,263 +2,329 @@
 
 ![CI](https://github.com/KacperGora/GymPal-Fullstack/actions/workflows/ci.yml/badge.svg?branch=dev)
 ![Frontend CI](https://github.com/KacperGora/GymPal-Fullstack/actions/workflows/frontend-ci.yml/badge.svg?branch=dev)
-![Node Version](https://img.shields.io/badge/node-20-brightgreen)
+![Node Version](https://img.shields.io/badge/node-22-brightgreen)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+![NestJS](https://img.shields.io/badge/NestJS-11-e0234e)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
 
-GymPal to aplikacja full-stackowa zorientowana na produkcję,
-zaprojektowana w celu zaprezentowania rzeczywistej architektury SaaS,
-wzorców uwierzytelniania oraz skalowalnego modelowania domeny.
+Fullstack calorie tracking platform — production-deployed on Google Cloud Run.
 
 ## 🌍 Live Demo
 
-🔗 https://gympal-frontend-hjz4j5fyoq-ey.a.run.app
+🔗 **https://gympal-frontend-hjz4j5fyoq-ey.a.run.app**
 
-## 🔐 Demo Account
-
-Możesz zalogować się testowym kontem:
-
-Email: demo@gympal.app  
+```
+Email:    demo@gympal.app
 Password: Demo123!
-
-
-Ten projekt koncentruje się na:
-
-1. Architekturze sterowanej przez backend (NestJS + Prisma),
-2. bezpiecznym uwierzytelnianiu opartym na sesjach,
-3. współdzielonym bezpieczeństwie typów między frontendem a backendem,
-4. CI/CD oraz lokalnym środowisku developerskim opartym o kontenery
-
-## Zakres techniczny
-
-- Modularna architektura backendu (NestJS modules per domena)
-- Autoryzacja oparta o sesje użytkownika
-- Walidacja i kontrakty API współdzielone z frontendem
-- Migracje bazy danych i seed danych testowych
-- Health checks i monitoring gotowości aplikacji
-
-## Funkcjonalności
-
-- [x] Rejestracja i logowanie użytkowników (JWT + HTTP-only cookies)
-- [x] Katalog ćwiczeń (siłowe, cardio, rozciąganie, HIIT)
-- [x] Planowanie i śledzenie sesji treningowych
-- [x] Zarządzanie treningami (CRUD)
-- [x] Śledzenie postępów i statystyk
-- [x] Profile użytkowników (waga, wzrost, cele)
-- [x] Wielojęzyczność (PL/EN)
-- [x] Responsywny interfejs użytkownika
-- [x] Dokumentacja API (Swagger)
-- [x] Docker Compose dla łatwego wdrożenia
-- [ ] Śledzenie posiłków i makroskładników
-- [ ] Dzienne statystyki kaloryczne
-- [ ] Aplikacja mobilna (React Native)
-
-## Architektura
-
-```mermaid
-graph LR
-    U[Użytkownik] -->|HTTPS| A
-    A[Cloud Run<br/>Frontend<br/>Next.js 16] -->|HTTP/REST<br/>rewrites| B[Cloud Run<br/>Backend<br/>NestJS 11]
-    B -->|SQL via<br/>Cloud SQL Proxy| C[(Cloud SQL<br/>PostgreSQL 16)]
-    A -.->|Shared Types| D[Shared<br/>Zod Schemas]
-    B -.->|Shared Types| D
-    GH[GitHub] -->|push| CB[Cloud Build]
-    CB -->|deploy| A
-    CB -->|deploy| B
-
-    style A fill:#61dafb,stroke:#333,stroke-width:2px
-    style B fill:#e0234e,stroke:#333,stroke-width:2px
-    style C fill:#336791,stroke:#333,stroke-width:2px
-    style D fill:#3068b7,stroke:#333,stroke-width:2px
-    style CB fill:#4285f4,stroke:#333,stroke-width:2px
-    style GH fill:#24292e,color:#fff,stroke:#333,stroke-width:2px
 ```
 
-**Główne komponenty:**
-- **Frontend**: Cloud Run — Next.js z React Query do zarządzania stanem serwera
-- **Backend**: Cloud Run — NestJS z Prisma ORM do komunikacji z bazą danych
-- **Baza danych**: Cloud SQL (PostgreSQL 16), połączenie przez Cloud SQL Proxy
-- **Shared**: Wspólne schematy walidacji Zod używane w frontend i backend
-- **CI/CD**: Google Cloud Build — automatyczny build i deploy po każdym pushu
+---
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph Client
+        N[Next.js 16<br/>React Query · Zustand · MUI]
+    end
+
+    subgraph API
+        NE[NestJS 11<br/>Modules · Guards · Interceptors]
+    end
+
+    subgraph Data
+        PG[(PostgreSQL 16<br/>Cloud SQL)]
+        PR[Prisma ORM<br/>migrations · type-safety]
+        RD[(Redis 7<br/>cache · queues)]
+    end
+
+    subgraph Jobs
+        BQ[BullMQ Workers<br/>nutrition stats · cleanup]
+    end
+
+    N -->|REST / HTTP-only cookies| NE
+    NE --> PR
+    PR --> PG
+    NE <-->|cache| RD
+    NE -->|enqueue| BQ
+    BQ -->|write stats| PR
+    BQ <-->|job queue| RD
+
+    subgraph CICD[CI/CD]
+        GH[GitHub] -->|push| CB[Cloud Build]
+        CB -->|deploy| N
+        CB -->|deploy| NE
+    end
+
+    style N fill:#61dafb,stroke:#333
+    style NE fill:#e0234e,color:#fff,stroke:#333
+    style PG fill:#336791,color:#fff,stroke:#333
+    style PR fill:#2d3748,color:#fff,stroke:#333
+    style RD fill:#dc382d,color:#fff,stroke:#333
+    style BQ fill:#f59e0b,stroke:#333
+    style CB fill:#4285f4,color:#fff,stroke:#333
+    style GH fill:#24292e,color:#fff,stroke:#333
+```
+
+---
 
 ## Tech Stack
 
-| Warstwa | Technologie |
-|---------|-------------|
-| **Frontend** | Next.js 16, React 19, MUI 7, React Query, React Hook Form |
-| **Backend** | NestJS 11, Prisma 7, PostgreSQL 16 |
-| **Auth** | JWT + HTTP-only cookies, Passport.js |
-| **i18n** | next-intl |
-| **Testing** | Jest, Vitest, Playwright |
-| **CI/CD** | GitHub Actions, Google Cloud Build |
-| **Deployment** | Google Cloud Run (frontend + backend), Cloud SQL (PostgreSQL) |
+| Layer | Technology | Why |
+|-------|-----------|-----|
+| **Frontend** | Next.js 16 + React 19 | App Router, SSR, streaming |
+| **State (server)** | React Query 5 | Cache, background refetch, optimistic updates |
+| **State (client)** | Zustand 5 | See [Engineering Decisions](#engineering-decisions) |
+| **UI** | Material UI 7 | Design system, accessible components |
+| **Forms** | React Hook Form + Zod | Uncontrolled inputs, shared validation schemas |
+| **Backend** | NestJS 11 | See [Engineering Decisions](#engineering-decisions) |
+| **ORM** | Prisma 7 | See [Engineering Decisions](#engineering-decisions) |
+| **Database** | PostgreSQL 16 | ACID, relational integrity, Cloud SQL |
+| **Cache / Queues** | Redis 7 + BullMQ | Persistent cache, async background jobs |
+| **Auth** | JWT + HTTP-only cookies | XSS-proof token storage, refresh rotation |
+| **i18n** | next-intl | PL / EN, locale routing |
+| **AI** | OpenAI GPT-4o-mini | Meal suggestions, retry + exponential backoff |
+| **Monitoring** | Sentry | Performance tracing, error grouping |
+| **API Docs** | Swagger / OpenAPI | Auto-generated from decorators |
+| **Testing** | Jest · Vitest · Playwright | Unit, integration, E2E |
+| **CI/CD** | GitHub Actions + Cloud Build | Lint → test → build → deploy |
+| **Deployment** | Google Cloud Run | Serverless containers, auto-scaling |
 
-## Struktura projektu
+---
+
+## Features
+
+- [x] Registration & login (JWT + HTTP-only cookies, refresh token rotation)
+- [x] Exercise catalogue (strength, cardio, stretching, HIIT) — Wger API integration
+- [x] Workout session tracking (CRUD)
+- [x] Nutrition tracking — meals, macros, calories
+- [x] AI meal suggestions (OpenAI GPT-4o-mini, 6h Redis cache, ~$0.0001/request)
+- [x] Daily nutrition statistics — recalculated via background job queue
+- [x] User profile (weight, height, goals, activity level)
+- [x] Rate limiting — global 100 req/60s, stricter on auth endpoints
+- [x] Multi-language (PL / EN)
+- [x] Responsive UI (MUI)
+- [x] API documentation (Swagger)
+- [x] Docker Compose for local development
+- [ ] Mobile app (React Native — planned)
+
+---
+
+## Engineering Decisions
+
+### Why Zustand instead of Redux?
+
+Redux adds significant boilerplate (actions, reducers, selectors, middleware) for problems that often don't exist at this scale. Zustand gives a reactive store with a hooks-first API and zero ceremony:
+
+```typescript
+// Redux: actions → reducer → selector → connect
+// Zustand: one slice, one hook
+const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  setUser: (user) => set({ user }),   // immutable by convention
+  clearUser: () => set({ user: null }),
+}));
+```
+
+GymPal uses **React Query for all server state** (fetching, caching, mutations) and Zustand only for the small slice of truly global client state (auth user, UI preferences). Redux would be over-engineering.
+
+---
+
+### Why NestJS modules?
+
+NestJS modules enforce **domain isolation** at the framework level. Each domain (auth, workouts, nutrition, ai, jobs…) is a self-contained module with its own providers, controllers and exports. This makes the dependency graph explicit and testable:
 
 ```
-├── frontend/          # Next.js app
-├── backend/           # NestJS API
-├── shared/            # Współdzielone typy i schematy Zod
-└── mobile/            # (planowane) React Native
+AppModule
+├── AuthModule        (JWT strategy, guards)
+├── WorkoutsModule    (sessions, exercises)
+├── NutritionModule   (meals, daily stats)
+├── AiModule          (OpenAI, prompt builder, retry)
+├── JobsModule        (BullMQ processors, producers)
+└── SharedModule      (Prisma, Redis, Logger, Cache)
 ```
 
-## Wymagania wstępne
+Benefits: circular dependency detection at startup, easy mocking in tests, feature flags per module, clear ownership.
 
-- Node.js 22+ (zalecane: użyj nvm do zarządzania wersjami)
-- PostgreSQL 16+
-- npm 10+
-- Docker i Docker Compose (opcjonalnie, do szybkiego startu)
+---
 
-## Quick Start z Docker
+### Why Prisma instead of raw SQL / TypeORM?
 
-Najszybszy sposób na uruchomienie całej aplikacji:
+Three reasons:
+
+1. **Type safety end-to-end** — Prisma generates TypeScript types from `schema.prisma`. The compiler catches schema mismatches before runtime.
+
+2. **Migration-first workflow** — `prisma migrate dev` produces SQL migrations as plain files, auditable in git history. No hidden state.
+
+3. **Shared schema as contract** — The Zod DTOs in `shared/` are generated to match Prisma models. Frontend and backend share the same validation shapes, eliminating a whole class of API contract bugs.
+
+TypeORM decorators scatter schema definition across entity classes; raw SQL loses type safety. Prisma centralises schema in one place and generates everything else.
+
+---
+
+### Why event-driven stats (BullMQ)?
+
+Recalculating daily nutrition statistics synchronously on every meal write would block the request and make the endpoint slow under load. Instead:
+
+```
+User saves meal
+      │
+      ▼
+API returns 201 immediately
+      │
+      ▼
+BullMQ enqueues recalculate-daily-stats job
+      │
+      ▼
+Worker picks up job → queries DB → updates DailyStat
+```
+
+This pattern decouples the write path from the computation, enables retries on failure, and provides a natural extension point for future jobs (email digests, streak calculations, export generation).
+
+---
+
+### Why Redis for caching?
+
+The previous in-memory cache (`Map<string, CacheEntry>`) was lost on every container restart. On Cloud Run, containers cold-start frequently. Redis provides:
+
+- **Persistence across restarts** — AI meal suggestions cached for 6h survive container recycling
+- **Shared cache across instances** — Cloud Run scales horizontally; in-memory cache means cache misses on new instances
+- **BullMQ dependency** — Redis is already required for the job queue; adding a cache layer is free
+
+---
+
+## Project Structure
+
+```
+GymPal/
+├── frontend/                 # Next.js 16 (App Router, i18n)
+│   ├── app/[locale]/
+│   │   ├── (auth)/           # Login, Register
+│   │   └── (protected)/      # Dashboard, workouts, nutrition, profile
+│   ├── features/             # Domain feature modules
+│   ├── shared/
+│   │   ├── api/              # Axios client + JWT interceptor
+│   │   ├── providers/        # AuthProvider, ThemeProvider
+│   │   └── stores/           # Zustand stores
+│   └── e2e/                  # Playwright tests
+│
+├── backend/                  # NestJS 11
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── auth/         # JWT strategy, refresh rotation
+│   │   │   ├── workouts/     # Sessions, exercises
+│   │   │   ├── nutrition/    # Meals, daily stats
+│   │   │   ├── ai/           # OpenAI, prompt builder, retry
+│   │   │   └── jobs/         # BullMQ processors & producers
+│   │   └── shared/
+│   │       ├── db/           # Prisma service
+│   │       ├── redis/        # Redis service (cache + queue connection)
+│   │       ├── cache/        # Cache abstraction (Redis-backed)
+│   │       └── logger/       # Structured logger, correlation IDs
+│   └── prisma/
+│       ├── schema.prisma
+│       └── migrations/
+│
+└── shared/                   # Zod schemas shared by frontend + backend
+```
+
+---
+
+## Quick Start
+
+### Docker (recommended)
 
 ```bash
-# Klonowanie repo
-git clone https://github.com/twoj-user/gympal.git
-cd gympal
-
-# Uruchomienie całego stacku (postgres, backend, frontend)
+git clone https://github.com/KacperGora/GymPal-Fullstack.git
+cd GymPal-Fullstack
 docker compose up -d
-
-# Sprawdzenie statusu kontenerów
-docker compose ps
 ```
 
-Aplikacja będzie dostępna pod adresami:
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:4000
-- **API Documentation (Swagger)**: http://localhost:4000/api/docs
-- **Health Check**: http://localhost:4000/health
-- **PostgreSQL**: localhost:5432 (user: gympal, password: gympal, db: gympal)
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3001 |
+| Backend API | http://localhost:4000 |
+| Swagger | http://localhost:4000/api/docs |
+| Health Check | http://localhost:4000/health |
 
-Zatrzymanie i wyczyszczenie:
 ```bash
-docker compose down
-docker compose down -v  # z usunięciem volumenu bazy danych
+docker compose down        # stop
+docker compose down -v     # stop + remove volumes
 ```
 
-## Development Setup (lokalne uruchomienie)
-
-### 1. Instalacja zależności
+### Local Development
 
 ```bash
-# Klonowanie repo
-git clone https://github.com/twoj-user/gympal.git
-cd gympal
-
-# Instalacja zależności (wszystkie workspaces)
 npm install
-```
 
-### 2. Konfiguracja środowiska
-
-```bash
-# Konfiguracja backendu
 cp backend/.env.example backend/.env
-# Uzupełnij DATABASE_URL i JWT_SECRET w pliku backend/.env
+# fill DATABASE_URL, JWT_SECRET, JWT_REFRESH_SECRET, REDIS_HOST
+
+# database
+cd backend
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
+
+# start (separate terminals)
+npm run start:dev -w backend   # :4000
+npm run dev -w frontend        # :3001
 ```
 
-Przykładowa zawartość `.env`:
+---
+
+## Scripts
+
+| Scope | Script | Description |
+|-------|--------|-------------|
+| backend | `npm run start:dev -w backend` | Dev server with hot reload |
+| backend | `npm run test -w backend` | Unit tests (Jest) |
+| backend | `npm run test:cov -w backend` | Coverage report |
+| backend | `npm run build -w backend` | Production build |
+| frontend | `npm run dev -w frontend` | Dev server |
+| frontend | `npm run test -w frontend` | Unit tests (Vitest) |
+| frontend | `npm run e2e -w frontend` | E2E tests (Playwright) |
+| frontend | `npm run build -w frontend` | Production build |
+
+---
+
+## Deployment
+
+Deployed on **Google Cloud Run** (Europe West 3) with automated CI/CD:
+
+1. Push to `dev` → GitHub Actions triggers Cloud Build
+2. Cloud Build: lint → test → docker build (multi-stage) → push to Artifact Registry → deploy to Cloud Run
+3. Secrets managed via **GCP Secret Manager** (DATABASE_URL, JWT_SECRET, OPENAI_API_KEY…)
+
+```
+Frontend: https://gympal-frontend-hjz4j5fyoq-ey.a.run.app
+Backend:  https://gympal-backend-hjz4j5fyoq-ey.a.run.app
+```
+
+---
+
+## Environment Variables
+
 ```env
+# backend/.env
 DATABASE_URL=postgresql://gympal:gympal@localhost:5432/gympal
-JWT_SECRET=your_secure_jwt_secret_key_here
+JWT_SECRET=your_jwt_secret
+JWT_REFRESH_SECRET=your_refresh_secret
 PORT=4000
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:3001
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Optional
+OPENAI_API_KEY=sk-...
+SENTRY_DSN=
 ```
 
-### 3. Przygotowanie bazy danych
+---
 
-Upewnij się, że PostgreSQL jest uruchomiony lokalnie lub użyj Docker:
+## License
 
-```bash
-# Opcja A: Docker (zalecane)
-docker run --name gympal-postgres -e POSTGRES_USER=gympal -e POSTGRES_PASSWORD=gympal -e POSTGRES_DB=gympal -p 5432:5432 -d postgres:16-alpine
-
-# Opcja B: Lokalna instalacja PostgreSQL
-# Utwórz bazę danych 'gympal' ręcznie
-```
-
-Następnie uruchom migracje Prisma:
-
-```bash
-cd backend
-
-# Generowanie klienta Prisma
-npx prisma generate
-
-# Uruchomienie migracji
-npx prisma migrate dev
-
-# (opcjonalnie) Załadowanie przykładowych danych
-npx prisma db seed
-```
-
-### 4. Uruchomienie aplikacji
-
-Uruchom backend i frontend w osobnych terminalach:
-
-```bash
-# Terminal 1: Backend (port 4000)
-npm run start:dev --workspace=backend
-
-# Terminal 2: Frontend (port 3001)
-npm run dev --workspace=frontend
-```
-
-Aplikacja będzie dostępna pod adresami:
-- **Frontend**: http://localhost:3001
-- **Backend API**: http://localhost:4000
-- **API Documentation**: http://localhost:4000/api/docs
-
-## Skrypty
-
-### Backend
-| Skrypt | Opis |
-|--------|------|
-| `npm run start:dev -w backend` | Dev server z hot reload |
-| `npm run test -w backend` | Testy jednostkowe |
-| `npm run test:cov -w backend` | Coverage |
-| `npm run build -w backend` | Build produkcyjny |
-
-### Frontend
-| Skrypt | Opis |
-|--------|------|
-| `npm run dev -w frontend` | Dev server |
-| `npm run test -w frontend` | Testy Vitest |
-| `npm run e2e -w frontend` | Testy E2E Playwright |
-| `npm run build -w frontend` | Build produkcyjny |
-
-## Dokumentacja API
-
-Backend udostępnia pełną dokumentację API w formacie OpenAPI/Swagger:
-
-- **Swagger UI**: http://localhost:4000/api/docs
-- **OpenAPI JSON**: http://localhost:4000/api-json
-
-### Główne endpointy
-
-**Autentykacja:**
-- `POST /auth/register` - Rejestracja nowego użytkownika
-- `POST /auth/login` - Logowanie (zwraca JWT w HTTP-only cookie)
-- `POST /auth/logout` - Wylogowanie
-- `GET /auth/me` - Pobranie danych zalogowanego użytkownika
-
-**Treningi:**
-- `GET /workouts` - Lista treningów użytkownika
-- `POST /workouts` - Utworzenie nowego treningu
-- `GET /workouts/:id` - Szczegóły treningu
-- `PATCH /workouts/:id` - Aktualizacja treningu
-- `DELETE /workouts/:id` - Usunięcie treningu
-
-**Ćwiczenia:**
-- `GET /exercises` - Katalog ćwiczeń
-- `GET /exercises/:id` - Szczegóły ćwiczenia
-- `POST /exercises` - Dodanie nowego ćwiczenia (admin)
-
-**Health Check:**
-- `GET /health` - Status backendu i połączenia z bazą danych
-
-## Licencja
-
-Prywatne repozytorium.
+Private repository.
