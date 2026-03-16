@@ -4,6 +4,11 @@ jest.mock('../../shared/db/prisma.service');
 
 import { MealsService } from './meals.service';
 import { PrismaService } from '../../shared/db/prisma.service';
+import { NutritionStatsProducer } from '../jobs/nutrition-stats.producer';
+
+const mockNutritionStatsProducer = {
+  scheduleRecalculation: jest.fn().mockResolvedValue(undefined),
+};
 
 describe('MealsService', () => {
   let service: MealsService;
@@ -15,6 +20,10 @@ describe('MealsService', () => {
         {
           provide: PrismaService,
           useValue: new PrismaService(),
+        },
+        {
+          provide: NutritionStatsProducer,
+          useValue: mockNutritionStatsProducer,
         },
       ],
     }).compile();
