@@ -172,7 +172,15 @@ export class AuthService {
       });
     }
 
-    const token = this.jwtService.sign({ sub: user.id, email: user.email });
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId: user.id },
+      select: { status: true },
+    });
+    const token = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      subscriptionStatus: subscription?.status ?? null,
+    });
     const refresh = await this.createRefreshToken(user.id, context);
     const { userProfile, password: _password, ...rest } = user;
     void _password;
@@ -224,9 +232,14 @@ export class AuthService {
       ...context,
       familyId: tokenRecord.familyId,
     });
+    const subscriptionOnRefresh = await this.prisma.subscription.findUnique({
+      where: { userId: tokenRecord.userId },
+      select: { status: true },
+    });
     const accessToken = this.jwtService.sign({
       sub: tokenRecord.user.id,
       email: tokenRecord.user.email,
+      subscriptionStatus: subscriptionOnRefresh?.status ?? null,
     });
 
     return {

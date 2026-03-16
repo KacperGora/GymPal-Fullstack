@@ -14,6 +14,11 @@ import { mealSuggestionRequestSchema } from '@gympal/shared';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
+import { SubscriptionGuard } from '../../shared/guards/subscription.guard';
+import {
+  UsageLimitGuard,
+  UsageFeature,
+} from '../../shared/guards/usage-limit.guard';
 import { AiService } from './ai.service';
 
 @ApiTags('ai')
@@ -24,6 +29,8 @@ export class AiController {
   constructor(private aiService: AiService) {}
 
   @Post('meal-suggestions')
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
+  @UsageFeature('AI_MEAL_SUGGESTIONS')
   @ApiOperation({ summary: 'Generate AI meal suggestions' })
   @ApiResponse({
     status: HttpStatus.OK,

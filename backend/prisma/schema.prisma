@@ -51,6 +51,8 @@ model User {
   workouts            WorkoutSession[]
   waterIntake         WaterIntake[]
   favoriteExercises   FavoriteExercise[]
+  subscription        Subscription?
+  aiRequests          AiRequest[]
 }
 
 model RefreshToken {
@@ -228,22 +230,22 @@ enum MacroFocus {
 }
 
 model Ingredient {
-  id                    String                  @id @default(cuid())
-  name                  String
-  servingSize           Float
-  servingUnit           String
-  calories              Float
-  proteins              Float
-  carbs                 Float
-  fats                  Float
-  fiber                 Float                   @default(0)
-  category              IngredientCategory
-  verified              Boolean                 @default(false)
-  source                String                  @default("USDA")
-  sourceUrl             String?
-  verifiedBy            String?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
+  id                      String                   @id @default(cuid())
+  name                    String
+  servingSize             Float
+  servingUnit             String
+  calories                Float
+  proteins                Float
+  carbs                   Float
+  fats                    Float
+  fiber                   Float                    @default(0)
+  category                IngredientCategory
+  verified                Boolean                  @default(false)
+  source                  String                   @default("USDA")
+  sourceUrl               String?
+  verifiedBy              String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
   mealTemplateIngredients MealTemplateIngredient[]
 
   @@unique([name, servingSize, servingUnit])
@@ -296,4 +298,71 @@ model CacheEntry {
   createdAt DateTime @default(now())
 
   @@index([expiresAt])
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+model Plan {
+  id            String         @id @default(cuid())
+  name          String
+  stripePriceId String         @unique
+  price         Int
+  currency      String         @default("pln")
+  interval      String
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+  usageLimits   UsageLimit[]
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               Int                @unique
+  user                 User               @relation(fields: [userId], references: [id])
+  planId               String
+  plan                 Plan               @relation(fields: [planId], references: [id])
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([stripeCustomerId])
+}
+
+model PaymentEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  type          String
+  processedAt   DateTime @default(now())
+  payload       Json
+}
+
+model UsageLimit {
+  id         String @id @default(cuid())
+  planId     String
+  plan       Plan   @relation(fields: [planId], references: [id])
+  feature    String
+  dailyLimit Int
+
+  @@unique([planId, feature])
+}
+
+model AiRequest {
+  id        String   @id @default(cuid())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  feature   String
+  createdAt DateTime @default(now())
+
+  @@index([userId, feature, createdAt])
 }

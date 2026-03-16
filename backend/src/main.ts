@@ -41,7 +41,7 @@ async function bootstrap() {
     process.exit(1);
   }
 
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
   const corsOrigins = process.env.CORS_ORIGIN?.split(',') ?? [
     'http://localhost:3000',
   ];
