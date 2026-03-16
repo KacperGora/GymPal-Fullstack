@@ -11,7 +11,7 @@ wzorców uwierzytelniania oraz skalowalnego modelowania domeny.
 
 ## 🌍 Live Demo
 
-🔗 https://gympal.up.railway.app/pl  
+🔗 https://gympal-frontend-hjz4j5fyoq-ey.a.run.app
 
 ## 🔐 Demo Account
 
@@ -56,22 +56,29 @@ Ten projekt koncentruje się na:
 
 ```mermaid
 graph LR
-    A[Frontend<br/>Next.js 16<br/>React 19<br/>MUI 7] -->|HTTP/REST| B[Backend<br/>NestJS 11<br/>Prisma 7]
-    B -->|SQL| C[(PostgreSQL 16)]
+    U[Użytkownik] -->|HTTPS| A
+    A[Cloud Run<br/>Frontend<br/>Next.js 16] -->|HTTP/REST<br/>rewrites| B[Cloud Run<br/>Backend<br/>NestJS 11]
+    B -->|SQL via<br/>Cloud SQL Proxy| C[(Cloud SQL<br/>PostgreSQL 16)]
     A -.->|Shared Types| D[Shared<br/>Zod Schemas]
     B -.->|Shared Types| D
+    GH[GitHub] -->|push| CB[Cloud Build]
+    CB -->|deploy| A
+    CB -->|deploy| B
 
     style A fill:#61dafb,stroke:#333,stroke-width:2px
     style B fill:#e0234e,stroke:#333,stroke-width:2px
     style C fill:#336791,stroke:#333,stroke-width:2px
     style D fill:#3068b7,stroke:#333,stroke-width:2px
+    style CB fill:#4285f4,stroke:#333,stroke-width:2px
+    style GH fill:#24292e,color:#fff,stroke:#333,stroke-width:2px
 ```
 
 **Główne komponenty:**
-- **Frontend**: Next.js z React Query do zarządzania stanem serwera
-- **Backend**: NestJS z Prisma ORM do komunikacji z bazą danych
+- **Frontend**: Cloud Run — Next.js z React Query do zarządzania stanem serwera
+- **Backend**: Cloud Run — NestJS z Prisma ORM do komunikacji z bazą danych
+- **Baza danych**: Cloud SQL (PostgreSQL 16), połączenie przez Cloud SQL Proxy
 - **Shared**: Wspólne schematy walidacji Zod używane w frontend i backend
-- **Baza danych**: PostgreSQL 16 do przechowywania danych aplikacji
+- **CI/CD**: Google Cloud Build — automatyczny build i deploy po każdym pushu
 
 ## Tech Stack
 
@@ -82,7 +89,8 @@ graph LR
 | **Auth** | JWT + HTTP-only cookies, Passport.js |
 | **i18n** | next-intl |
 | **Testing** | Jest, Vitest, Playwright |
-| **CI/CD** | GitHub Actions |
+| **CI/CD** | GitHub Actions, Google Cloud Build |
+| **Deployment** | Google Cloud Run (frontend + backend), Cloud SQL (PostgreSQL) |
 
 ## Struktura projektu
 
