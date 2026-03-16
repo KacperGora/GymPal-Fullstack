@@ -1,4 +1,4 @@
-# GymPal
+# GymPal — production fullstack SaaS
 
 ![CI](https://github.com/KacperGora/GymPal-Fullstack/actions/workflows/ci.yml/badge.svg?branch=dev)
 ![Frontend CI](https://github.com/KacperGora/GymPal-Fullstack/actions/workflows/frontend-ci.yml/badge.svg?branch=dev)
@@ -7,16 +7,16 @@
 ![NestJS](https://img.shields.io/badge/NestJS-11-e0234e)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 
-Fullstack calorie tracking platform — production-deployed on Google Cloud Run.
+**Stack:** Next.js · NestJS · PostgreSQL · Redis · BullMQ · Prisma · Docker · GCP
 
-## 🌍 Live Demo
+**Key engineering:**
+- Event-driven nutrition stats pipeline — meal writes enqueue BullMQ jobs, stats computed asynchronously
+- Distributed Redis cache — shared across Cloud Run instances, survives container restarts
+- JWT refresh token rotation with family-based revocation and brute-force lockout
+- OpenAI integration with prompt builder, exponential backoff retry, and 6h cache layer
+- Background workers, rate limiting, Sentry tracing, Swagger docs — production-grade from day one
 
-🔗 **https://gympal-frontend-hjz4j5fyoq-ey.a.run.app**
-
-```
-Email:    demo@gympal.app
-Password: Demo123!
-```
+🔗 **Live demo: https://gympal-frontend-hjz4j5fyoq-ey.a.run.app** · `demo@gympal.app` / `Demo123!`
 
 ---
 
@@ -98,7 +98,7 @@ graph TD
 - [x] Exercise catalogue (strength, cardio, stretching, HIIT) — Wger API integration
 - [x] Workout session tracking (CRUD)
 - [x] Nutrition tracking — meals, macros, calories
-- [x] AI meal suggestions (OpenAI GPT-4o-mini, 6h Redis cache, ~$0.0001/request)
+- [x] AI meal suggestions — prompt builder with macro targeting, retry policy (3 attempts, exponential backoff), Redis cache keyed by (category × macro focus), ~$0.0001/request at scale
 - [x] Daily nutrition statistics — recalculated via background job queue
 - [x] User profile (weight, height, goals, activity level)
 - [x] Rate limiting — global 100 req/60s, stricter on auth endpoints
