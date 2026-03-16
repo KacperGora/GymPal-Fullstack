@@ -3,10 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { ACCESS_TOKEN_COOKIE } from '@gympal/shared';
+import { SubscriptionStatus } from '../../../generated/prisma/enums';
 
 interface JwtPayload {
   sub: number;
   email: string;
+  subscriptionStatus?: SubscriptionStatus | null;
 }
 
 @Injectable()
@@ -22,6 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   validate(payload: JwtPayload) {
-    return { id: Number(payload.sub), email: payload.email };
+    return {
+      id: Number(payload.sub),
+      email: payload.email,
+      subscriptionStatus: payload.subscriptionStatus ?? null,
+    };
   }
 }

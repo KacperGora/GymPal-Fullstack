@@ -20,6 +20,8 @@ import { ExercisesModule } from './modules/exercises/exercises.module';
 import { HealthModule } from './modules/health/health.module';
 import { AiModule } from './modules/ai/ai.module';
 import { JobsModule } from './modules/jobs/jobs.module';
+import { StripeModule } from './modules/stripe/stripe.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggerModule } from './shared/sentry/logger.module';
 
@@ -49,6 +51,8 @@ import { LoggerModule } from './shared/sentry/logger.module';
     HealthModule,
     AiModule,
     JobsModule,
+    StripeModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [
