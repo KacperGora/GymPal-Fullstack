@@ -161,10 +161,12 @@ export const Navbar = () => {
         anchor="left"
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        PaperProps={{
-          sx: {
-            backgroundColor: theme.palette.background.default,
-            backgroundImage: 'none',
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: theme.palette.background.default,
+              backgroundImage: 'none',
+            },
           },
         }}
         sx={{
