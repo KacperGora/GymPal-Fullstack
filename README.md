@@ -193,6 +193,132 @@ The previous in-memory cache (`Map<string, CacheEntry>`) was lost on every conta
 
 ---
 
+## Database Design
+
+11 tables, fully relational with enforced foreign keys and indexes on all hot query paths.
+
+```
+User ──< Meal
+     ──< FavoriteMeal
+     ──< DailyStat          (upserted by BullMQ worker after every meal write)
+     ──< WorkoutSession ──< WorkoutExercise
+     ──< WaterIntake
+     ──< UserProfile        (1-to-1)
+     ──< RefreshToken       (family-based rotation, brute-force lockout)
+     ──< FavoriteExercise
+
+MealTemplate ──< MealTemplateIngredient ──> Ingredient
+```
+
+| Table | Key columns | Notes |
+|-------|-------------|-------|
+| `User` | id, email, failedLoginAttempts, lockedUntil | Brute-force lockout built-in |
+| `RefreshToken` | tokenHash, familyId, expiresAt, revokedAt | Family rotation — stolen token revokes entire family |
+| `Meal` | userId, name, calories, proteins, carbs, fats, category, date | Indexed on `userId` + `date` |
+| `DailyStat` | userId, date, calories, proteins, carbs, fats | Unique on `(userId, date)`, written by background job |
+| `WorkoutSession` | userId, name, date, duration, caloriesBurned | Indexed on `userId` |
+| `WorkoutExercise` | workoutSessionId, wgerExerciseId, sets, reps, weight | Cascade delete with session |
+| `UserProfile` | userId, height, weight, age, activity, goal | Used for TDEE calculation |
+| `WaterIntake` | userId, date, glasses | Unique on `(userId, date)` |
+| `MealTemplate` | name, category, macroFocus, totalCalories | Seeded reference data for AI suggestions |
+| `Ingredient` | name, servingSize, calories, proteins, carbs, fats | Unique on `(name, servingSize, servingUnit)` |
+
+---
+
+## API Examples
+
+Base URL: `https://gympal-backend-hjz4j5fyoq-ey.a.run.app`
+
+Auth uses **HTTP-only cookies** — no Bearer token needed after login.
+
+### Authentication
+
+```http
+POST /auth/register
+{ "firstName": "Jan", "lastName": "Kowalski", "email": "jan@example.com", "password": "Secret123!" }
+
+POST /auth/login
+{ "email": "jan@example.com", "password": "Secret123!" }
+→ Sets access_token + refresh_token cookies
+
+POST /auth/refresh     # rotate refresh token
+POST /auth/logout      # revoke token family
+GET  /auth/me          # current user
+```
+
+### Nutrition
+
+```http
+POST /meals
+{ "name": "Chicken breast", "calories": 165, "proteins": 31, "carbs": 0, "fats": 3.6, "category": "LUNCH", "date": "2026-03-16" }
+→ 201 { id, name, calories, ... }
+→ triggers BullMQ job → recalculates DailyStat
+
+GET  /meals?date=2026-03-16    # all meals for a day
+GET  /meals/recent             # last 6 unique meals (for quick-add)
+PATCH /meals/:id               # partial update
+DELETE /meals/:id
+
+GET  /nutrition/daily-stats?date=2026-03-16
+→ { calories: 1840, proteins: 142, carbs: 180, fats: 52 }
+
+GET  /nutrition/weekly-stats
+GET  /nutrition/tdee            # calculated from UserProfile (Mifflin-St Jeor)
+```
+
+### AI Meal Suggestions
+
+```http
+POST /ai/meal-suggestions
+{ "category": "BREAKFAST", "date": "2026-03-16", "count": 3 }
+→ cached in Redis for 6h per (category, macroTarget) key
+→ [{ "name": "Oatmeal with banana", "calories": 380, "proteins": 12, ... }]
+```
+
+### Workouts
+
+```http
+POST /workouts
+{ "name": "Push Day", "date": "2026-03-16", "duration": 60, "caloriesBurned": 420 }
+
+POST /workouts/:id/exercises
+{ "wgerExerciseId": 192, "exerciseName": "Bench Press", "sets": 4, "reps": 8, "weight": 80, "restTime": 90 }
+
+GET  /workouts?from=2026-03-01&to=2026-03-31
+GET  /workouts/stats/weekly
+```
+
+### Exercises (Wger API proxy + favorites)
+
+```http
+GET  /exercises-api?limit=20&offset=0
+GET  /exercises-api/search/:term
+GET  /exercises-api/category/:categoryId
+POST /exercises-api/favorites     { "wgerExerciseId": 192, "name": "Bench Press", ... }
+DELETE /exercises-api/favorites/:id
+```
+
+Full interactive docs: **http://localhost:4000/api/docs** (Swagger)
+
+---
+
+## Roadmap
+
+### In progress
+- [ ] Ingredient database with macro lookup (USDA-sourced, seeded)
+- [ ] Meal templates with scaleable recipes
+
+### Planned
+- [ ] Mobile app (React Native / Expo)
+- [ ] Weekly email digest (BullMQ scheduled job + Resend)
+- [ ] Streak tracking and habit goals
+- [ ] Barcode scanner for food logging
+- [ ] Subscription tier (Stripe) with extended AI quota
+- [ ] Export to CSV / PDF (nutrition reports)
+- [ ] Social features — share workouts
+
+---
+
 ## Project Structure
 
 ```
