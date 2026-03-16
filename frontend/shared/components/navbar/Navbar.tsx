@@ -59,9 +59,7 @@ export const Navbar = () => {
         backgroundColor: isHome
           ? alpha(theme.palette.background.default, 0.55)
           : theme.palette.background.paper,
-        borderBottom: isHome
-          ? `1px solid ${alpha(theme.palette.common.white, 0.08)}`
-          : `1px solid ${alpha(theme.palette.common.white, 0.05)}`,
+        borderBottom: `1px solid ${theme.palette.divider}`,
         backdropFilter: isHome ? 'blur(10px)' : 'none',
       }}
     >
@@ -178,9 +176,7 @@ export const Navbar = () => {
           </Typography>
           <ThemeToggle />
 
-          <Divider
-            sx={{ mb: 1, borderColor: alpha(theme.palette.common.white, 0.08) }}
-          />
+          <Divider sx={{ mb: 1 }} />
           <List>
             {isAuthenticated
               ? NAV_ITEMS.map(({ key, path }) => (
@@ -190,9 +186,7 @@ export const Navbar = () => {
                 ))
               : null}
           </List>
-          <Divider
-            sx={{ my: 1, borderColor: alpha(theme.palette.common.white, 0.08) }}
-          />
+          <Divider sx={{ my: 1 }} />
           {isAuthenticated ? (
             <Button
               fullWidth

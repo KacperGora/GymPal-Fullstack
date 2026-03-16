@@ -10,8 +10,8 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (data: LoginDto) => login(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['me'] });
       router.push('/welcome');
     },
   });

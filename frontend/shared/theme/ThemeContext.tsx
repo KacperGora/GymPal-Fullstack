@@ -66,11 +66,6 @@ export function ThemeContextProvider({
     setMode(next);
   }, [resolvedMode, setMode]);
 
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    document.documentElement.setAttribute('data-theme', resolvedMode);
-  }, [resolvedMode]);
-
   const value = useMemo(
     () => ({
       mode,
@@ -80,6 +75,11 @@ export function ThemeContextProvider({
     }),
     [mode, resolvedMode, setMode, toggleMode],
   );
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.setAttribute('data-theme', resolvedMode);
+  }, [resolvedMode]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
