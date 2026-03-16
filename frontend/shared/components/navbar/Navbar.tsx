@@ -161,6 +161,12 @@ export const Navbar = () => {
         anchor="left"
         open={isOpen}
         onClose={() => setIsOpen(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: theme.palette.background.default,
+            backgroundImage: 'none',
+          },
+        }}
         sx={{
           '& .MuiBackdrop-root': {
             backgroundColor: alpha(theme.palette.common.black, 0.35),
@@ -174,8 +180,6 @@ export const Navbar = () => {
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
             GymPal
           </Typography>
-          <ThemeToggle />
-
           <Divider sx={{ mb: 1 }} />
           <List>
             {isAuthenticated
@@ -208,7 +212,7 @@ export const Navbar = () => {
               {t('login')}
             </Button>
           )}
-          <Box sx={{ mt: 1 }}>
+          <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
             <ThemeToggle />
             <LanguageSelector />
           </Box>
