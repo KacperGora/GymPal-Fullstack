@@ -48,8 +48,8 @@ steps:
       - --allow-unauthenticated
       - --port=4000
       - --add-cloudsql-instances=$PROJECT_ID:europe-west3:gympal-db
-      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest
-      - --set-env-vars=NODE_ENV=production,CORS_ORIGIN=https://gympal-frontend-hjz4j5fyoq-ey.a.run.app
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,JWT_SECRET=JWT_SECRET:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest,STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest
+      - --set-env-vars=NODE_ENV=production,CORS_ORIGIN=https://gympal-frontend-hjz4j5fyoq-ey.a.run.app,FRONTEND_URL=https://gympal-frontend-hjz4j5fyoq-ey.a.run.app
 
   # Deploy frontend to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -63,7 +63,7 @@ steps:
       - --platform=managed
       - --allow-unauthenticated
       - --port=3000
-      - --set-env-vars=NODE_ENV=production,BACKEND_URL=https://gympal-backend-hjz4j5fyoq-ey.a.run.app
+      - --set-env-vars=NODE_ENV=production,BACKEND_URL=https://gympal-backend-hjz4j5fyoq-ey.a.run.app,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_publishable_key_here
 
 images:
   - 'gcr.io/$PROJECT_ID/gympal-backend'
