@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Headers,
   HttpCode,
@@ -28,11 +29,18 @@ export class StripeWebhookController {
     @Req() req: { rawBody?: Buffer },
     @Headers('stripe-signature') signature: string,
   ) {
+    if (!req.rawBody) {
+      throw new BadRequestException('Missing raw request body');
+    }
+    if (!signature) {
+      throw new BadRequestException('Missing stripe-signature header');
+    }
+
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) throw new Error('STRIPE_WEBHOOK_SECRET not set');
 
     const event = this.stripeService.constructEvent(
-      req.rawBody!,
+      req.rawBody,
       signature,
       webhookSecret,
     );
@@ -47,7 +55,7 @@ export class StripeWebhookController {
         return;
       }
 
-      await this.subscriptionsService.handleStripeEvent(event);
+      await this.subscriptionsService.handleStripeEvent(event, tx);
 
       await tx.paymentEvent.create({
         data: {

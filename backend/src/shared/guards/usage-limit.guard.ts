@@ -1,12 +1,13 @@
 import {
   CanActivate,
   ExecutionContext,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../db/prisma.service';
 import { SubscriptionStatus } from '../../generated/prisma/enums';
 
@@ -40,36 +41,40 @@ export class UsageLimitGuard implements CanActivate {
       status === SubscriptionStatus.ACTIVE ||
       status === SubscriptionStatus.TRIALING;
 
+    const dailyLimit = isSubscribed
+      ? await this.getSubscriptionLimit(user.id, feature)
+      : FREE_DAILY_LIMIT;
+
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const [usedToday, dailyLimit] = await Promise.all([
-      this.prisma.aiRequest.count({
-        where: { userId: user.id, feature, createdAt: { gte: todayStart } },
-      }),
-      isSubscribed
-        ? this.getSubscriptionLimit(user.id, feature)
-        : Promise.resolve(FREE_DAILY_LIMIT),
-    ]);
+    await this.prisma.$transaction(
+      async (tx) => {
+        const usedToday = await tx.aiRequest.count({
+          where: { userId: user.id, feature, createdAt: { gte: todayStart } },
+        });
 
-    if (usedToday >= dailyLimit) {
-      this.logger.warn(
-        `Usage limit hit: userId=${user.id} feature=${feature} used=${usedToday}/${dailyLimit}`,
-      );
-      throw new HttpException(
-        {
-          statusCode: HttpStatus.TOO_MANY_REQUESTS,
-          message: `Daily limit of ${dailyLimit} requests for ${feature} reached`,
-          limit: dailyLimit,
-          used: usedToday,
-        },
-        HttpStatus.TOO_MANY_REQUESTS,
-      );
-    }
+        if (usedToday >= dailyLimit) {
+          this.logger.warn(
+            `Usage limit hit: userId=${user.id} feature=${feature} used=${usedToday}/${dailyLimit}`,
+          );
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.TOO_MANY_REQUESTS,
+              message: `Daily limit of ${dailyLimit} requests for ${feature} reached`,
+              limit: dailyLimit,
+              used: usedToday,
+            },
+            HttpStatus.TOO_MANY_REQUESTS,
+          );
+        }
 
-    await this.prisma.aiRequest.create({
-      data: { userId: user.id, feature },
-    });
+        await tx.aiRequest.create({
+          data: { userId: user.id, feature },
+        });
+      },
+      { isolationLevel: 'Serializable' },
+    );
 
     return true;
   }
