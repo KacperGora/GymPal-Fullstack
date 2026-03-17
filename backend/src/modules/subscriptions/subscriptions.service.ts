@@ -227,13 +227,26 @@ export class SubscriptionsService {
   }
 
   private extractSubscriptionId(invoice: Stripe.Invoice): string | null {
-    // In API version 2026-02-25.clover, subscription ID is under
-    // invoice.parent.subscription_details.subscription
+    // In API version 2026-02-25.clover, invoice.subscription was removed.
+    // Primary source: invoice.parent.subscription_details.subscription
     const details = invoice.parent?.subscription_details;
-    if (!details) return null;
-    return typeof details.subscription === 'string'
-      ? details.subscription
-      : (details.subscription?.id ?? null);
+    if (details) {
+      const fromParent =
+        typeof details.subscription === 'string'
+          ? details.subscription
+          : (details.subscription?.id ?? null);
+      if (fromParent) return fromParent;
+    }
+
+    // Fallback: first line item that references a subscription
+    const fromLines = invoice.lines?.data.find((l) => l.subscription);
+    if (fromLines?.subscription) {
+      return typeof fromLines.subscription === 'string'
+        ? fromLines.subscription
+        : fromLines.subscription.id;
+    }
+
+    return null;
   }
 
   private mapStripeStatus(
