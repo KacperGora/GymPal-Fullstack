@@ -47,6 +47,9 @@ describe('AuthService', () => {
               updateMany: jest.fn(),
               deleteMany: jest.fn(),
             },
+            subscription: {
+              findUnique: jest.fn(),
+            },
             $transaction: jest.fn(),
           },
         },
@@ -146,6 +149,7 @@ describe('AuthService', () => {
       expect(mockJwtService.sign).toHaveBeenCalledWith({
         sub: 1,
         email: dto.email,
+        subscriptionStatus: null,
       });
     });
 
