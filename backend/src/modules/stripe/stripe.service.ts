@@ -8,7 +8,7 @@ export class StripeService {
   constructor() {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) throw new Error('STRIPE_SECRET_KEY not set');
-    this.stripe = new Stripe(secretKey, { apiVersion: '2026-02-25.clover' });
+    this.stripe = new Stripe(secretKey);
   }
 
   constructEvent(

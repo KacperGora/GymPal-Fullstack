@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import Stripe from 'stripe';
+import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../shared/db/prisma.service';
 import { StripeService } from '../stripe/stripe.service';
 import { SubscriptionStatus } from '../../generated/prisma/enums';
@@ -66,13 +67,15 @@ export class SubscriptionsService {
       userId,
     });
 
+    // Store the Stripe customer ID without granting access — webhook will
+    // confirm the subscription and update the status to ACTIVE/TRIALING.
     if (!user.subscription) {
       await this.prisma.subscription.create({
         data: {
           userId,
           planId: plan.id,
           stripeCustomerId: customerId,
-          status: SubscriptionStatus.TRIALING,
+          status: SubscriptionStatus.CANCELED,
         },
       });
     }
@@ -93,22 +96,25 @@ export class SubscriptionsService {
     return { url: session.url };
   }
 
-  async handleStripeEvent(event: Stripe.Event): Promise<void> {
+  async handleStripeEvent(
+    event: Stripe.Event,
+    tx: Prisma.TransactionClient = this.prisma,
+  ): Promise<void> {
     switch (event.type) {
       case 'checkout.session.completed':
-        await this.handleCheckoutCompleted(event.data.object);
+        await this.handleCheckoutCompleted(event.data.object, tx);
         break;
       case 'customer.subscription.updated':
-        await this.handleSubscriptionUpdated(event.data.object);
+        await this.handleSubscriptionUpdated(event.data.object, tx);
         break;
       case 'customer.subscription.deleted':
-        await this.handleSubscriptionDeleted(event.data.object);
+        await this.handleSubscriptionDeleted(event.data.object, tx);
         break;
       case 'invoice.payment_failed':
-        await this.handlePaymentFailed(event.data.object);
+        await this.handlePaymentFailed(event.data.object, tx);
         break;
       case 'invoice.payment_succeeded':
-        await this.handlePaymentSucceeded(event.data.object);
+        await this.handlePaymentSucceeded(event.data.object, tx);
         break;
       default:
         this.logger.debug(`Unhandled Stripe event: ${event.type}`);
@@ -117,6 +123,7 @@ export class SubscriptionsService {
 
   private async handleCheckoutCompleted(
     session: Stripe.Checkout.Session,
+    tx: Prisma.TransactionClient,
   ): Promise<void> {
     if (session.mode !== 'subscription' || !session.subscription) return;
 
@@ -131,31 +138,33 @@ export class SubscriptionsService {
     );
     const priceId = stripeSubscription.items.data[0]?.price.id;
     const plan = priceId
-      ? await this.prisma.plan.findUnique({ where: { stripePriceId: priceId } })
+      ? await tx.plan.findUnique({ where: { stripePriceId: priceId } })
       : null;
 
     const startDate = new Date(stripeSubscription.start_date * 1000);
-    const trialEnd = stripeSubscription.trial_end
+    // In API version 2026-02-25.clover, current_period_end was replaced by
+    // billing_cycle_anchor. Use trial_end when trialing, otherwise the anchor.
+    const periodEnd = stripeSubscription.trial_end
       ? new Date(stripeSubscription.trial_end * 1000)
-      : null;
+      : new Date(stripeSubscription.billing_cycle_anchor * 1000);
 
-    await this.prisma.subscription.upsert({
+    await tx.subscription.upsert({
       where: { userId },
       update: {
         stripeSubscriptionId: stripeSubscription.id,
-        planId: plan?.id ?? (await this.getFirstPlanId()),
+        planId: plan?.id ?? (await this.getFirstPlanId(tx)),
         status: this.mapStripeStatus(stripeSubscription.status),
         currentPeriodStart: startDate,
-        currentPeriodEnd: trialEnd,
+        currentPeriodEnd: periodEnd,
       },
       create: {
         userId,
         stripeCustomerId: session.customer as string,
         stripeSubscriptionId: stripeSubscription.id,
-        planId: plan?.id ?? (await this.getFirstPlanId()),
+        planId: plan?.id ?? (await this.getFirstPlanId(tx)),
         status: this.mapStripeStatus(stripeSubscription.status),
         currentPeriodStart: startDate,
-        currentPeriodEnd: trialEnd,
+        currentPeriodEnd: periodEnd,
       },
     });
 
@@ -164,13 +173,14 @@ export class SubscriptionsService {
 
   private async handleSubscriptionUpdated(
     stripeSubscription: Stripe.Subscription,
+    tx: Prisma.TransactionClient,
   ): Promise<void> {
     const priceId = stripeSubscription.items.data[0]?.price.id;
     const plan = priceId
-      ? await this.prisma.plan.findUnique({ where: { stripePriceId: priceId } })
+      ? await tx.plan.findUnique({ where: { stripePriceId: priceId } })
       : null;
 
-    await this.prisma.subscription.updateMany({
+    await tx.subscription.updateMany({
       where: { stripeSubscriptionId: stripeSubscription.id },
       data: {
         ...(plan ? { planId: plan.id } : {}),
@@ -182,34 +192,43 @@ export class SubscriptionsService {
 
   private async handleSubscriptionDeleted(
     stripeSubscription: Stripe.Subscription,
+    tx: Prisma.TransactionClient,
   ): Promise<void> {
-    await this.prisma.subscription.updateMany({
+    await tx.subscription.updateMany({
       where: { stripeSubscriptionId: stripeSubscription.id },
       data: { status: SubscriptionStatus.CANCELED },
     });
   }
 
-  private async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+  private async handlePaymentFailed(
+    invoice: Stripe.Invoice,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
     const subscriptionId = this.extractSubscriptionId(invoice);
     if (!subscriptionId) return;
 
-    await this.prisma.subscription.updateMany({
+    await tx.subscription.updateMany({
       where: { stripeSubscriptionId: subscriptionId },
       data: { status: SubscriptionStatus.PAST_DUE },
     });
   }
 
-  private async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+  private async handlePaymentSucceeded(
+    invoice: Stripe.Invoice,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
     const subscriptionId = this.extractSubscriptionId(invoice);
     if (!subscriptionId) return;
 
-    await this.prisma.subscription.updateMany({
+    await tx.subscription.updateMany({
       where: { stripeSubscriptionId: subscriptionId },
       data: { status: SubscriptionStatus.ACTIVE },
     });
   }
 
   private extractSubscriptionId(invoice: Stripe.Invoice): string | null {
+    // In API version 2026-02-25.clover, subscription ID is under
+    // invoice.parent.subscription_details.subscription
     const details = invoice.parent?.subscription_details;
     if (!details) return null;
     return typeof details.subscription === 'string'
@@ -233,8 +252,10 @@ export class SubscriptionsService {
     return map[status] ?? SubscriptionStatus.CANCELED;
   }
 
-  private async getFirstPlanId(): Promise<string> {
-    const plan = await this.prisma.plan.findFirst();
+  private async getFirstPlanId(
+    tx: Prisma.TransactionClient = this.prisma,
+  ): Promise<string> {
+    const plan = await tx.plan.findFirst();
     if (!plan) throw new Error('No plans in database — seed required');
     return plan.id;
   }
