@@ -12,6 +12,11 @@ async function main() {
   console.log('🌱 Starting database seeding...');
 
   try {
+    // Seed plans
+    console.log('💳 Seeding plans...');
+    await seedPlans(prisma);
+    console.log('✅ Seeded plans');
+
     // Seed ingredients
     console.log('📦 Seeding ingredients...');
     const ingredientCount = await seedIngredients(prisma);
@@ -27,6 +32,32 @@ async function main() {
     console.error('❌ Error during seeding:', error);
     throw error;
   }
+}
+
+async function seedPlans(prisma: PrismaClient): Promise<void> {
+  const existing = await prisma.plan.count();
+  if (existing > 0) {
+    console.log(`   Skipping: ${existing} plans already exist`);
+    return;
+  }
+
+  const pro = await prisma.plan.create({
+    data: {
+      name: 'Pro',
+      stripePriceId: 'price_1TBzqP4d6DwnhKO48sR9IcIa',
+      price: 999,
+      currency: 'pln',
+      interval: 'month',
+    },
+  });
+
+  await prisma.usageLimit.create({
+    data: {
+      planId: pro.id,
+      feature: 'AI_MEAL_SUGGESTIONS',
+      dailyLimit: 100,
+    },
+  });
 }
 
 async function seedIngredients(prisma: PrismaClient): Promise<number> {
