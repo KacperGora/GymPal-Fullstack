@@ -24,7 +24,8 @@
     "login": "Zaloguj",
     "logout": "Wyloguj",
     "dashboard": "Pulpit",
-    "nutrition": "Odżywianie"
+    "nutrition": "Odżywianie",
+    "billing": "Subskrypcja"
   },
   "home": {
     "title": "GymPal"
@@ -240,6 +241,31 @@
     "workoutFrequencyPerWeek": "na tydzień",
     "workoutFrequencyWorkouts": "treningów",
     "macroBreakdownTitle": "Dzisiejszy rozkład makro"
+  },
+  "billing": {
+    "title": "Subskrypcja",
+    "currentPlan": "Aktualny plan",
+    "availablePlans": "Dostępne plany",
+    "subscribe": "Subskrybuj",
+    "manageSubscription": "Zarządzaj subskrypcją",
+    "paymentSuccess": "Płatność zakończona sukcesem! Twoja subskrypcja jest aktywna.",
+    "paymentCanceled": "Płatność anulowana. Możesz spróbować ponownie w dowolnym momencie.",
+    "trialNote": "Zawiera 14-dniowy bezpłatny okres próbny. Anuluj w dowolnym momencie.",
+    "renewsOn": "Odnawia się {date}",
+    "trialEndsOn": "Okres próbny kończy się {date}",
+    "cancelsOn": "Anuluje się {date}",
+    "status": {
+      "ACTIVE": "Aktywna",
+      "TRIALING": "Okres próbny",
+      "PAST_DUE": "Zaległa płatność",
+      "CANCELED": "Anulowana",
+      "UNPAID": "Nieopłacona",
+      "PAUSED": "Wstrzymana"
+    },
+    "interval": {
+      "month": "miesiąc",
+      "year": "rok"
+    }
   },
   "profile": {
     "title": "Profil",

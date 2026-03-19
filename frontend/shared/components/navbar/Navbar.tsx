@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   { key: 'exercises', path: '/exercises' },
   { key: 'workouts', path: '/workouts' },
   { key: 'profile', path: '/profile' },
+  { key: 'billing', path: '/billing' },
 ] as const;
 
 export const Navbar = () => {
