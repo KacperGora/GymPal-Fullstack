@@ -7,9 +7,10 @@
 ![NestJS](https://img.shields.io/badge/NestJS-11-e0234e)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 
-**Stack:** Next.js · NestJS · PostgreSQL · Redis · BullMQ · Prisma · Docker · GCP
+**Stack:** Next.js · NestJS · PostgreSQL · Redis · BullMQ · Prisma · Stripe · Docker · GCP
 
 **Key engineering:**
+- Stripe subscription billing — Checkout, webhook processing with idempotency, usage limits per tier
 - Event-driven nutrition stats pipeline — meal writes enqueue BullMQ jobs, stats computed asynchronously
 - Distributed Redis cache — shared across Cloud Run instances, survives container restarts
 - JWT refresh token rotation with family-based revocation and brute-force lockout
@@ -42,6 +43,10 @@ graph TD
         BQ[BullMQ Workers<br/>nutrition stats · cleanup]
     end
 
+    subgraph Payments
+        ST[Stripe<br/>Checkout · Webhooks · Portal]
+    end
+
     N -->|REST / HTTP-only cookies| NE
     NE --> PR
     PR --> PG
@@ -49,6 +54,8 @@ graph TD
     NE -->|enqueue| BQ
     BQ -->|write stats| PR
     BQ <-->|job queue| RD
+    NE <-->|subscriptions| ST
+    ST -->|webhook events| NE
 
     subgraph CICD[CI/CD]
         GH[GitHub] -->|push| CB[Cloud Build]
@@ -62,6 +69,7 @@ graph TD
     style PR fill:#2d3748,color:#fff,stroke:#333
     style RD fill:#dc382d,color:#fff,stroke:#333
     style BQ fill:#f59e0b,stroke:#333
+    style ST fill:#635bff,color:#fff,stroke:#333
     style CB fill:#4285f4,color:#fff,stroke:#333
     style GH fill:#24292e,color:#fff,stroke:#333
 ```
@@ -82,6 +90,7 @@ graph TD
 | **Database** | PostgreSQL 16 | ACID, relational integrity, Cloud SQL |
 | **Cache / Queues** | Redis 7 + BullMQ | Persistent cache, async background jobs |
 | **Auth** | JWT + HTTP-only cookies | XSS-proof token storage, refresh rotation |
+| **Payments** | Stripe | Checkout sessions, webhooks, billing portal |
 | **i18n** | next-intl | PL / EN, locale routing |
 | **AI** | OpenAI GPT-4o-mini | Meal suggestions, retry + exponential backoff |
 | **Monitoring** | Sentry | Performance tracing, error grouping |
@@ -105,12 +114,63 @@ graph TD
 - [x] Multi-language (PL / EN)
 - [x] Responsive UI (MUI)
 - [x] API documentation (Swagger)
+- [x] Subscription billing (Stripe Checkout, webhooks, customer portal, usage limits per tier)
 - [x] Docker Compose for local development
 - [ ] Mobile app (React Native — planned)
 
 ---
 
-## Engineering Decisions
+## Architecture Decisions
+
+### Why NestJS instead of Express?
+
+Express is minimal — it gives you `req`, `res`, and middleware. Everything else (validation, dependency injection, module structure, guards, interceptors) you wire yourself. That works for small services but leads to inconsistent architecture as the codebase grows.
+
+NestJS provides **opinionated structure out of the box**: modules enforce domain boundaries, guards handle authorization declaratively, interceptors handle cross-cutting concerns (logging, caching, response transformation), and the built-in DI container makes testing straightforward. In GymPal this means:
+
+- `UsageLimitGuard` — a single decorator enforces per-tier rate limits across any endpoint
+- `StripeWebhookController` has its own module, injected with `StripeService` + `PrismaService` — all mockable in tests
+- Adding a new domain (e.g. subscriptions) is: create module → register providers → export what's shared
+
+The trade-off is more ceremony for trivial endpoints, but GymPal has 15+ modules and 40+ endpoints — the structure pays for itself.
+
+---
+
+### Why JWT in HTTP-only cookies (not localStorage)?
+
+Storing JWTs in `localStorage` means any XSS vulnerability gives an attacker full access to the token. HTTP-only cookies are **invisible to JavaScript** — even if XSS occurs, the token can't be exfiltrated.
+
+GymPal's auth flow:
+
+```
+Login → server sets two HTTP-only cookies:
+  access_token  (15 min, signed JWT with userId + subscriptionStatus)
+  refresh_token (7 days, opaque, hashed in DB)
+
+On 401 → axios interceptor calls /auth/refresh
+       → server rotates refresh token (family-based)
+       → if token reuse detected → entire family revoked (stolen token protection)
+```
+
+The `subscriptionStatus` claim in the JWT avoids a DB query on every guarded request — the guard reads the claim directly. When a webhook updates the subscription, the next token refresh picks up the new status.
+
+---
+
+### Why shared Zod schemas?
+
+The `shared/` package contains Zod schemas that are the **single source of truth** for data shapes. Both frontend forms (React Hook Form) and backend DTOs validate against the same schema:
+
+```
+shared/schemas/meal.schema.ts
+    ↓                    ↓
+Frontend:            Backend:
+RHF resolver         NestJS ValidationPipe
+(client-side)        (server-side)
+```
+
+This eliminates an entire class of bugs where frontend sends `{ calories: "165" }` (string) but backend expects `number`. The schema catches it on both sides. When the schema changes, TypeScript compiler flags every consumer.
+
+---
 
 ### Why Zustand instead of Redux?
 
@@ -136,12 +196,14 @@ NestJS modules enforce **domain isolation** at the framework level. Each domain 
 
 ```
 AppModule
-├── AuthModule        (JWT strategy, guards)
-├── WorkoutsModule    (sessions, exercises)
-├── NutritionModule   (meals, daily stats)
-├── AiModule          (OpenAI, prompt builder, retry)
-├── JobsModule        (BullMQ processors, producers)
-└── SharedModule      (Prisma, Redis, Logger, Cache)
+├── AuthModule            (JWT strategy, guards, refresh rotation)
+├── WorkoutsModule        (sessions, exercises)
+├── NutritionModule       (meals, daily stats)
+├── AiModule              (OpenAI, prompt builder, retry)
+├── SubscriptionsModule   (Stripe checkout, portal, webhook handlers)
+├── StripeModule          (Stripe SDK wrapper, signature verification)
+├── JobsModule            (BullMQ processors, producers)
+└── SharedModule          (Prisma, Redis, Logger, Cache, UsageLimitGuard)
 ```
 
 Benefits: circular dependency detection at startup, easy mocking in tests, feature flags per module, clear ownership.
@@ -193,9 +255,50 @@ The previous in-memory cache (`Map<string, CacheEntry>`) was lost on every conta
 
 ---
 
+## Payment & Subscriptions (Stripe)
+
+GymPal uses Stripe for subscription billing with a full production payment flow:
+
+```
+User selects plan → POST /billing/checkout
+    │
+    ▼
+Backend creates Stripe Checkout Session (with 14-day trial)
+    │
+    ▼
+User redirected to Stripe-hosted payment page
+    │
+    ▼
+Payment succeeds → Stripe sends webhook → POST /stripe/webhook
+    │
+    ▼
+Webhook handler (idempotent, transactional):
+  1. Verify signature (constructEvent)
+  2. Check PaymentEvent table for duplicate (stripeEventId)
+  3. Update Subscription status within same DB transaction
+  4. Record event for audit trail
+    │
+    ▼
+Next JWT refresh picks up new subscriptionStatus claim
+    │
+    ▼
+UsageLimitGuard reads claim → grants Pro-tier limits
+```
+
+**Key design decisions:**
+
+- **No premature access** — subscription is created with status `CANCELED` during checkout. Only the webhook sets `ACTIVE`/`TRIALING` after Stripe confirms payment. Users can't gain access by abandoning checkout.
+- **Idempotent webhooks** — `PaymentEvent` table deduplicates by `stripeEventId`. All status changes + event recording happen in a single Prisma `$transaction`.
+- **Usage limits per tier** — `UsageLimitGuard` checks subscription status from JWT claim and enforces per-feature daily limits (free: 10/day, pro: configurable per plan). The check + increment runs in a `Serializable` transaction to prevent race conditions.
+- **Customer portal** — subscribed users manage billing, cancel, or change plans through Stripe's hosted portal (no custom UI needed for sensitive operations).
+
+Handled webhook events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`, `invoice.payment_succeeded`.
+
+---
+
 ## Database Design
 
-11 tables, fully relational with enforced foreign keys and indexes on all hot query paths.
+16 tables, fully relational with enforced foreign keys and indexes on all hot query paths.
 
 ```
 User ──< Meal
@@ -206,6 +309,11 @@ User ──< Meal
      ──< UserProfile        (1-to-1)
      ──< RefreshToken       (family-based rotation, brute-force lockout)
      ──< FavoriteExercise
+     ──< AiRequest          (per-user usage tracking for rate limits)
+     ──< Subscription ──> Plan ──< UsageLimit (per-feature daily limits)
+
+Plan ──< UsageLimit         (feature-level daily limits per subscription plan)
+PaymentEvent               (idempotent webhook deduplication by stripeEventId)
 
 MealTemplate ──< MealTemplateIngredient ──> Ingredient
 ```
@@ -221,6 +329,11 @@ MealTemplate ──< MealTemplateIngredient ──> Ingredient
 | `UserProfile` | userId, height, weight, age, activity, goal | Used for TDEE calculation |
 | `WaterIntake` | userId, date, glasses | Unique on `(userId, date)` |
 | `MealTemplate` | name, category, macroFocus, totalCalories | Seeded reference data for AI suggestions |
+| `Subscription` | userId, planId, stripeCustomerId, stripeSubscriptionId, status | Unique on `userId`, status in JWT claim |
+| `Plan` | name, stripePriceId, price, currency, interval | Seeded via `prisma db seed` |
+| `UsageLimit` | planId, feature, dailyLimit | Per-feature limit per plan |
+| `PaymentEvent` | stripeEventId, type, payload | Unique on `stripeEventId` — webhook idempotency |
+| `AiRequest` | userId, feature, createdAt | Usage counter, indexed on `(userId, feature, createdAt)` |
 | `Ingredient` | name, servingSize, calories, proteins, carbs, fats | Unique on `(name, servingSize, servingUnit)` |
 
 ---
@@ -288,6 +401,21 @@ GET  /workouts?from=2026-03-01&to=2026-03-31
 GET  /workouts/stats/weekly
 ```
 
+### Billing & Subscriptions
+
+```http
+GET  /billing/plans                # available subscription plans
+GET  /billing/subscription/me      # current user's subscription + plan
+POST /billing/checkout             # create Stripe Checkout session
+{ "priceId": "price_1R..." }
+→ { "url": "https://checkout.stripe.com/c/pay/..." }
+
+POST /billing/portal               # create Stripe Customer Portal session
+→ { "url": "https://billing.stripe.com/p/session/..." }
+
+POST /stripe/webhook               # Stripe webhook (signature-verified)
+```
+
 ### Exercises (Wger API proxy + favorites)
 
 ```http
@@ -305,17 +433,16 @@ Full interactive docs: **http://localhost:4000/api/docs** (Swagger)
 ## Roadmap
 
 ### In progress
+- [ ] RBAC — Trainer/Client roles with row-level access control
 - [ ] Ingredient database with macro lookup (USDA-sourced, seeded)
-- [ ] Meal templates with scaleable recipes
 
 ### Planned
+- [ ] Real-time workout sessions (WebSockets)
+- [ ] AI workout planner (weekly plans based on goals, equipment, level)
 - [ ] Mobile app (React Native / Expo)
 - [ ] Weekly email digest (BullMQ scheduled job + Resend)
 - [ ] Streak tracking and habit goals
-- [ ] Barcode scanner for food logging
-- [ ] Subscription tier (Stripe) with extended AI quota
 - [ ] Export to CSV / PDF (nutrition reports)
-- [ ] Social features — share workouts
 
 ---
 
@@ -341,6 +468,8 @@ GymPal/
 │   │   │   ├── workouts/     # Sessions, exercises
 │   │   │   ├── nutrition/    # Meals, daily stats
 │   │   │   ├── ai/           # OpenAI, prompt builder, retry
+│   │   │   ├── stripe/       # Stripe SDK wrapper, webhook signature
+│   │   │   ├── subscriptions/ # Checkout, portal, webhook handlers
 │   │   │   └── jobs/         # BullMQ processors & producers
 │   │   └── shared/
 │   │       ├── db/           # Prisma service
@@ -443,6 +572,11 @@ CORS_ORIGIN=http://localhost:3001
 # Redis
 REDIS_HOST=localhost
 REDIS_PORT=6379
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+FRONTEND_URL=http://localhost:3001
 
 # Optional
 OPENAI_API_KEY=sk-...
