@@ -63,4 +63,10 @@ export const endpointList = {
   ai: {
     mealSuggestions: '/ai/meal-suggestions',
   },
+  subscriptions: {
+    plans: '/subscriptions/plans',
+    me: '/subscriptions/me',
+    checkout: '/subscriptions/checkout',
+    portal: '/subscriptions/portal',
+  },
 };

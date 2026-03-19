@@ -24,7 +24,8 @@
     "login": "Login",
     "logout": "Logout",
     "dashboard": "Dashboard",
-    "nutrition": "Nutrition"
+    "nutrition": "Nutrition",
+    "billing": "Billing"
   },
   "home": {
     "title": "GymPal"
@@ -376,6 +377,31 @@
     "searchMinChars": "Type at least 2 characters",
     "noExercisesFound": "No exercises found",
     "selectedExercise": "Selected"
+  },
+  "billing": {
+    "title": "Billing",
+    "currentPlan": "Current plan",
+    "availablePlans": "Available plans",
+    "subscribe": "Subscribe",
+    "manageSubscription": "Manage subscription",
+    "paymentSuccess": "Payment successful! Your subscription is now active.",
+    "paymentCanceled": "Payment canceled. You can try again anytime.",
+    "trialNote": "14-day free trial included. Cancel anytime.",
+    "renewsOn": "Renews on {date}",
+    "trialEndsOn": "Trial ends on {date}",
+    "cancelsOn": "Cancels on {date}",
+    "status": {
+      "ACTIVE": "Active",
+      "TRIALING": "Trial",
+      "PAST_DUE": "Past due",
+      "CANCELED": "Canceled",
+      "UNPAID": "Unpaid",
+      "PAUSED": "Paused"
+    },
+    "interval": {
+      "month": "month",
+      "year": "year"
+    }
   },
   "profile": {
     "title": "Profile",

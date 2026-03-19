@@ -32,7 +32,6 @@ export class StripeService {
   }): Promise<Stripe.Checkout.Session> {
     return this.stripe.checkout.sessions.create({
       customer: params.customerId,
-      payment_method_types: ['card'],
       line_items: [{ price: params.priceId, quantity: 1 }],
       mode: 'subscription',
       success_url: params.successUrl,
