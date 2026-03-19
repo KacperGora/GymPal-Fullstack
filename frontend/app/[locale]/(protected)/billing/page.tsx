@@ -20,15 +20,18 @@ export default function BillingPage() {
   const success = searchParams.get('success') === 'true';
   const canceled = searchParams.get('canceled') === 'true';
 
-  const { data: plans, isLoading: plansLoading } = usePlans();
   const { data: subscription, isLoading: subLoading } =
     useMySubscription(isAuthenticated);
 
-  const checkout = useCreateCheckout();
-  const portal = useCreatePortal();
-
   const isActiveSubscription =
     subscription?.status === 'ACTIVE' || subscription?.status === 'TRIALING';
+
+  const { data: plans, isLoading: plansLoading } = usePlans({
+    enabled: !subLoading && !isActiveSubscription,
+  });
+
+  const checkout = useCreateCheckout();
+  const portal = useCreatePortal();
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>

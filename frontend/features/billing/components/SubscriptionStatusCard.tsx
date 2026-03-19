@@ -11,7 +11,12 @@ import {
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
 
-import type { Subscription, SubscriptionStatus } from '../types';
+import type { Plan, Subscription, SubscriptionStatus } from '../types';
+
+const VALID_INTERVALS: ReadonlySet<Plan['interval']> = new Set([
+  'month',
+  'year',
+]);
 
 interface Props {
   subscription: Subscription;
@@ -69,8 +74,15 @@ export const SubscriptionStatusCard = ({
         </Typography>
 
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {(plan.price / 100).toFixed(2)} {plan.currency.toUpperCase()} /{' '}
-          {t(`interval.${plan.interval}`)}
+          {new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency: plan.currency,
+            minimumFractionDigits: 2,
+          }).format(plan.price / 100)}{' '}
+          /{' '}
+          {t(
+            `interval.${VALID_INTERVALS.has(plan.interval) ? plan.interval : 'month'}`,
+          )}
         </Typography>
 
         {periodEndDate && (
