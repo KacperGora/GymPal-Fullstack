@@ -46,13 +46,13 @@ test.describe('Billing page', () => {
   }) => {
     await registerAndLogin(page, 'billing');
 
-    await page.route('**/billing/subscription/me', (route) =>
+    await page.route('**/subscriptions/me', (route) =>
       route.fulfill({
         status: 404,
         body: JSON.stringify({ message: 'Not found' }),
       }),
     );
-    await page.route('**/billing/plans', (route) =>
+    await page.route('**/subscriptions/plans', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -74,7 +74,7 @@ test.describe('Billing page', () => {
   }) => {
     await registerAndLogin(page, 'billing-active');
 
-    await page.route('**/billing/subscription/me', (route) =>
+    await page.route('**/subscriptions/me', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -91,13 +91,13 @@ test.describe('Billing page', () => {
   test('checkout redirects to Stripe on plan selection', async ({ page }) => {
     await registerAndLogin(page, 'billing-checkout');
 
-    await page.route('**/billing/subscription/me', (route) =>
+    await page.route('**/subscriptions/me', (route) =>
       route.fulfill({
         status: 404,
         body: JSON.stringify({ message: 'Not found' }),
       }),
     );
-    await page.route('**/billing/plans', (route) =>
+    await page.route('**/subscriptions/plans', (route) =>
       route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -106,7 +106,7 @@ test.describe('Billing page', () => {
     );
 
     let checkoutRequested = false;
-    await page.route('**/billing/checkout', (route) => {
+    await page.route('**/subscriptions/checkout', (route) => {
       checkoutRequested = true;
       route.fulfill({
         status: 200,
