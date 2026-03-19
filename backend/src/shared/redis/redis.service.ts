@@ -66,6 +66,22 @@ export class RedisService implements OnModuleDestroy {
     return this.client;
   }
 
+  async publish(channel: string, message: string): Promise<void> {
+    try {
+      await this.client.publish(channel, message);
+    } catch (err) {
+      this.logger.error(
+        `Redis PUBLISH failed for channel "${channel}": ${String(err)}`,
+      );
+    }
+  }
+
+  createSubscriber(): Redis {
+    const host = process.env.REDIS_HOST ?? 'localhost';
+    const port = parseInt(process.env.REDIS_PORT ?? '6379', 10);
+    return new Redis({ host, port });
+  }
+
   async onModuleDestroy(): Promise<void> {
     await this.client.quit();
   }

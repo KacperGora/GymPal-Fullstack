@@ -7,8 +7,12 @@ import {
 import Stripe from 'stripe';
 import { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../shared/db/prisma.service';
+import { RedisService } from '../../shared/redis/redis.service';
 import { StripeService } from '../stripe/stripe.service';
 import { SubscriptionStatus } from '../../generated/prisma/enums';
+
+const SUBSCRIPTION_ACTIVATED_CHANNEL = (userId: number) =>
+  `subscription:activated:${userId}`;
 
 const FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:3000';
 
@@ -19,6 +23,7 @@ export class SubscriptionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeService: StripeService,
+    private readonly redisService: RedisService,
   ) {}
 
   async getPlans() {
@@ -169,6 +174,10 @@ export class SubscriptionsService {
     });
 
     this.logger.log(`Subscription activated for userId=${userId}`);
+    await this.redisService.publish(
+      SUBSCRIPTION_ACTIVATED_CHANNEL(userId),
+      'activated',
+    );
   }
 
   private async handleSubscriptionUpdated(
