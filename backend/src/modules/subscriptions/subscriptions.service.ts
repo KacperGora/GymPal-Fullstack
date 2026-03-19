@@ -173,11 +173,24 @@ export class SubscriptionsService {
       },
     });
 
-    this.logger.log(`Subscription activated for userId=${userId}`);
-    await this.redisService.publish(
-      SUBSCRIPTION_ACTIVATED_CHANNEL(userId),
-      'activated',
-    );
+    // Fix #5: publikuj tylko gdy subskrypcja faktycznie jest aktywna —
+    // Stripe może zwrócić status incomplete (PAST_DUE) przy nieudanej płatności
+    const finalStatus = this.mapStripeStatus(stripeSubscription.status);
+    const isActive =
+      finalStatus === SubscriptionStatus.ACTIVE ||
+      finalStatus === SubscriptionStatus.TRIALING;
+
+    if (isActive) {
+      this.logger.log(`Subscription activated for userId=${userId}`);
+      await this.redisService.publish(
+        SUBSCRIPTION_ACTIVATED_CHANNEL(userId),
+        'activated',
+      );
+    } else {
+      this.logger.warn(
+        `checkout.session.completed for userId=${userId} resulted in status=${finalStatus} — skipping activation event`,
+      );
+    }
   }
 
   private async handleSubscriptionUpdated(

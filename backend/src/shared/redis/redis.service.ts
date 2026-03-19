@@ -77,9 +77,13 @@ export class RedisService implements OnModuleDestroy {
   }
 
   createSubscriber(): Redis {
-    const host = process.env.REDIS_HOST ?? 'localhost';
-    const port = parseInt(process.env.REDIS_PORT ?? '6379', 10);
-    return new Redis({ host, port });
+    // Fix #6: duplicate() dziedziczy konfigurację (host/port/options) i event handlery
+    // zamiast tworzyć niezależne połączenie per request SSE
+    const subscriber = this.client.duplicate();
+    subscriber.on('error', (err) => {
+      this.logger.error(`Redis subscriber error: ${err.message}`);
+    });
+    return subscriber;
   }
 
   async onModuleDestroy(): Promise<void> {
