@@ -101,13 +101,56 @@ export class SubscriptionsService {
     return { url: session.url };
   }
 
+  /**
+   * Publish Redis activation event AFTER transaction commits.
+   */
+  async notifyActivationIfNeeded(event: Stripe.Event): Promise<void> {
+    if (event.type !== 'checkout.session.completed') return;
+    const session = event.data.object;
+    const userId = Number(session.metadata?.userId);
+    if (!userId) return;
+
+    const sub = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
+    const isActive =
+      sub?.status === SubscriptionStatus.ACTIVE ||
+      sub?.status === SubscriptionStatus.TRIALING;
+
+    if (isActive) {
+      await this.redisService.publish(
+        SUBSCRIPTION_ACTIVATED_CHANNEL(userId),
+        'activated',
+      );
+    }
+  }
+
+  /**
+   * Pre-fetch any external data needed by the event handler (e.g. Stripe API calls).
+   * This MUST run outside the DB transaction to avoid timeout.
+   */
+  async prefetchForEvent(
+    event: Stripe.Event,
+  ): Promise<Stripe.Subscription | null> {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      if (session.mode === 'subscription' && session.subscription) {
+        return this.stripeService.retrieveSubscription(
+          session.subscription as string,
+        );
+      }
+    }
+    return null;
+  }
+
   async handleStripeEvent(
     event: Stripe.Event,
     tx: Prisma.TransactionClient = this.prisma,
+    prefetched?: Stripe.Subscription | null,
   ): Promise<void> {
     switch (event.type) {
       case 'checkout.session.completed':
-        await this.handleCheckoutCompleted(event.data.object, tx);
+        await this.handleCheckoutCompleted(event.data.object, tx, prefetched);
         break;
       case 'customer.subscription.updated':
         await this.handleSubscriptionUpdated(event.data.object, tx);
@@ -129,6 +172,7 @@ export class SubscriptionsService {
   private async handleCheckoutCompleted(
     session: Stripe.Checkout.Session,
     tx: Prisma.TransactionClient,
+    prefetched?: Stripe.Subscription | null,
   ): Promise<void> {
     if (session.mode !== 'subscription' || !session.subscription) return;
 
@@ -138,9 +182,12 @@ export class SubscriptionsService {
       return;
     }
 
-    const stripeSubscription = await this.stripeService.retrieveSubscription(
-      session.subscription as string,
-    );
+    // Use prefetched subscription (fetched outside transaction) to avoid timeout.
+    const stripeSubscription =
+      prefetched ??
+      (await this.stripeService.retrieveSubscription(
+        session.subscription as string,
+      ));
     const priceId = stripeSubscription.items.data[0]?.price.id;
     const plan = priceId
       ? await tx.plan.findUnique({ where: { stripePriceId: priceId } })
@@ -173,8 +220,8 @@ export class SubscriptionsService {
       },
     });
 
-    // Fix #5: publikuj tylko gdy subskrypcja faktycznie jest aktywna —
-    // Stripe może zwrócić status incomplete (PAST_DUE) przy nieudanej płatności
+    // Publish activation event AFTER the transaction commits (called separately).
+    // Store info needed for post-transaction notification.
     const finalStatus = this.mapStripeStatus(stripeSubscription.status);
     const isActive =
       finalStatus === SubscriptionStatus.ACTIVE ||
@@ -182,10 +229,6 @@ export class SubscriptionsService {
 
     if (isActive) {
       this.logger.log(`Subscription activated for userId=${userId}`);
-      await this.redisService.publish(
-        SUBSCRIPTION_ACTIVATED_CHANNEL(userId),
-        'activated',
-      );
     } else {
       this.logger.warn(
         `checkout.session.completed for userId=${userId} resulted in status=${finalStatus} — skipping activation event`,

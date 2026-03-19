@@ -45,6 +45,10 @@ export class StripeWebhookController {
       webhookSecret,
     );
 
+    // Prefetch external data (Stripe API calls) OUTSIDE the transaction
+    // to avoid the 5s Prisma interactive transaction timeout.
+    const prefetched = await this.subscriptionsService.prefetchForEvent(event);
+
     await this.prisma.$transaction(async (tx) => {
       const existing = await tx.paymentEvent.findUnique({
         where: { stripeEventId: event.id },
@@ -55,7 +59,7 @@ export class StripeWebhookController {
         return;
       }
 
-      await this.subscriptionsService.handleStripeEvent(event, tx);
+      await this.subscriptionsService.handleStripeEvent(event, tx, prefetched);
 
       await tx.paymentEvent.create({
         data: {
@@ -65,6 +69,14 @@ export class StripeWebhookController {
         },
       });
     });
+
+    // Publish Redis activation event AFTER transaction commits successfully.
+    // This is non-critical — failure here won't break the subscription.
+    await this.subscriptionsService
+      .notifyActivationIfNeeded(event)
+      .catch((err) =>
+        this.logger.warn(`Post-transaction notification failed: ${err}`),
+      );
 
     return { received: true };
   }
