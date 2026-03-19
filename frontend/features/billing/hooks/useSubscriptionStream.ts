@@ -6,6 +6,8 @@ interface SubscriptionStreamState {
   timedOut: boolean;
 }
 
+type StreamStatus = 'idle' | 'pending' | 'activated' | 'timedOut';
+
 // Client-side timeout — slightly longer than backend SSE_TIMEOUT_MS (30s)
 const CLIENT_TIMEOUT_MS = 35_000;
 
@@ -13,9 +15,16 @@ export const useSubscriptionStream = (
   enabled: boolean,
 ): SubscriptionStreamState => {
   const queryClient = useQueryClient();
-  // Track terminal states — setState only ever called inside async callbacks
-  const [activated, setActivated] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
+  const [status, setStatus] = useState<StreamStatus>('idle');
+  // Fix #2: track previous enabled to reset status when enabled transitions to true
+  const [prevEnabled, setPrevEnabled] = useState(enabled);
+
+  if (prevEnabled !== enabled) {
+    setPrevEnabled(enabled);
+    if (enabled) {
+      setStatus('pending');
+    }
+  }
 
   useEffect(() => {
     if (!enabled) return;
@@ -25,19 +34,31 @@ export const useSubscriptionStream = (
     });
 
     const timeout = setTimeout(() => {
-      setTimedOut(true);
+      setStatus('timedOut');
       es.close();
     }, CLIENT_TIMEOUT_MS);
 
-    es.onmessage = () => {
+    es.onmessage = (event: MessageEvent) => {
       clearTimeout(timeout);
-      setActivated(true);
-      void queryClient.invalidateQueries({ queryKey: ['subscription', 'me'] });
+      // Fix #4: backend wysyła jawny event {status:'timeout'} zamiast cicho zamykać
+      const data = event.data
+        ? (JSON.parse(event.data as string) as { status?: string })
+        : {};
+
+      if (data.status === 'timeout') {
+        setStatus('timedOut');
+      } else {
+        setStatus('activated');
+        void queryClient.invalidateQueries({
+          queryKey: ['subscription', 'me'],
+        });
+      }
       es.close();
     };
 
     es.onerror = () => {
       clearTimeout(timeout);
+      setStatus('timedOut');
       es.close();
     };
 
@@ -47,7 +68,8 @@ export const useSubscriptionStream = (
     };
   }, [enabled, queryClient]);
 
-  const isPending = enabled && !activated && !timedOut;
-
-  return { isPending, timedOut: enabled && timedOut };
+  return {
+    isPending: enabled && status === 'pending',
+    timedOut: enabled && status === 'timedOut',
+  };
 };

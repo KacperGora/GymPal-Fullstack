@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Logger,
   MessageEvent,
   Post,
   Sse,
@@ -25,6 +26,8 @@ const SSE_TIMEOUT_MS = 30_000;
 @ApiTags('subscriptions')
 @Controller('subscriptions')
 export class SubscriptionsController {
+  private readonly logger = new Logger(SubscriptionsController.name);
+
   constructor(
     private readonly subscriptionsService: SubscriptionsService,
     private readonly redisService: RedisService,
@@ -64,7 +67,15 @@ export class SubscriptionsController {
       const channel = `subscription:activated:${userId}`;
       const subscriber = this.redisService.createSubscriber();
 
-      void subscriber.subscribe(channel);
+      // Fix #3: await subscribe i obsłuż błąd Redis zamiast zostawiać unhandled rejection
+      subscriber.subscribe(channel).catch((err: unknown) => {
+        this.logger.error(
+          `Redis subscribe failed for userId=${userId}: ${String(err)}`,
+        );
+        observer.error(err);
+        void subscriber.quit();
+      });
+
       subscriber.on('message', () => {
         observer.next({ data: { status: 'activated' } } as MessageEvent);
         observer.complete();
@@ -72,6 +83,9 @@ export class SubscriptionsController {
       });
 
       const timeout = setTimeout(() => {
+        // Fix #4: wyślij jawny event timeout — klient nie może odróżnić
+        // normalnego zamknięcia od błędu sieciowego bez tego sygnału
+        observer.next({ data: { status: 'timeout' } } as MessageEvent);
         observer.complete();
         void subscriber.quit();
       }, SSE_TIMEOUT_MS);
