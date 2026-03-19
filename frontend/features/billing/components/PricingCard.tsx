@@ -12,6 +12,11 @@ import { useTranslations } from 'next-intl';
 
 import type { Plan } from '../types';
 
+const VALID_INTERVALS: ReadonlySet<Plan['interval']> = new Set([
+  'month',
+  'year',
+]);
+
 interface Props {
   plan: Plan;
   isCurrentPlan: boolean;
@@ -58,13 +63,17 @@ export const PricingCard = ({
 
         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, mb: 2 }}>
           <Typography variant="h4" fontWeight={800}>
-            {(plan.price / 100).toFixed(0)}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {plan.currency.toUpperCase()}
+            {new Intl.NumberFormat(undefined, {
+              style: 'currency',
+              currency: plan.currency,
+              minimumFractionDigits: 2,
+            }).format(plan.price / 100)}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            / {t(`interval.${plan.interval}`)}
+            /{' '}
+            {t(
+              `interval.${VALID_INTERVALS.has(plan.interval) ? plan.interval : 'month'}`,
+            )}
           </Typography>
         </Box>
 

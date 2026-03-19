@@ -12,7 +12,7 @@ export interface Plan {
   stripePriceId: string;
   price: number;
   currency: string;
-  interval: string;
+  interval: 'month' | 'year';
   createdAt: string;
 }
 
