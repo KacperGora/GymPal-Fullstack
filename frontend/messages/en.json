@@ -386,6 +386,8 @@
     "manageSubscription": "Manage subscription",
     "paymentSuccess": "Payment successful! Your subscription is now active.",
     "paymentCanceled": "Payment canceled. You can try again anytime.",
+    "confirmingPayment": "Confirming your payment, please wait…",
+    "confirmationTimeout": "We couldn't confirm your subscription automatically. Please refresh the page in a moment.",
     "trialNote": "14-day free trial included. Cancel anytime.",
     "renewsOn": "Renews on {date}",
     "trialEndsOn": "Trial ends on {date}",

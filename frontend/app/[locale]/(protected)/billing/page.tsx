@@ -1,12 +1,19 @@
 'use client';
 
-import { Alert, Box, Skeleton, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Skeleton,
+  Typography,
+} from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { PricingCard } from '@/features/billing/components/PricingCard';
 import { SubscriptionStatusCard } from '@/features/billing/components/SubscriptionStatusCard';
 
+import { useSubscriptionStream } from '@/features/billing/hooks/useSubscriptionStream';
 import { useCreateCheckout } from '@/features/billing/mutations/useCreateCheckout';
 import { useCreatePortal } from '@/features/billing/mutations/useCreatePortal';
 import { useMySubscription } from '@/features/billing/queries/useMySubscription';
@@ -33,15 +40,32 @@ export default function BillingPage() {
   const checkout = useCreateCheckout();
   const portal = useCreatePortal();
 
+  const { isPending: streamPending, timedOut: streamTimedOut } =
+    useSubscriptionStream(success && !isActiveSubscription);
+
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
       <Typography variant="h4" gutterBottom>
         {t('title')}
       </Typography>
 
-      {success && (
+      {success && !streamPending && !streamTimedOut && (
         <Alert severity="success" sx={{ mb: 3 }}>
           {t('paymentSuccess')}
+        </Alert>
+      )}
+      {streamPending && (
+        <Alert
+          severity="info"
+          icon={<CircularProgress size={20} />}
+          sx={{ mb: 3 }}
+        >
+          {t('confirmingPayment')}
+        </Alert>
+      )}
+      {streamTimedOut && (
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          {t('confirmationTimeout')}
         </Alert>
       )}
       {canceled && (

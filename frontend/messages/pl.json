@@ -250,6 +250,8 @@
     "manageSubscription": "Zarządzaj subskrypcją",
     "paymentSuccess": "Płatność zakończona sukcesem! Twoja subskrypcja jest aktywna.",
     "paymentCanceled": "Płatność anulowana. Możesz spróbować ponownie w dowolnym momencie.",
+    "confirmingPayment": "Potwierdzamy płatność, proszę czekać…",
+    "confirmationTimeout": "Nie udało się automatycznie potwierdzić subskrypcji. Odśwież stronę za chwilę.",
     "trialNote": "Zawiera 14-dniowy bezpłatny okres próbny. Anuluj w dowolnym momencie.",
     "renewsOn": "Odnawia się {date}",
     "trialEndsOn": "Okres próbny kończy się {date}",
