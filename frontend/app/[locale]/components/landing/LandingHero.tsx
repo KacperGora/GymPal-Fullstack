@@ -4,12 +4,17 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Grid,
   Paper,
   Stack,
   Typography,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+
+import { login } from '@/features/auth/api/auth.api';
+import { useRouter } from '@/i18n/navigation';
 
 import { getFeatureCards, getHeroStats, getWorkoutRows } from './content';
 import {
@@ -21,6 +26,21 @@ import {
 
 export function LandingHero() {
   const t = useTranslations('landing');
+  const router = useRouter();
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  const handleDemoLogin = async () => {
+    setIsDemoLoading(true);
+    try {
+      await login({ email: 'demo@gympal.app', password: 'Demo123!' });
+      router.push('/dashboard');
+    } catch {
+      // silently ignore errors
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
+
   const heroStats = getHeroStats(t);
   const workoutRows = getWorkoutRows(t);
   const featureCards = getFeatureCards(t);
@@ -72,8 +92,15 @@ export function LandingHero() {
               color="secondary"
               size="large"
               sx={{ px: 3.5 }}
+              onClick={handleDemoLogin}
+              disabled={isDemoLoading}
+              startIcon={
+                isDemoLoading ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : undefined
+              }
             >
-              {t('hero.secondaryCta')}
+              {t('hero.demoCta')}
             </Button>
           </Stack>
           <Stack direction="row" spacing={4} sx={{ pt: 2 }}>

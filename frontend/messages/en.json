@@ -37,7 +37,8 @@
       "title": "Premium workout and nutrition planning in one panel.",
       "subtitle": "Designed like a premium product: consistent, fast, and convenient for daily use. Plans, progress, calorie goals and macros in one view — no app juggling.",
       "primaryCta": "Start premium plan",
-      "secondaryCta": "See premium demo",
+      "secondaryCta": "Try demo",
+      "demoCta": "Try demo — no signup needed",
       "stats": [
         { "label": "Plans", "value": "120+" },
         { "label": "Exercises", "value": "600+" },
