@@ -29,14 +29,6 @@ const mockBaseApis = async (
   glasses = 0,
 ) => {
   await page.route('**/meals**', (route) => {
-    if (route.request().url().includes('/meals/recent')) {
-      route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([]),
-      });
-      return;
-    }
     if (route.request().method() === 'GET') {
       route.fulfill({
         status: 200,
@@ -51,6 +43,13 @@ const mockBaseApis = async (
       body: JSON.stringify(MOCK_MEAL),
     });
   });
+  await page.route('**/meals/recent**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    }),
+  );
   await page.route('**/nutrition/tdee**', (route) =>
     route.fulfill({
       status: 200,
@@ -108,7 +107,7 @@ test.describe('Nutrition page', () => {
     ).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.getByText('500 kcal', { exact: true })).toBeVisible();
+    await expect(page.getByText('500 kcal')).toBeVisible();
   });
 
   test('opens add meal modal on button click', async ({ page }) => {

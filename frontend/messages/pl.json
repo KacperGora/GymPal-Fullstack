@@ -37,7 +37,8 @@
       "title": "Premium planowanie treningu i żywienia w jednym panelu.",
       "subtitle": "Zaprojektowane jak produkt klasy premium: spójne, szybkie i wygodne w użyciu na co dzień. Plany, progres, cele kalorii i makra w jednym widoku, bez żonglowania aplikacjami.",
       "primaryCta": "Zacznij plan premium",
-      "secondaryCta": "Zobacz demo premium",
+      "secondaryCta": "Wypróbuj demo",
+      "demoCta": "Wypróbuj demo — bez rejestracji",
       "stats": [
         { "label": "Planów", "value": "120+" },
         { "label": "Ćwiczeń", "value": "600+" },
