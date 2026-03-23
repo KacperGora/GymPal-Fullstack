@@ -14,13 +14,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model Seeder {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  runAt     DateTime @default(now())
-  createdAt DateTime @default(now())
-}
-
 enum ExerciseCategory {
   STRENGTH
   CARDIO
@@ -35,12 +28,61 @@ enum MealCategory {
   SNACK
 }
 
+enum Role {
+  ADMIN
+  TRAINER
+  CLIENT
+}
+
+enum TrainerClientStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum IngredientCategory {
+  PROTEIN
+  CARBS
+  VEGETABLES
+  FRUITS
+  DAIRY
+  FATS_OILS
+  GRAINS
+  LEGUMES
+  NUTS_SEEDS
+  BEVERAGES
+  CONDIMENTS
+  OTHER
+}
+
+enum MealDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum MacroFocus {
+  HIGH_PROTEIN
+  LOW_CARB
+  BALANCED
+  HIGH_CARB
+  LOW_FAT
+}
+
+model Seeder {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  runAt     DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
 model User {
   id                  Int                @id @unique @default(autoincrement())
   firstName           String
   lastName            String
   password            String
   email               String             @unique
+  role                Role               @default(CLIENT)
   failedLoginAttempts Int                @default(0)
   lockedUntil         DateTime?
   refreshTokens       RefreshToken[]
@@ -53,6 +95,28 @@ model User {
   favoriteExercises   FavoriteExercise[]
   subscription        Subscription?
   aiRequests          AiRequest[]
+  clientRelations     TrainerClient[]    @relation("TrainerRelation")
+  trainerRelations    TrainerClient[]    @relation("ClientRelation")
+}
+
+model TrainerClient {
+  id          String              @id @default(cuid())
+  trainerId   Int
+  trainer     User                @relation("TrainerRelation", fields: [trainerId], references: [id], onDelete: Cascade)
+  clientId    Int
+  client      User                @relation("ClientRelation", fields: [clientId], references: [id], onDelete: Cascade)
+  status      TrainerClientStatus @default(PENDING)
+  inviteToken String?             @unique
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+
+  @@unique([trainerId, clientId])
+  @@index([trainerId])
+  @@index([clientId])
+  @@index([status])
+  @@index([inviteToken])
 }
 
 model RefreshToken {
@@ -198,35 +262,6 @@ model FavoriteExercise {
   createdAt      DateTime @default(now())
 
   @@unique([userId, wgerExerciseId])
-}
-
-enum IngredientCategory {
-  PROTEIN
-  CARBS
-  VEGETABLES
-  FRUITS
-  DAIRY
-  FATS_OILS
-  GRAINS
-  LEGUMES
-  NUTS_SEEDS
-  BEVERAGES
-  CONDIMENTS
-  OTHER
-}
-
-enum MealDifficulty {
-  EASY
-  MEDIUM
-  HARD
-}
-
-enum MacroFocus {
-  HIGH_PROTEIN
-  LOW_CARB
-  BALANCED
-  HIGH_CARB
-  LOW_FAT
 }
 
 model Ingredient {

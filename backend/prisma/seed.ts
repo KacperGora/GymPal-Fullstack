@@ -2,6 +2,7 @@ import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
+import { hashPassword } from '../src/shared/lib/hash';
 
 dotenv.config();
 
@@ -27,6 +28,11 @@ async function main() {
     console.log('🍽️  Seeding meal templates...');
     const templateCount = await seedMealTemplates(prisma);
     console.log(`✅ Seeded ${templateCount} meal templates`);
+
+    // Seed users (RBAC roles)
+    console.log('👤 Seeding users...');
+    await seedUsers(prisma);
+    console.log('✅ Seeded users');
 
     // Seed demo user
     console.log('👤 Seeding demo user...');
@@ -65,6 +71,85 @@ async function seedPlans(prisma: PrismaClient): Promise<void> {
     },
   });
 }
+async function seedUsers(prisma: PrismaClient): Promise<void> {
+  const existingCount = await prisma.user.count();
+  if (existingCount > 0) {
+    console.log(`skipping: ${existingCount} users already exist`);
+    return;
+  }
+
+  const admin = await prisma.user.create({
+    data: {
+      email: 'admin@gympal.app',
+      firstName: 'Admin',
+      password: await hashPassword('Admin123!'),
+      lastName: 'GymPal',
+      role: 'ADMIN',
+    },
+  });
+
+  const trainer = await prisma.user.create({
+    data: {
+      email: 'trainer@gympal.app',
+      password: await hashPassword('Trainer123!'),
+      firstName: 'John',
+      lastName: 'Coach',
+      role: 'TRAINER',
+    },
+  });
+  const client1 = await prisma.user.create({
+    data: {
+      email: 'client1@gympal.app',
+      password: await hashPassword('Client123!'),
+      firstName: 'Alice',
+      lastName: 'Strong',
+      role: 'CLIENT',
+    },
+  });
+
+  const client2 = await prisma.user.create({
+    data: {
+      email: 'client2@gympal.app',
+      password: await hashPassword('Client123!'),
+      firstName: 'Bob',
+      lastName: 'Fit',
+      role: 'CLIENT',
+    },
+  });
+
+  const client3 = await prisma.user.create({
+    data: {
+      email: 'client3@gympal.app',
+      password: await hashPassword('Client123!'),
+      firstName: 'Charlie',
+      lastName: 'Gains',
+      role: 'CLIENT',
+    },
+  });
+
+  await prisma.trainerClient.createMany({
+    data: [
+      {
+        trainerId: trainer.id,
+        clientId: client1.id,
+        status: 'ACTIVE',
+        acceptedAt: new Date(),
+      },
+      {
+        trainerId: trainer.id,
+        clientId: client2.id,
+        status: 'ACTIVE',
+        acceptedAt: new Date(),
+      },
+      {
+        trainerId: trainer.id,
+        clientId: client3.id,
+        status: 'ACTIVE',
+        acceptedAt: new Date(),
+      },
+    ],
+  });
+}
 
 async function seedIngredients(prisma: PrismaClient): Promise<number> {
   const existingCount = await prisma.ingredient.count();
@@ -74,14 +159,110 @@ async function seedIngredients(prisma: PrismaClient): Promise<number> {
   }
 
   const ingredients = [
-    { name: 'Chicken Breast (skinless, cooked)', servingSize: 100, servingUnit: 'g', calories: 165, proteins: 31, carbs: 0, fats: 3.6, fiber: 0, category: 'PROTEIN', verified: true, source: 'USDA' },
-    { name: 'Salmon (cooked)', servingSize: 100, servingUnit: 'g', calories: 206, proteins: 22, carbs: 0, fats: 13, fiber: 0, category: 'PROTEIN', verified: true, source: 'USDA' },
-    { name: 'Brown Rice (cooked)', servingSize: 100, servingUnit: 'g', calories: 111, proteins: 2.6, carbs: 23, fats: 0.9, fiber: 1.8, category: 'CARB', verified: true, source: 'USDA' },
-    { name: 'Oats (dry)', servingSize: 100, servingUnit: 'g', calories: 389, proteins: 17, carbs: 66, fats: 6.9, fiber: 10.6, category: 'CARB', verified: true, source: 'USDA' },
-    { name: 'Banana', servingSize: 100, servingUnit: 'g', calories: 89, proteins: 1.1, carbs: 23, fats: 0.3, fiber: 2.6, category: 'FRUIT', verified: true, source: 'USDA' },
-    { name: 'Broccoli (cooked)', servingSize: 100, servingUnit: 'g', calories: 34, proteins: 2.8, carbs: 7, fats: 0.4, fiber: 2.4, category: 'VEGETABLE', verified: true, source: 'USDA' },
-    { name: 'Greek Yogurt (plain)', servingSize: 100, servingUnit: 'g', calories: 59, proteins: 10, carbs: 3.3, fats: 0.4, fiber: 0, category: 'DAIRY', verified: true, source: 'USDA' },
-    { name: 'Olive Oil', servingSize: 100, servingUnit: 'ml', calories: 884, proteins: 0, carbs: 0, fats: 100, fiber: 0, category: 'FAT', verified: true, source: 'USDA' },
+    {
+      name: 'Chicken Breast (skinless, cooked)',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 165,
+      proteins: 31,
+      carbs: 0,
+      fats: 3.6,
+      fiber: 0,
+      category: 'PROTEIN',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Salmon (cooked)',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 206,
+      proteins: 22,
+      carbs: 0,
+      fats: 13,
+      fiber: 0,
+      category: 'PROTEIN',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Brown Rice (cooked)',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 111,
+      proteins: 2.6,
+      carbs: 23,
+      fats: 0.9,
+      fiber: 1.8,
+      category: 'CARBS',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Oats (dry)',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 389,
+      proteins: 17,
+      carbs: 66,
+      fats: 6.9,
+      fiber: 10.6,
+      category: 'CARBS',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Banana',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 89,
+      proteins: 1.1,
+      carbs: 23,
+      fats: 0.3,
+      fiber: 2.6,
+      category: 'FRUITS',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Broccoli (cooked)',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 34,
+      proteins: 2.8,
+      carbs: 7,
+      fats: 0.4,
+      fiber: 2.4,
+      category: 'VEGETABLES',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Greek Yogurt (plain)',
+      servingSize: 100,
+      servingUnit: 'g',
+      calories: 59,
+      proteins: 10,
+      carbs: 3.3,
+      fats: 0.4,
+      fiber: 0,
+      category: 'DAIRY',
+      verified: true,
+      source: 'USDA',
+    },
+    {
+      name: 'Olive Oil',
+      servingSize: 100,
+      servingUnit: 'ml',
+      calories: 884,
+      proteins: 0,
+      carbs: 0,
+      fats: 100,
+      fiber: 0,
+      category: 'FATS_OILS',
+      verified: true,
+      source: 'USDA',
+    },
   ];
 
   const created = await prisma.ingredient.createMany({
@@ -100,10 +281,58 @@ async function seedMealTemplates(prisma: PrismaClient): Promise<number> {
   }
 
   const templates = [
-    { name: 'Oatmeal with Banana', category: 'BREAKFAST', baseRecipe: JSON.stringify([]), totalCalories: 350, totalProteins: 10, totalCarbs: 65, totalFats: 5, scaleableIngredients: [], minScale: 0.7, maxScale: 1.3, preparationTime: 10, difficulty: 'EASY', macroFocus: 'CARB', translations: '{}' },
-    { name: 'Grilled Chicken with Brown Rice', category: 'LUNCH', baseRecipe: JSON.stringify([]), totalCalories: 500, totalProteins: 40, totalCarbs: 45, totalFats: 10, scaleableIngredients: [], minScale: 0.7, maxScale: 1.3, preparationTime: 30, difficulty: 'MEDIUM', macroFocus: 'PROTEIN', translations: '{}' },
-    { name: 'Salmon with Vegetables', category: 'DINNER', baseRecipe: JSON.stringify([]), totalCalories: 480, totalProteins: 35, totalCarbs: 30, totalFats: 20, scaleableIngredients: [], minScale: 0.7, maxScale: 1.3, preparationTime: 25, difficulty: 'MEDIUM', macroFocus: 'PROTEIN', translations: '{}' },
-    { name: 'Greek Yogurt Bowl', category: 'SNACK', baseRecipe: JSON.stringify([]), totalCalories: 220, totalProteins: 15, totalCarbs: 30, totalFats: 2, scaleableIngredients: [], minScale: 0.7, maxScale: 1.3, preparationTime: 5, difficulty: 'EASY', macroFocus: 'PROTEIN', translations: '{}' },
+    {
+      name: 'Oatmeal with Banana',
+      category: 'BREAKFAST',
+      totalCalories: 350,
+      totalProteins: 10,
+      totalCarbs: 65,
+      totalFats: 5,
+      minScale: 0.7,
+      maxScale: 1.3,
+      preparationTime: 10,
+      difficulty: 'EASY',
+      macroFocus: 'HIGH_CARB',
+    },
+    {
+      name: 'Grilled Chicken with Brown Rice',
+      category: 'LUNCH',
+      totalCalories: 500,
+      totalProteins: 40,
+      totalCarbs: 45,
+      totalFats: 10,
+      minScale: 0.7,
+      maxScale: 1.3,
+      preparationTime: 30,
+      difficulty: 'MEDIUM',
+      macroFocus: 'HIGH_PROTEIN',
+    },
+    {
+      name: 'Salmon with Vegetables',
+      category: 'DINNER',
+      totalCalories: 480,
+      totalProteins: 35,
+      totalCarbs: 30,
+      totalFats: 20,
+      minScale: 0.7,
+      maxScale: 1.3,
+      preparationTime: 25,
+      difficulty: 'MEDIUM',
+      macroFocus: 'HIGH_PROTEIN',
+    },
+    {
+      name: 'Greek Yogurt Bowl',
+      category: 'SNACK',
+      totalCalories: 220,
+      totalProteins: 15,
+      totalCarbs: 30,
+      totalFats: 2,
+      minScale: 0.7,
+      maxScale: 1.3,
+      preparationTime: 5,
+      difficulty: 'EASY',
+      macroFocus: 'HIGH_PROTEIN',
+    },
   ];
 
   const created = await prisma.mealTemplate.createMany({

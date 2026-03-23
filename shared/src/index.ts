@@ -10,6 +10,8 @@ export * from "./schemas/ai.schema.js";
 export * from "./types/pagination.js";
 export * from "./contract/auth.contract.js";
 export * from "./constants/cookies.js";
+export * from "./types/auth.js";
+
 export {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
