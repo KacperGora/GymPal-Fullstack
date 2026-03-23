@@ -107,7 +107,7 @@ test.describe('Nutrition page', () => {
     ).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.getByText('500 kcal')).toBeVisible();
+    await expect(page.getByText('500 kcal', { exact: true })).toBeVisible();
   });
 
   test('opens add meal modal on button click', async ({ page }) => {
