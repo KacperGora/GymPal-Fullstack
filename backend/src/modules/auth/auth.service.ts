@@ -30,6 +30,20 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  private generateAccessToken(user: {
+    id: number;
+    email: string;
+    role: string;
+    subscriptionStatus: string | null;
+  }) {
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      subscriptionStatus: user.subscriptionStatus,
+    });
+  }
+
   private hashToken(token: string) {
     return crypto.createHash('sha256').update(token).digest('hex');
   }
@@ -103,6 +117,7 @@ export class AuthService {
       select: {
         id: true,
         email: true,
+        role: true,
         password: true,
         userProfile: { select: { id: true } },
         failedLoginAttempts: true,
@@ -176,9 +191,10 @@ export class AuthService {
       where: { userId: user.id },
       select: { status: true },
     });
-    const token = this.jwtService.sign({
-      sub: user.id,
+    const token = this.generateAccessToken({
+      id: user.id,
       email: user.email,
+      role: user.role,
       subscriptionStatus: subscription?.status ?? null,
     });
     const refresh = await this.createRefreshToken(user.id, context);
@@ -201,6 +217,7 @@ export class AuthService {
           select: {
             id: true,
             email: true,
+            role: true,
             userProfile: { select: { id: true } },
           },
         },
@@ -236,9 +253,10 @@ export class AuthService {
       where: { userId: tokenRecord.userId },
       select: { status: true },
     });
-    const accessToken = this.jwtService.sign({
-      sub: tokenRecord.user.id,
+    const accessToken = this.generateAccessToken({
+      id: tokenRecord.user.id,
       email: tokenRecord.user.email,
+      role: tokenRecord.user.role,
       subscriptionStatus: subscriptionOnRefresh?.status ?? null,
     });
 
