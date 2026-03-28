@@ -2,7 +2,8 @@ import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
 import * as dotenv from 'dotenv';
-import { hashPassword } from '../src/shared/lib/hash';
+
+const hashPassword = (pass: string) => bcrypt.hash(pass, 10);
 
 dotenv.config();
 
