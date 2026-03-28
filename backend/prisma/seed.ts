@@ -73,83 +73,75 @@ async function seedPlans(prisma: PrismaClient): Promise<void> {
   });
 }
 async function seedUsers(prisma: PrismaClient): Promise<void> {
-  const existingCount = await prisma.user.count();
-  if (existingCount > 0) {
-    console.log(`skipping: ${existingCount} users already exist`);
-    return;
-  }
-
-  const admin = await prisma.user.create({
-    data: {
+  const usersToSeed = [
+    {
       email: 'admin@gympal.app',
       firstName: 'Admin',
       password: await hashPassword('Admin123!'),
       lastName: 'GymPal',
-      role: 'ADMIN',
+      role: 'ADMIN' as const,
     },
-  });
-
-  const trainer = await prisma.user.create({
-    data: {
+    {
       email: 'trainer@gympal.app',
       password: await hashPassword('Trainer123!'),
       firstName: 'John',
       lastName: 'Coach',
-      role: 'TRAINER',
+      role: 'TRAINER' as const,
     },
-  });
-  const client1 = await prisma.user.create({
-    data: {
+    {
       email: 'client1@gympal.app',
       password: await hashPassword('Client123!'),
       firstName: 'Alice',
       lastName: 'Strong',
-      role: 'CLIENT',
+      role: 'CLIENT' as const,
     },
-  });
-
-  const client2 = await prisma.user.create({
-    data: {
+    {
       email: 'client2@gympal.app',
       password: await hashPassword('Client123!'),
       firstName: 'Bob',
       lastName: 'Fit',
-      role: 'CLIENT',
+      role: 'CLIENT' as const,
     },
-  });
-
-  const client3 = await prisma.user.create({
-    data: {
+    {
       email: 'client3@gympal.app',
       password: await hashPassword('Client123!'),
       firstName: 'Charlie',
       lastName: 'Gains',
-      role: 'CLIENT',
+      role: 'CLIENT' as const,
     },
-  });
+  ];
 
-  await prisma.trainerClient.createMany({
-    data: [
-      {
-        trainerId: trainer.id,
-        clientId: client1.id,
-        status: 'ACTIVE',
-        acceptedAt: new Date(),
-      },
-      {
-        trainerId: trainer.id,
-        clientId: client2.id,
-        status: 'ACTIVE',
-        acceptedAt: new Date(),
-      },
-      {
-        trainerId: trainer.id,
-        clientId: client3.id,
-        status: 'ACTIVE',
-        acceptedAt: new Date(),
-      },
-    ],
-  });
+  const upserted = await Promise.all(
+    usersToSeed.map((data) =>
+      prisma.user.upsert({
+        where: { email: data.email },
+        update: { password: data.password, role: data.role },
+        create: data,
+      }),
+    ),
+  );
+
+  console.log(`   Upserted ${upserted.length} users`);
+
+  const trainer = upserted.find((u) => u.email === 'trainer@gympal.app')!;
+  const clients = upserted.filter((u) => u.role === 'CLIENT');
+
+  await Promise.all(
+    clients.map((client) =>
+      prisma.trainerClient.upsert({
+        where: {
+          trainerId_clientId: { trainerId: trainer.id, clientId: client.id },
+        },
+        update: {},
+        create: {
+          trainerId: trainer.id,
+          clientId: client.id,
+          status: 'ACTIVE',
+          acceptedAt: new Date(),
+        },
+      }),
+    ),
+  );
 }
 
 async function seedIngredients(prisma: PrismaClient): Promise<number> {
