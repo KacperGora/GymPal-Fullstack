@@ -122,7 +122,7 @@ test.describe('Dashboard page', () => {
     await expect(page.getByText('Nawodnienie')).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.getByText('4')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '4' })).toBeVisible();
   });
 
   test('shows macros section', async ({ page }) => {

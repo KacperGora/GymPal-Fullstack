@@ -170,7 +170,7 @@ test.describe('Nutrition page', () => {
     await page.goto('/pl/nutrition');
 
     await expect(page.getByText('Nawodnienie')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('3')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '3' })).toBeVisible();
   });
 
   test('navigates to previous day when left arrow clicked', async ({
