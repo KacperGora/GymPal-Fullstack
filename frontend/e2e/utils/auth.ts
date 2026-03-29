@@ -1,5 +1,49 @@
 import { expect, type Page } from '@playwright/test';
 
+export const loginAsTrainer = async (page: Page) => {
+  await page.route('**/auth/me**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 1,
+        firstName: 'John',
+        lastName: 'Coach',
+        email: 'trainer@gympal.app',
+        role: 'TRAINER',
+        hasProfile: true,
+      }),
+    }),
+  );
+  await page.goto('/pl/login');
+  await page.locator('input[name="email"]').fill('trainer@gympal.app');
+  await page.locator('input[name="password"]').fill('Trainer123!');
+  await page.locator('form').getByRole('button', { name: 'Zaloguj' }).click();
+  await expect(page).toHaveURL(/\/pl\/trainer\/dashboard/, { timeout: 10000 });
+};
+
+export const loginAsClient = async (page: Page) => {
+  await page.route('**/auth/me**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 1,
+        firstName: 'John',
+        lastName: 'client',
+        email: 'client1@gympal.app',
+        role: 'CLIENT',
+        hasProfile: true,
+      }),
+    }),
+  );
+  await page.goto('/pl/login');
+  await page.locator('input[name="email"]').fill('client1@gympal.app');
+  await page.locator('input[name="password"]').fill('Client123!');
+  await page.locator('form').getByRole('button', { name: 'Zaloguj' }).click();
+  await expect(page).toHaveURL(/\/pl\/dashboard/, { timeout: 10000 });
+};
+
 export const createTestUser = (prefix: string = 'test') => ({
   firstName: 'Test',
   lastName: 'User',

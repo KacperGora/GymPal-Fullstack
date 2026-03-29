@@ -44,7 +44,8 @@ test.describe('Profile flow', () => {
 
     await page.getByRole('button', { name: 'Zapisz' }).click();
 
-    await expect(page).toHaveURL(/\/pl\/profile/, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/pl\/dashboard/, { timeout: 10000 });
+    await page.goto('/pl/profile');
     await expect(page.getByRole('heading', { name: 'Profil' })).toBeVisible();
     await expect(page.getByText('32 lata')).toBeVisible();
 
