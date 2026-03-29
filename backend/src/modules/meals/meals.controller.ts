@@ -19,6 +19,7 @@ import { RequestUser } from '../../shared/decorators/request-user.decorator';
 import { createMealSchema, updateMealSchema } from '@gympal/shared';
 import type { CreateMealDto, UpdateMealDto } from '@gympal/shared';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { OwnershipGuard } from '../../shared/guards/ownership.guard';
 
 @ApiTags('meals')
 @ApiBearerAuth()
@@ -40,19 +41,31 @@ export class MealsController {
   }
 
   @Get()
+  @UseGuards(OwnershipGuard)
   @ApiOperation({ summary: 'Get all meals for user' })
   @ApiResponse({ status: 200, description: 'Returns list of meals' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findAll(@RequestUser('id') userId: number, @Query('date') date?: string) {
-    return this.mealsService.findAll(userId, date);
+  findAll(
+    @RequestUser('id') userId: number,
+    @Query('clientId') clientId: string,
+    @Query('date') date?: string,
+  ) {
+    const targetUserId = clientId ? parseInt(clientId, 10) : userId;
+
+    return this.mealsService.findAll(targetUserId, date);
   }
 
   @Get('recent')
+  @UseGuards(OwnershipGuard)
   @ApiOperation({ summary: 'Get recent meals' })
   @ApiResponse({ status: 200, description: 'Returns recent meals' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  findRecent(@RequestUser('id') userId: number) {
-    return this.mealsService.findRecent(userId);
+  findRecent(
+    @RequestUser('id') userId: number,
+    @Query('clientId') clientId: string,
+  ) {
+    const targetUserId = clientId ? parseInt(clientId, 10) : userId;
+    return this.mealsService.findRecent(targetUserId);
   }
 
   @Get(':id')

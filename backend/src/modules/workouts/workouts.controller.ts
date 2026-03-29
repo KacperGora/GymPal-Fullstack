@@ -33,6 +33,7 @@ import type {
   WorkoutQueryDto,
 } from '@gympal/shared';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { OwnershipGuard } from '../../shared/guards/ownership.guard';
 
 @ApiTags('workouts')
 @ApiBearerAuth()
@@ -61,11 +62,14 @@ export class WorkoutsController {
   @ApiOperation({ summary: 'Get all workout sessions' })
   @ApiResponse({ status: 200, description: 'Returns list of workout sessions' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @UseGuards(OwnershipGuard)
   findAllWorkouts(
     @RequestUser('id') userId: number,
+    @Query('clientId') clientId: string,
     @Query(new ZodValidationPipe(workoutQuerySchema)) query?: WorkoutQueryDto,
   ) {
-    return this.workoutsService.findAllWorkoutSessions(userId, query);
+    const targetUserId = clientId ? parseInt(clientId, 10) : userId;
+    return this.workoutsService.findAllWorkoutSessions(targetUserId, query);
   }
 
   @Get(':id')

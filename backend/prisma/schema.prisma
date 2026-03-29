@@ -38,6 +38,7 @@ enum TrainerClientStatus {
   PENDING
   ACTIVE
   REJECTED
+  REVOKED
 }
 
 enum IngredientCategory {
@@ -103,8 +104,8 @@ model TrainerClient {
   id          String              @id @default(cuid())
   trainerId   Int
   trainer     User                @relation("TrainerRelation", fields: [trainerId], references: [id], onDelete: Cascade)
-  clientId    Int
-  client      User                @relation("ClientRelation", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    Int?
+  client      User?               @relation("ClientRelation", fields: [clientId], references: [id], onDelete: Cascade)
   status      TrainerClientStatus @default(PENDING)
   inviteToken String?             @unique
   createdAt   DateTime            @default(now())

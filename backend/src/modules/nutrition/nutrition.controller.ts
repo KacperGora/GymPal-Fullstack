@@ -9,6 +9,7 @@ import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { ZodValidationPipe } from '../../shared/pipes/zod-validation.pipe';
 import { nutritionQuerySchema } from '@gympal/shared';
 import type { NutritionQueryDto } from '@gympal/shared';
+import { OwnershipGuard } from '../../shared/guards/ownership.guard';
 
 @ApiTags('nutrition')
 @ApiBearerAuth()
@@ -18,11 +19,16 @@ export class NutritionController {
   constructor(private readonly nutritionService: NutritionService) {}
 
   @Get('daily-stats')
+  @UseGuards(OwnershipGuard)
   @ApiOperation({ summary: 'Get daily nutrition statistics' })
   @ApiResponse({ status: 200, description: 'Returns daily nutrition stats' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  getDailyStats(@RequestUser('id') userId: number) {
-    return this.nutritionService.calculateDailyStats(userId);
+  getDailyStats(
+    @RequestUser('id') userId: number,
+    @Query('clientId') clientId: string,
+  ) {
+    const targetUser = clientId ? parseInt(clientId, 10) : userId;
+    return this.nutritionService.calculateDailyStats(targetUser);
   }
 
   @Get('weekly-stats')
