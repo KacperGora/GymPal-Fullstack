@@ -15,8 +15,11 @@ import type {
 import { api } from '@/shared/api/axios';
 import { endpointList } from '@/shared/api/endpoint';
 
-export const getMeals = async (date?: string): Promise<Meal[]> => {
-  const params = date ? { date } : {};
+export const getMeals = async (
+  date?: string,
+  clientId?: number,
+): Promise<Meal[]> => {
+  const params = { ...(date && { date }), ...(clientId && { clientId }) };
   const res = await api.get(endpointList.meals.list, { params });
   return res.data as Meal[];
 };
@@ -43,9 +46,12 @@ export const getRecentMeals = async (): Promise<RecentMeal[]> => {
   return res.data as RecentMeal[];
 };
 
-export const getDailyStats = async (date: string): Promise<DailyStats> => {
+export const getDailyStats = async (
+  date: string,
+  clientId?: number,
+): Promise<DailyStats> => {
   const res = await api.get(endpointList.nutrition.dailyStats, {
-    params: { date },
+    params: { date, ...(clientId && { clientId }) },
   });
   return res.data as DailyStats;
 };

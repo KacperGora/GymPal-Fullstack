@@ -26,8 +26,10 @@
     "dashboard": "Pulpit",
     "nutrition": "Odżywianie",
     "billing": "Subskrypcja",
+    "trainerInfo": "Mój trener",
     "trainerDashboard": "Panel trenera",
-    "adminPanel": "Panel admina"
+    "adminPanel": "Panel admina",
+    "adminUsers": "Użytkownicy"
   },
   "home": {
     "title": "GymPal"

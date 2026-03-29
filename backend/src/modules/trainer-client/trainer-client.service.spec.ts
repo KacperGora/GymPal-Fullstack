@@ -105,6 +105,47 @@ describe('TrainerClientService', () => {
     });
   });
 
+  describe('getClientDetails', () => {
+    it('returns client details for active relation', async () => {
+      prisma.trainerClient.findUnique.mockResolvedValue({
+        id: '1',
+        status: 'ACTIVE',
+        acceptedAt: new Date(),
+        client: {
+          id: 5,
+          firstName: 'Alice',
+          lastName: 'Strong',
+          email: 'alice@example.com',
+        },
+      });
+
+      const result = await service.getClientDetails(1, 5);
+
+      expect(result.client).toBeDefined();
+      expect(result.status).toBe('ACTIVE');
+    });
+
+    it('throws NotFoundException when relation does not exist', async () => {
+      prisma.trainerClient.findUnique.mockResolvedValue(null);
+
+      await expect(service.getClientDetails(1, 99)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws NotFoundException when relation is not ACTIVE', async () => {
+      prisma.trainerClient.findUnique.mockResolvedValue({
+        id: '1',
+        status: 'REVOKED',
+        client: { id: 5 },
+      });
+
+      await expect(service.getClientDetails(1, 5)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
   describe('getTrainer', () => {
     it('returns trainer for client', async () => {
       prisma.trainerClient.findFirst.mockResolvedValue({

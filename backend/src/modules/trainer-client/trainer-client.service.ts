@@ -103,4 +103,37 @@ export class TrainerClientService {
 
     return relation?.trainer ?? null;
   }
+
+  async getClient(clientId: number) {
+    const relation = await this.prisma.trainerClient.findFirst({
+      where: { clientId, status: 'ACTIVE' },
+      select: { client: true },
+    });
+    return relation?.client ?? null;
+  }
+
+  async getClientDetails(trainerId: number, clientId: number) {
+    const relation = await this.prisma.trainerClient.findUnique({
+      where: { trainerId_clientId: { trainerId, clientId } },
+      select: {
+        id: true,
+        status: true,
+        acceptedAt: true,
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!relation || relation.status !== 'ACTIVE') {
+      throw new NotFoundException('Client not found');
+    }
+
+    return relation;
+  }
 }

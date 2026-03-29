@@ -58,6 +58,19 @@ export class TrainerClientController {
     return this.trainerClientService.getClients(req.user.id);
   }
 
+  @Get('clients/:clientId')
+  @UseGuards(RolesGuard)
+  @Roles(Role.TRAINER)
+  getClientDetails(
+    @Req() req: { user: { id: number } },
+    @Param('clientId') clientId: string,
+  ) {
+    return this.trainerClientService.getClientDetails(
+      req.user.id,
+      parseInt(clientId, 10),
+    );
+  }
+
   @Get('trainer')
   @UseGuards(RolesGuard)
   @Roles(Role.CLIENT)
