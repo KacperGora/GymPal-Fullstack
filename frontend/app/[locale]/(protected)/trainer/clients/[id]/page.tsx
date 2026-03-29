@@ -13,6 +13,8 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { LiveSessionPanel } from '@/features/trainer/components/LiveSessionPanel';
+
 import { useDailyStats, useMeals } from '@/features/nutrition/queries';
 import { useClientDetails } from '@/features/trainer/queries';
 import { useWorkouts } from '@/features/workouts/queries';
@@ -46,6 +48,7 @@ const ClientPage = () => {
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
         <Tab label={t('workoutsTab')} />
         <Tab label={t('nutritionTab')} />
+        <Tab label="Live" />
       </Tabs>
 
       {tab === 0 && (
@@ -80,6 +83,8 @@ const ClientPage = () => {
           )}
         </Box>
       )}
+
+      {tab === 2 && <LiveSessionPanel clientId={clientId} />}
 
       {tab === 1 && (
         <Box>
