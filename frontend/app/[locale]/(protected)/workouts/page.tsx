@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import type { WorkoutSession } from '@/features/workouts/types';
 
+import { WorkoutSessionPanel } from '@/features/workout-session/components/WorkoutSessionPanel';
 import {
   AddExerciseModal,
   AddWorkoutModal,
@@ -105,6 +106,12 @@ export default function Workouts() {
           {t('trackWorkouts')}
         </Typography>
       </Box>
+
+      {user?.role === 'CLIENT' && (
+        <Box sx={{ mb: 3 }}>
+          <WorkoutSessionPanel />
+        </Box>
+      )}
 
       <WorkoutsGrid
         workouts={workouts}

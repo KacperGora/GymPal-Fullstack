@@ -26,6 +26,7 @@ import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggerModule } from './shared/sentry/logger.module';
 import { TrainerClientModule } from './modules/trainer-client/trainer-client.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { WorkoutGatewayModule } from './modules/workout-gateway/workout-gateway.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { AdminModule } from './modules/admin/admin.module';
     SubscriptionsModule,
     TrainerClientModule,
     AdminModule,
+    WorkoutGatewayModule,
   ],
   controllers: [AppController],
   providers: [
