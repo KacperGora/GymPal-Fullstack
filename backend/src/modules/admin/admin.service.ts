@@ -7,7 +7,15 @@ export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getUsers() {
-    return await this.prisma.user.findMany({});
+    return await this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
+    });
   }
 
   async getStats() {
@@ -30,6 +38,13 @@ export class AdminService {
       where: { id: userId },
       data: {
         role: role,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
       },
     });
   }

@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Req,
   UseGuards,
@@ -33,6 +35,9 @@ export class TrainerClientController {
     @Req() req: { user: { id: number } },
     @Body('token') token: string,
   ) {
+    if (!token?.trim()) {
+      throw new BadRequestException('token is required');
+    }
     return this.trainerClientService.acceptInvite(req.user.id, token);
   }
 
@@ -41,12 +46,9 @@ export class TrainerClientController {
   @Roles(Role.TRAINER)
   delete(
     @Req() req: { user: { id: number } },
-    @Param('clientId') clientId: string,
+    @Param('clientId', ParseIntPipe) clientId: number,
   ) {
-    return this.trainerClientService.revokeClient(
-      req.user.id,
-      parseInt(clientId, 10),
-    );
+    return this.trainerClientService.revokeClient(req.user.id, clientId);
   }
 
   @Get('clients')

@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseEnumPipe,
+  ParseIntPipe,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { RolesGuard } from '../../shared/guards/roles.guard';
 import { Roles } from '../../shared/decorators/roles.decorator';
@@ -17,8 +26,11 @@ export class AdminController {
   }
 
   @Patch('users/:id')
-  updateUser(@Param('id') id: string, @Body('role') role: Role) {
-    return this.adminService.updateUserRole(parseInt(id, 10), role);
+  updateUser(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('role', new ParseEnumPipe(Role)) role: Role,
+  ) {
+    return this.adminService.updateUserRole(id, role);
   }
 
   @Get('stats')

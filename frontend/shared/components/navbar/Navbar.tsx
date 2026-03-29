@@ -26,7 +26,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { LanguageSelector } from '../language-selector/LanguageSelector';
 import { ThemeToggle } from '../theme-toggle/ThemeToggle';
 
-const NAV_ITEMS = [
+const CLIENT_navItems = [
   { key: 'dashboard', path: '/dashboard' },
   { key: 'nutrition', path: '/nutrition' },
   { key: 'exercises', path: '/exercises' },
@@ -35,15 +35,37 @@ const NAV_ITEMS = [
   { key: 'billing', path: '/billing' },
 ] as const;
 
+const TRAINER_navItems = [
+  { key: 'trainerDashboard', path: '/trainer/dashboard' },
+  { key: 'profile', path: '/profile' },
+] as const;
+
+const ADMIN_navItems = [
+  { key: 'adminPanel', path: '/admin' },
+  { key: 'profile', path: '/profile' },
+] as const;
+
 export const Navbar = () => {
   const theme = useTheme();
   const t = useTranslations('navbar');
-  const { isAuthenticated, isLoading, logout } = useAuth();
+
+  const { isAuthenticated, isLoading, logout, user } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
   const isHome = pathname === '/' || pathname === `/${locale}`;
+
   const [isOpen, setIsOpen] = useState(false);
+
+  const navItemsByRole = {
+    TRAINER: TRAINER_navItems,
+    ADMIN: ADMIN_navItems,
+    CLIENT: CLIENT_navItems,
+  };
+  const navItems =
+    navItemsByRole[user?.role as keyof typeof navItemsByRole] ??
+    CLIENT_navItems;
+
   const handleNavigate = (path: string) => () => {
     router.push(path);
     setIsOpen(false);
@@ -115,7 +137,7 @@ export const Navbar = () => {
         >
           {isAuthenticated ? (
             <>
-              {NAV_ITEMS.map(({ key, path }) => (
+              {navItems.map(({ key, path }) => (
                 <Button
                   key={key}
                   color="primary"
@@ -186,7 +208,7 @@ export const Navbar = () => {
           <Divider sx={{ mb: 1 }} />
           <List>
             {isAuthenticated
-              ? NAV_ITEMS.map(({ key, path }) => (
+              ? navItems.map(({ key, path }) => (
                   <ListItemButton key={key} onClick={handleNavigate(path)}>
                     <ListItemText primary={t(key)} />
                   </ListItemButton>

@@ -22,10 +22,10 @@ export class OwnershipGuard implements CanActivate {
       return true;
     }
 
-    if (!/^\d+$/.test(query.clientId)) {
+    const clientId = parseInt(query.clientId, 10);
+    if (Number.isNaN(clientId)) {
       throw new BadRequestException('Invalid clientId');
     }
-    const clientId = Number(query.clientId);
 
     if (user.role === Role.TRAINER) {
       const relation = await this.prisma.trainerClient.findUnique({
@@ -40,7 +40,7 @@ export class OwnershipGuard implements CanActivate {
     }
 
     if (user.id !== clientId) {
-      throw new ForbiddenException('You can only access your own data');
+      throw new ForbiddenException('You can only access your onw data');
     }
 
     return true;

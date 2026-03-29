@@ -62,14 +62,14 @@ describe('OwnershipGuard', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('throws error for trainer with no relation', async () => {
+  it('throws error for trainer with no realtion', async () => {
     prisma.trainerClient.findUnique.mockResolvedValue(null);
     await expect(
       guard.canActivate(makeContext(Role.TRAINER, 1, '5')),
     ).rejects.toThrow(ForbiddenException);
   });
 
-  it('allows client to access own data', async () => {
+  it('allows client to acces own data', async () => {
     await expect(
       guard.canActivate(makeContext(Role.CLIENT, 5, '5')),
     ).resolves.toBe(true);

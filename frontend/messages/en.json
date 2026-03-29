@@ -25,7 +25,9 @@
     "logout": "Logout",
     "dashboard": "Dashboard",
     "nutrition": "Nutrition",
-    "billing": "Billing"
+    "billing": "Billing",
+    "trainerDashboard": "Trainer Dashboard",
+    "adminPanel": "Admin Panel"
   },
   "home": {
     "title": "GymPal"
@@ -438,5 +440,14 @@
       "maintain": "Maintain weight",
       "gain": "Gain mass"
     }
+  },
+  "trainer": {
+    "clients": "Your Clients",
+    "noClients": "You have no clients yet. Share your invite link to get started!",
+    "inviteLink": "Invite link",
+    "generateLink": "Generate invite link",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied!",
+    "removeClient": "Remove client"
   }
 }

@@ -65,7 +65,7 @@ export class WorkoutsController {
   @UseGuards(OwnershipGuard)
   findAllWorkouts(
     @RequestUser('id') userId: number,
-    @Query('clientId') clientId: string,
+    @Query('clientId') clientId?: string,
     @Query(new ZodValidationPipe(workoutQuerySchema)) query?: WorkoutQueryDto,
   ) {
     const targetUserId = clientId ? parseInt(clientId, 10) : userId;

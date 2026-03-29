@@ -21,9 +21,10 @@ export class TrainerClientService {
       },
     });
 
+    const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
     return {
       token,
-      link: `${process.env.FRONTEND_URL}/invite?token=${token}`,
+      link: `${frontendUrl}/invite?token=${token}`,
     };
   }
   async acceptInvite(clientId: number, token: string) {
@@ -73,14 +74,31 @@ export class TrainerClientService {
   }
   async getClients(trainerId: number) {
     return this.prisma.trainerClient.findMany({
-      where: { trainerId },
-      include: { client: true },
+      where: { trainerId, status: 'ACTIVE' },
+      select: {
+        id: true,
+        clientId: true,
+        status: true,
+        acceptedAt: true,
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
     });
   }
   async getTrainer(clientId: number) {
     const relation = await this.prisma.trainerClient.findFirst({
       where: { clientId, status: 'ACTIVE' },
-      include: { trainer: true },
+      select: {
+        trainer: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
     });
 
     return relation?.trainer ?? null;
