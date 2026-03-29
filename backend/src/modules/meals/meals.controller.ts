@@ -47,7 +47,7 @@ export class MealsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findAll(
     @RequestUser('id') userId: number,
-    @Query('clientId') clientId: string,
+    @Query('clientId') clientId?: string,
     @Query('date') date?: string,
   ) {
     const targetUserId = clientId ? parseInt(clientId, 10) : userId;
@@ -62,7 +62,7 @@ export class MealsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   findRecent(
     @RequestUser('id') userId: number,
-    @Query('clientId') clientId: string,
+    @Query('clientId') clientId?: string,
   ) {
     const targetUserId = clientId ? parseInt(clientId, 10) : userId;
     return this.mealsService.findRecent(targetUserId);

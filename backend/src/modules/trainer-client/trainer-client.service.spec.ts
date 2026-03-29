@@ -45,7 +45,7 @@ describe('TrainerClientService', () => {
         NotFoundException,
       );
     });
-    it('throws BadRequestExeption when relation is already ACTIVE', async () => {
+    it('throws BadRequestException when relation is already ACTIVE', async () => {
       prisma.trainerClient.findUnique.mockResolvedValue({ status: 'ACTIVE' });
 
       await expect(service.acceptInvite(1, 'token')).rejects.toThrow(
@@ -67,7 +67,7 @@ describe('TrainerClientService', () => {
   });
 
   describe('revokeClient', () => {
-    it('throws notfoundexception when realtion does not exist', async () => {
+    it('throws NotFoundException when relation does not exist', async () => {
       prisma.trainerClient.findUnique.mockResolvedValue(null);
 
       await expect(service.revokeClient(1, 5)).rejects.toThrow(
@@ -75,7 +75,7 @@ describe('TrainerClientService', () => {
       );
     });
 
-    it('revokes client succesflly', async () => {
+    it('revokes client successfully', async () => {
       prisma.trainerClient.findUnique.mockResolvedValue({ status: 'ACTIVE' });
       prisma.trainerClient.update.mockResolvedValue({ status: 'REVOKED' });
 
@@ -107,9 +107,13 @@ describe('TrainerClientService', () => {
 
   describe('getTrainer', () => {
     it('returns trainer for client', async () => {
-      prisma.trainerClient.findUnique.mockResolvedValue({
-        status: 'ACTIVE',
-        trainer: { id: 1, firstName: 'John' },
+      prisma.trainerClient.findFirst.mockResolvedValue({
+        trainer: {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john@example.com',
+        },
       });
 
       const result = await service.getTrainer(5);
@@ -118,7 +122,7 @@ describe('TrainerClientService', () => {
     });
 
     it('returns null when client has no trainer', async () => {
-      prisma.trainerClient.findUnique.mockResolvedValue(null);
+      prisma.trainerClient.findFirst.mockResolvedValue(null);
 
       const result = await service.getTrainer(5);
 

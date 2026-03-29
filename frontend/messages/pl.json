@@ -25,7 +25,9 @@
     "logout": "Wyloguj",
     "dashboard": "Pulpit",
     "nutrition": "Odżywianie",
-    "billing": "Subskrypcja"
+    "billing": "Subskrypcja",
+    "trainerDashboard": "Panel trenera",
+    "adminPanel": "Panel admina"
   },
   "home": {
     "title": "GymPal"
@@ -438,5 +440,14 @@
         "gain": "Przyrost masy"
       }
     }
+  },
+  "trainer": {
+    "clients": "Twoi klienci",
+    "noClients": "Nie masz jeszcze klientów. Udostępnij link zaproszenia!",
+    "inviteLink": "Wygeneruj link zaproszenia",
+    "generateLink": "Wygeneruj link",
+    "copyLink": "Skopiuj link",
+    "linkCopied": "Link skopiowany!",
+    "removeClient": "Usuń klienta"
   }
 }

@@ -471,6 +471,7 @@ describe('AuthService', () => {
         email: 'jan@test.pl',
         firstName: 'Jan',
         lastName: 'Kowalski',
+        role: 'CLIENT',
         userProfile: { id: 1 },
       });
 
@@ -480,6 +481,7 @@ describe('AuthService', () => {
         id: 1,
         email: 'jan@test.pl',
         firstName: 'Jan',
+        role: 'CLIENT',
         lastName: 'Kowalski',
         hasProfile: true,
       });

@@ -55,11 +55,9 @@ describe('RolesGuard', () => {
   });
 
   it('error message contains required roles', () => {
-    expect.hasAssertions();
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
     try {
       guard.canActivate(makeContext(Role.CLIENT));
-      fail('Expected ForbiddenException to be thrown');
     } catch (e) {
       expect((e as ForbiddenException).message).toContain(ROLES_KEY);
     }

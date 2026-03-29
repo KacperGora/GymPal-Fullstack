@@ -9,9 +9,10 @@ export * from "./schemas/nutrition.schema.js";
 export * from "./schemas/ai.schema.js";
 export * from "./types/pagination.js";
 export * from "./contract/auth.contract.js";
+export * from "./errors/auth.errors.js";
 export * from "./constants/cookies.js";
 export * from "./types/auth.js";
-
+export * from "./schemas/trainer-client.schema.js";
 export {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,

@@ -69,4 +69,9 @@ export const endpointList = {
     checkout: '/subscriptions/checkout',
     portal: '/subscriptions/portal',
   },
+  trainerClient: {
+    clients: '/trainer-client/clients',
+    invite: '/trainer-client/invite',
+    delete: (clientId: number) => `/trainer-client/${clientId}`,
+  },
 };

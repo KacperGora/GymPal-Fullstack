@@ -25,7 +25,7 @@ export class NutritionController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getDailyStats(
     @RequestUser('id') userId: number,
-    @Query('clientId') clientId: string,
+    @Query('clientId') clientId?: string,
   ) {
     const targetUser = clientId ? parseInt(clientId, 10) : userId;
     return this.nutritionService.calculateDailyStats(targetUser);

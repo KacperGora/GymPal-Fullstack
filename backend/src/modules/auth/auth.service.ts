@@ -283,6 +283,7 @@ export class AuthService {
         firstName: true,
         lastName: true,
         userProfile: { select: { id: true } },
+        role: true,
       },
     });
 
