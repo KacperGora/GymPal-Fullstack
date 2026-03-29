@@ -1,7 +1,7 @@
 import { LoginDto } from '@gympal/shared';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 
-import { login } from '@/features/auth/api/auth.api';
+import { login, getMe } from '@/features/auth/api/auth.api';
 import { useRouter } from '@/i18n/navigation';
 
 export const useLogin = () => {
@@ -11,8 +11,20 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (data: LoginDto) => login(data),
     onSuccess: async () => {
-      await queryClient.refetchQueries({ queryKey: ['me'] });
-      router.push('/welcome');
+      const me = await queryClient.fetchQuery({
+        queryKey: ['me'],
+        queryFn: getMe,
+      });
+
+      if (me.role === 'TRAINER') {
+        router.push('/trainer/dashboard');
+      } else if (me.role === 'ADMIN') {
+        router.push('/admin');
+      } else if (me.hasProfile) {
+        router.push('/dashboard');
+      } else {
+        router.push('/welcome');
+      }
     },
   });
 };

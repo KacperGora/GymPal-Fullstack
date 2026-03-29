@@ -23,7 +23,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user?.hasProfile) {
-      router.replace('/profile');
+      router.replace('/dashboard');
     }
   }, [router, user?.hasProfile]);
 
