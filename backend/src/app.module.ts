@@ -24,6 +24,8 @@ import { StripeModule } from './modules/stripe/stripe.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { LoggerModule } from './shared/sentry/logger.module';
+import { TrainerClientModule } from './modules/trainer-client/trainer-client.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -53,6 +55,8 @@ import { LoggerModule } from './shared/sentry/logger.module';
     JobsModule,
     StripeModule,
     SubscriptionsModule,
+    TrainerClientModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

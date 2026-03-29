@@ -4,6 +4,7 @@ jest.mock('../../shared/db/prisma.service');
 
 import { MealsController } from './meals.controller';
 import { MealsService } from './meals.service';
+import { PrismaService } from '../../shared/db/prisma.service';
 
 const mockMealsService = {
   create: jest.fn(),
@@ -19,7 +20,13 @@ describe('MealsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MealsController],
-      providers: [{ provide: MealsService, useValue: mockMealsService }],
+      providers: [
+        { provide: MealsService, useValue: mockMealsService },
+        {
+          provide: PrismaService,
+          useValue: {},
+        },
+      ],
     }).compile();
 
     controller = module.get<MealsController>(MealsController);

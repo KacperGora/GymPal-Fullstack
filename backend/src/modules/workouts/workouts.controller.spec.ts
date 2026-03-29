@@ -6,6 +6,7 @@ jest.mock('@gympal/shared');
 
 import { WorkoutsController } from './workouts.controller';
 import { WorkoutsService } from './workouts.service';
+import { PrismaService } from '../../shared/db/prisma.service';
 
 const mockWorkoutsService = {
   createWorkoutSession: jest.fn(),
@@ -41,6 +42,10 @@ describe('WorkoutsController', () => {
         {
           provide: WorkoutsService,
           useValue: mockWorkoutsService,
+        },
+        {
+          provide: PrismaService,
+          useValue: {},
         },
       ],
     }).compile();
@@ -82,7 +87,7 @@ describe('WorkoutsController', () => {
       const workouts = [mockWorkout];
       mockWorkoutsService.findAllWorkoutSessions.mockResolvedValue(workouts);
 
-      const result = await controller.findAllWorkouts(1);
+      const result = await controller.findAllWorkouts(1, undefined, undefined);
 
       expect(result).toEqual(workouts);
       expect(mockWorkoutsService.findAllWorkoutSessions).toHaveBeenCalledWith(
@@ -100,7 +105,7 @@ describe('WorkoutsController', () => {
 
       mockWorkoutsService.findAllWorkoutSessions.mockResolvedValue([]);
 
-      await controller.findAllWorkouts(1, query);
+      await controller.findAllWorkouts(1, undefined, query);
 
       expect(mockWorkoutsService.findAllWorkoutSessions).toHaveBeenCalledWith(
         1,
