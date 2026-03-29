@@ -10,6 +10,10 @@ describe('AdminService', () => {
       findUnique: jest.Mock;
       update: jest.Mock;
       count: jest.Mock;
+      groupBy: jest.Mock;
+    };
+    trainerClient: {
+      count: jest.Mock;
     };
   };
 
@@ -19,6 +23,10 @@ describe('AdminService', () => {
         findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
+        count: jest.fn(),
+        groupBy: jest.fn(),
+      },
+      trainerClient: {
         count: jest.fn(),
       },
     };
@@ -67,12 +75,19 @@ describe('AdminService', () => {
 
   describe('getStats', () => {
     it('returns stats with user counts by role', async () => {
-      prisma.user.count.mockResolvedValue(5);
+      prisma.user.count.mockResolvedValue(10);
+      prisma.user.groupBy.mockResolvedValue([
+        { role: 'CLIENT', _count: { id: 7 } },
+        { role: 'TRAINER', _count: { id: 2 } },
+        { role: 'ADMIN', _count: { id: 1 } },
+      ]);
+      prisma.trainerClient.count.mockResolvedValue(3);
 
       const result = await service.getStats();
 
-      expect(result).toBeDefined();
-      expect(result.total).toBeDefined();
+      expect(result.total).toBe(10);
+      expect(result.byRole).toEqual({ CLIENT: 7, TRAINER: 2, ADMIN: 1 });
+      expect(result.activeTrainerClientRelations).toBe(3);
     });
   });
 });

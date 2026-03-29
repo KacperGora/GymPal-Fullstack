@@ -26,8 +26,10 @@
     "dashboard": "Dashboard",
     "nutrition": "Nutrition",
     "billing": "Billing",
+    "trainerInfo": "My Trainer",
     "trainerDashboard": "Trainer Dashboard",
-    "adminPanel": "Admin Panel"
+    "adminPanel": "Admin Panel",
+    "adminUsers": "Users"
   },
   "home": {
     "title": "GymPal"

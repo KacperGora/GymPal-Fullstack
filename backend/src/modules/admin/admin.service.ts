@@ -7,7 +7,7 @@ export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getUsers() {
-    return await this.prisma.user.findMany({
+    return this.prisma.user.findMany({
       select: {
         id: true,
         email: true,
@@ -15,12 +15,21 @@ export class AdminService {
         lastName: true,
         role: true,
       },
+      orderBy: { id: 'desc' },
     });
   }
 
   async getStats() {
+    const [total, byRole, activeRelations] = await Promise.all([
+      this.prisma.user.count(),
+      this.prisma.user.groupBy({ by: ['role'], _count: { id: true } }),
+      this.prisma.trainerClient.count({ where: { status: 'ACTIVE' } }),
+    ]);
+
     return {
-      total: await this.prisma.user.count(),
+      total,
+      byRole: Object.fromEntries(byRole.map((r) => [r.role, r._count.id])),
+      activeTrainerClientRelations: activeRelations,
     };
   }
 
@@ -38,13 +47,6 @@ export class AdminService {
       where: { id: userId },
       data: {
         role: role,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
       },
     });
   }

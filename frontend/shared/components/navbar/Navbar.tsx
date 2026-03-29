@@ -31,6 +31,7 @@ const CLIENT_navItems = [
   { key: 'nutrition', path: '/nutrition' },
   { key: 'exercises', path: '/exercises' },
   { key: 'workouts', path: '/workouts' },
+  { key: 'trainerInfo', path: '/trainer-info' },
   { key: 'profile', path: '/profile' },
   { key: 'billing', path: '/billing' },
 ] as const;
@@ -42,6 +43,7 @@ const TRAINER_navItems = [
 
 const ADMIN_navItems = [
   { key: 'adminPanel', path: '/admin' },
+  { key: 'adminUsers', path: '/admin/users' },
   { key: 'profile', path: '/profile' },
 ] as const;
 
