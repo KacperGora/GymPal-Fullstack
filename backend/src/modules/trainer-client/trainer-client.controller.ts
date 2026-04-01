@@ -63,12 +63,9 @@ export class TrainerClientController {
   @Roles(Role.TRAINER)
   getClientDetails(
     @Req() req: { user: { id: number } },
-    @Param('clientId') clientId: string,
+    @Param('clientId', ParseIntPipe) clientId: number,
   ) {
-    return this.trainerClientService.getClientDetails(
-      req.user.id,
-      parseInt(clientId, 10),
-    );
+    return this.trainerClientService.getClientDetails(req.user.id, clientId);
   }
 
   @Get('trainer')

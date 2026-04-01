@@ -5,9 +5,12 @@ import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import GroupIcon from '@mui/icons-material/Group';
 import PersonIcon from '@mui/icons-material/Person';
 import { Box, Card, CardContent, Skeleton, Typography } from '@mui/material';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+
+import type { ReactNode } from 'react';
 
 import { useAdminStats } from '@/features/admin/queries';
+import { Link } from '@/i18n/navigation';
 
 const StatCard = ({
   label,
@@ -16,7 +19,7 @@ const StatCard = ({
 }: {
   label: string;
   value: number | undefined;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }) => (
   <Card>
     <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -32,6 +35,7 @@ const StatCard = ({
 );
 
 const AdminDashboardPage = () => {
+  const t = useTranslations('adminPage');
   const { data: stats, isLoading } = useAdminStats();
 
   return (
@@ -44,10 +48,10 @@ const AdminDashboardPage = () => {
           mb: 3,
         }}
       >
-        <Typography variant="h5">Panel admina</Typography>
+        <Typography variant="h5">{t('title')}</Typography>
         <Link href="/admin/users" style={{ textDecoration: 'none' }}>
           <Typography variant="body2" color="primary">
-            Zarządzaj użytkownikami →
+            {t('manageUsers')}
           </Typography>
         </Link>
       </Box>
@@ -78,24 +82,24 @@ const AdminDashboardPage = () => {
           }}
         >
           <StatCard
-            label="Wszyscy użytkownicy"
+            label={t('allUsers')}
             value={stats?.total}
             icon={<GroupIcon sx={{ fontSize: 40, color: 'primary.main' }} />}
           />
           <StatCard
-            label="Klienci"
+            label={t('clients')}
             value={stats?.byRole.CLIENT}
             icon={<PersonIcon sx={{ fontSize: 40, color: 'success.main' }} />}
           />
           <StatCard
-            label="Trenerzy"
+            label={t('trainers')}
             value={stats?.byRole.TRAINER}
             icon={
               <FitnessCenterIcon sx={{ fontSize: 40, color: 'warning.main' }} />
             }
           />
           <StatCard
-            label="Aktywne relacje trener-klient"
+            label={t('activeRelations')}
             value={stats?.activeTrainerClientRelations}
             icon={
               <AdminPanelSettingsIcon

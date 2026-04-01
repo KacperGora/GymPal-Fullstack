@@ -29,7 +29,7 @@ test.describe('Trainer invite flow', () => {
   });
 });
 
-test.describe('accept invite linke as client', () => {
+test.describe('accept invite link as client', () => {
   test('login as client and go to dashboard', async ({ page }) => {
     await loginAsClient(page);
   });

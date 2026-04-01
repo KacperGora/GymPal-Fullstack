@@ -2,16 +2,18 @@
 
 import PersonIcon from '@mui/icons-material/Person';
 import { Box, Card, CardContent, Skeleton, Typography } from '@mui/material';
+import { useTranslations } from 'next-intl';
 
 import { useMyTrainer } from '@/features/trainer/queries';
 
 const TrainerInfoPage = () => {
+  const t = useTranslations('trainerInfo');
   const { data: trainer, isLoading } = useMyTrainer();
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        Mój trener
+        {t('title')}
       </Typography>
 
       {isLoading ? (
@@ -32,8 +34,7 @@ const TrainerInfoPage = () => {
         </Card>
       ) : (
         <Typography variant="body1" color="text.secondary">
-          Nie masz jeszcze przypisanego trenera. Poproś trenera o link
-          zaproszenia.
+          {t('noTrainer')}
         </Typography>
       )}
     </Box>

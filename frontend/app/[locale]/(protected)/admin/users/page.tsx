@@ -19,6 +19,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import type { AdminUser } from '@/features/admin/api/admin.api';
@@ -35,6 +36,7 @@ const ROLE_COLORS: Record<
 };
 
 const AdminUsersPage = () => {
+  const t = useTranslations('adminUsers');
   const { data: users, isLoading } = useAdminUsers();
   const { mutate: updateRole, isPending } = useUpdateUserRole();
 
@@ -57,7 +59,7 @@ const AdminUsersPage = () => {
   return (
     <Box sx={{ maxWidth: 960, mx: 'auto', p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        Użytkownicy
+        {t('title')}
       </Typography>
 
       {isLoading ? (
@@ -66,10 +68,10 @@ const AdminUsersPage = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Imię i nazwisko</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Rola</TableCell>
+              <TableCell>{t('id')}</TableCell>
+              <TableCell>{t('name')}</TableCell>
+              <TableCell>{t('email')}</TableCell>
+              <TableCell>{t('role')}</TableCell>
               <TableCell />
             </TableRow>
           </TableHead>
@@ -90,7 +92,7 @@ const AdminUsersPage = () => {
                 </TableCell>
                 <TableCell align="right">
                   <Button size="small" onClick={() => openDialog(user)}>
-                    Zmień rolę
+                    {t('changeRole')}
                   </Button>
                 </TableCell>
               </TableRow>
@@ -100,7 +102,7 @@ const AdminUsersPage = () => {
       )}
 
       <Dialog open={!!dialog} onClose={closeDialog} maxWidth="xs" fullWidth>
-        <DialogTitle>Zmień rolę użytkownika</DialogTitle>
+        <DialogTitle>{t('changeRoleTitle')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" gutterBottom>
             {dialog?.user.email}
@@ -121,13 +123,13 @@ const AdminUsersPage = () => {
           </Select>
         </DialogContent>
         <DialogActions>
-          <Button onClick={closeDialog}>Anuluj</Button>
+          <Button onClick={closeDialog}>{t('cancel')}</Button>
           <Button
             variant="contained"
             onClick={handleConfirm}
             disabled={isPending || dialog?.role === dialog?.user.role}
           >
-            {isPending ? <CircularProgress size={20} /> : 'Zapisz'}
+            {isPending ? <CircularProgress size={20} /> : t('save')}
           </Button>
         </DialogActions>
       </Dialog>

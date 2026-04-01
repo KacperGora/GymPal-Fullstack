@@ -45,8 +45,13 @@ export class AdminService {
     }
     return await this.prisma.user.update({
       where: { id: userId },
-      data: {
-        role: role,
+      data: { role },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
       },
     });
   }
