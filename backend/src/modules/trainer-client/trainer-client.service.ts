@@ -107,7 +107,16 @@ export class TrainerClientService {
   async getClient(clientId: number) {
     const relation = await this.prisma.trainerClient.findFirst({
       where: { clientId, status: 'ACTIVE' },
-      select: { client: true },
+      select: {
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
     });
     return relation?.client ?? null;
   }

@@ -450,6 +450,42 @@
     "generateLink": "Wygeneruj link",
     "copyLink": "Skopiuj link",
     "linkCopied": "Link skopiowany!",
-    "removeClient": "Usuń klienta"
+    "removeClient": "Usuń klienta",
+    "workoutsTab": "Treningi",
+    "nutritionTab": "Żywienie",
+    "noWorkouts": "Brak treningów.",
+    "noMeals": "Brak posiłków dzisiaj.",
+    "today": "Dzisiaj"
+  },
+  "trainerInfo": {
+    "title": "Mój trener",
+    "noTrainer": "Nie masz jeszcze przypisanego trenera. Poproś trenera o link zaproszenia."
+  },
+  "invite": {
+    "title": "Zaproszenie od trenera",
+    "description": "Kliknij poniżej, aby połączyć się ze swoim trenerem.",
+    "accept": "Akceptuj zaproszenie",
+    "invalidLink": "Nieprawidłowy link zaproszenia.",
+    "accepted": "Zaproszenie zaakceptowane! Przekierowuję...",
+    "error": "Wystąpił błąd. Spróbuj ponownie."
+  },
+  "adminPage": {
+    "title": "Panel admina",
+    "manageUsers": "Zarządzaj użytkownikami →",
+    "allUsers": "Wszyscy użytkownicy",
+    "clients": "Klienci",
+    "trainers": "Trenerzy",
+    "activeRelations": "Aktywne relacje trener-klient"
+  },
+  "adminUsers": {
+    "title": "Użytkownicy",
+    "id": "ID",
+    "name": "Imię i nazwisko",
+    "email": "Email",
+    "role": "Rola",
+    "changeRole": "Zmień rolę",
+    "changeRoleTitle": "Zmień rolę użytkownika",
+    "cancel": "Anuluj",
+    "save": "Zapisz"
   }
 }

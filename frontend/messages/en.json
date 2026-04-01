@@ -450,6 +450,42 @@
     "generateLink": "Generate invite link",
     "copyLink": "Copy link",
     "linkCopied": "Link copied!",
-    "removeClient": "Remove client"
+    "removeClient": "Remove client",
+    "workoutsTab": "Workouts",
+    "nutritionTab": "Nutrition",
+    "noWorkouts": "No workouts.",
+    "noMeals": "No meals today.",
+    "today": "Today"
+  },
+  "trainerInfo": {
+    "title": "My Trainer",
+    "noTrainer": "You have no trainer assigned yet. Ask your trainer for an invite link."
+  },
+  "invite": {
+    "title": "Trainer Invitation",
+    "description": "Click below to connect with your trainer.",
+    "accept": "Accept Invitation",
+    "invalidLink": "Invalid invitation link.",
+    "accepted": "Invitation accepted! Redirecting...",
+    "error": "An error occurred. Please try again."
+  },
+  "adminPage": {
+    "title": "Admin Panel",
+    "manageUsers": "Manage users →",
+    "allUsers": "All users",
+    "clients": "Clients",
+    "trainers": "Trainers",
+    "activeRelations": "Active trainer-client relations"
+  },
+  "adminUsers": {
+    "title": "Users",
+    "id": "ID",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "changeRole": "Change role",
+    "changeRoleTitle": "Change user role",
+    "cancel": "Cancel",
+    "save": "Save"
   }
 }

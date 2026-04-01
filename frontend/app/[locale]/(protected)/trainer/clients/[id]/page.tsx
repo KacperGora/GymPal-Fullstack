@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 import { useDailyStats, useMeals } from '@/features/nutrition/queries';
@@ -19,6 +20,7 @@ import { useWorkouts } from '@/features/workouts/queries';
 const today = new Date().toISOString().split('T')[0];
 
 const ClientPage = () => {
+  const t = useTranslations('trainer');
   const { id } = useParams<{ id: string }>();
   const clientId = parseInt(id, 10);
   const [tab, setTab] = useState(0);
@@ -42,14 +44,14 @@ const ClientPage = () => {
       )}
 
       <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2 }}>
-        <Tab label="Treningi" />
-        <Tab label="Żywienie" />
+        <Tab label={t('workoutsTab')} />
+        <Tab label={t('nutritionTab')} />
       </Tabs>
 
       {tab === 0 && (
         <Box>
           {!workouts?.data?.length ? (
-            <Typography variant="body2">Brak treningów.</Typography>
+            <Typography variant="body2">{t('noWorkouts')}</Typography>
           ) : (
             workouts.data.map((w) => (
               <Card key={w.id} sx={{ mb: 1 }}>
@@ -84,7 +86,9 @@ const ClientPage = () => {
           {dailyStats && (
             <Card sx={{ mb: 2 }}>
               <CardContent>
-                <Typography variant="subtitle1">Dzisiaj ({today})</Typography>
+                <Typography variant="subtitle1">
+                  {t('today')} ({today})
+                </Typography>
                 <Typography variant="body2">
                   Kalorie: {dailyStats.totalCalories} kcal · Białko:{' '}
                   {dailyStats.totalProteins}g · Węgle: {dailyStats.totalCarbs}g
@@ -94,7 +98,7 @@ const ClientPage = () => {
             </Card>
           )}
           {!meals?.length ? (
-            <Typography variant="body2">Brak posiłków dzisiaj.</Typography>
+            <Typography variant="body2">{t('noMeals')}</Typography>
           ) : (
             meals.map((m) => (
               <Card key={m.id} sx={{ mb: 1 }}>

@@ -7,12 +7,15 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { useAcceptInvite } from '@/features/trainer/mutations';
+import { useRouter } from '@/i18n/navigation';
 
 const InvitePage = () => {
+  const t = useTranslations('invite');
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const router = useRouter();
@@ -30,7 +33,7 @@ const InvitePage = () => {
   if (!token) {
     return (
       <Box sx={{ maxWidth: 480, mx: 'auto', mt: 8, p: 3 }}>
-        <Alert severity="error">Nieprawidłowy link zaproszenia.</Alert>
+        <Alert severity="error">{t('invalidLink')}</Alert>
       </Box>
     );
   }
@@ -38,22 +41,22 @@ const InvitePage = () => {
   return (
     <Box sx={{ maxWidth: 480, mx: 'auto', mt: 8, p: 3, textAlign: 'center' }}>
       <Typography variant="h5" gutterBottom>
-        Zaproszenie od trenera
+        {t('title')}
       </Typography>
 
       {accepted ? (
         <Alert severity="success" sx={{ mt: 2 }}>
-          Zaproszenie zaakceptowane! Przekierowuję...
+          {t('accepted')}
         </Alert>
       ) : (
         <>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Kliknij poniżej, aby połączyć się ze swoim trenerem.
+            {t('description')}
           </Typography>
 
           {isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {(error as Error)?.message ?? 'Wystąpił błąd. Spróbuj ponownie.'}
+              {(error as Error)?.message ?? t('error')}
             </Alert>
           )}
 
@@ -67,11 +70,7 @@ const InvitePage = () => {
               })
             }
           >
-            {isPending ? (
-              <CircularProgress size={24} />
-            ) : (
-              'Akceptuj zaproszenie'
-            )}
+            {isPending ? <CircularProgress size={24} /> : t('accept')}
           </Button>
         </>
       )}
