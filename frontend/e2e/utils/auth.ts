@@ -1,6 +1,13 @@
 import { expect, type Page } from '@playwright/test';
 
 export const loginAsTrainer = async (page: Page) => {
+  await page.route('**/auth/login**', (route) =>
+    route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({}),
+    }),
+  );
   await page.route('**/auth/me**', (route) =>
     route.fulfill({
       status: 200,
@@ -23,6 +30,13 @@ export const loginAsTrainer = async (page: Page) => {
 };
 
 export const loginAsClient = async (page: Page) => {
+  await page.route('**/auth/login**', (route) =>
+    route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({}),
+    }),
+  );
   await page.route('**/auth/me**', (route) =>
     route.fulfill({
       status: 200,
