@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../../shared/db/prisma.service';
 import type {
@@ -21,8 +21,6 @@ interface RawEmbeddingRow {
 
 @Injectable()
 export class VectorStoreService {
-  private readonly logger = new Logger(VectorStoreService.name);
-
   constructor(private readonly prisma: PrismaService) {}
 
   async upsert(
@@ -33,38 +31,46 @@ export class VectorStoreService {
     const now = new Date();
     const id = randomUUID();
 
-    await this.prisma.$executeRaw`
-      INSERT INTO "UserEmbedding" (
-        "id", "userId", "sourceType", "sourceId", "content", "embedding", "metadata", "createdAt", "updatedAt"
-      )
-      VALUES (
-        ${id},
-        ${request.userId},
-        ${request.sourceType},
-        ${request.sourceId},
-        ${request.content},
-        ${vectorLiteral}::vector,
-        ${request.metadata ? JSON.stringify(request.metadata) : null}::jsonb,
-        ${now},
-        ${now}
-      )
-      ON CONFLICT ("sourceType", "sourceId")
-        DO UPDATE SET
-          "content"   = EXCLUDED."content",
-          "embedding" = EXCLUDED."embedding",
-          "metadata"  = EXCLUDED."metadata",
-          "updatedAt" = EXCLUDED."updatedAt"
-    `;
+    const row = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.$queryRaw<RawEmbeddingRow[]>`
+        UPDATE "UserEmbedding"
+        SET
+          "content"   = ${request.content},
+          "embedding" = ${vectorLiteral}::vector,
+          "metadata"  = ${request.metadata ? JSON.stringify(request.metadata) : null}::jsonb,
+          "updatedAt" = ${now}
+        WHERE "userId"     = ${request.userId}
+          AND "sourceType" = ${request.sourceType}
+          AND "sourceId"   = ${request.sourceId}
+        RETURNING "id", "userId", "sourceType", "sourceId", "content", "metadata", "createdAt"
+      `;
 
-    const rows = await this.prisma.$queryRaw<RawEmbeddingRow[]>`
-      SELECT "id", "userId", "sourceType", "sourceId", "content", "metadata", "createdAt"
-      FROM "UserEmbedding"
-      WHERE "sourceType" = ${request.sourceType}
-        AND "sourceId"   = ${request.sourceId}
-      LIMIT 1
-    `;
+      if (updated.length > 0) {
+        return updated[0];
+      }
 
-    return this.toRecord(rows[0]);
+      const inserted = await tx.$queryRaw<RawEmbeddingRow[]>`
+        INSERT INTO "UserEmbedding" (
+          "id", "userId", "sourceType", "sourceId", "content", "embedding", "metadata", "createdAt", "updatedAt"
+        )
+        VALUES (
+          ${id},
+          ${request.userId},
+          ${request.sourceType},
+          ${request.sourceId},
+          ${request.content},
+          ${vectorLiteral}::vector,
+          ${request.metadata ? JSON.stringify(request.metadata) : null}::jsonb,
+          ${now},
+          ${now}
+        )
+        RETURNING "id", "userId", "sourceType", "sourceId", "content", "metadata", "createdAt"
+      `;
+
+      return inserted[0];
+    });
+
+    return this.toRecord(row);
   }
 
   async searchSimilar(

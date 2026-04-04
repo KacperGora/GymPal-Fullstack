@@ -416,6 +416,6 @@ model UserEmbedding {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@unique([userId, sourceType, sourceId])
   @@index([userId])
-  @@index([sourceType, sourceId])
 }

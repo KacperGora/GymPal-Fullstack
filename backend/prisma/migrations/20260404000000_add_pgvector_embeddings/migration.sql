@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Create UserEmbedding table
 CREATE TABLE IF NOT EXISTS "UserEmbedding" (
-  "id"         TEXT NOT NULL,
+  "id"         TEXT NOT NULL DEFAULT gen_random_uuid()::TEXT,
   "userId"     INTEGER NOT NULL,
   "sourceType" TEXT NOT NULL,
   "sourceId"   TEXT NOT NULL,
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS "UserEmbedding" (
 );
 
 CREATE INDEX IF NOT EXISTS "UserEmbedding_userId_idx" ON "UserEmbedding"("userId");
-CREATE INDEX IF NOT EXISTS "UserEmbedding_sourceType_sourceId_idx" ON "UserEmbedding"("sourceType", "sourceId");
+CREATE UNIQUE INDEX IF NOT EXISTS "UserEmbedding_userId_sourceType_sourceId_key"
+  ON "UserEmbedding"("userId", "sourceType", "sourceId");
 
 -- IVFFlat index for approximate cosine similarity search
 -- Effective when table has > 10K rows; exact scan is fast enough below that threshold

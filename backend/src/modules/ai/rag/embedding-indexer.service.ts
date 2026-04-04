@@ -15,10 +15,6 @@ export interface MealCreatedEvent {
   mealId: string;
 }
 
-export interface ProfileUpdatedEvent {
-  userId: number;
-}
-
 @Injectable()
 export class EmbeddingIndexerService {
   private readonly logger = new Logger(EmbeddingIndexerService.name);
@@ -81,33 +77,6 @@ export class EmbeddingIndexerService {
     } catch (error) {
       this.logger.warn(
         `Failed to index meal ${event.mealId}`,
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-  }
-
-  @OnEvent('profile.updated', { async: true })
-  async handleProfileUpdated(event: ProfileUpdatedEvent): Promise<void> {
-    try {
-      const profile = await this.prisma.userProfile.findUnique({
-        where: { userId: event.userId },
-      });
-
-      if (!profile) return;
-
-      const content = this.serializeProfile(profile);
-      await this.indexContent(
-        event.userId,
-        'user_profile',
-        String(event.userId),
-        content,
-        { updatedAt: profile.updatedAt.toISOString() },
-      );
-
-      this.logger.debug(`Indexed profile for user ${event.userId}`);
-    } catch (error) {
-      this.logger.warn(
-        `Failed to index profile for user ${event.userId}`,
         error instanceof Error ? error.message : String(error),
       );
     }
@@ -178,22 +147,6 @@ export class EmbeddingIndexerService {
       `Białko: ${meal.proteins}g`,
       `Węglowodany: ${meal.carbs}g`,
       `Tłuszcze: ${meal.fats}g`,
-    ].join(' | ');
-  }
-
-  private serializeProfile(profile: {
-    height: number;
-    weight: number;
-    age: number;
-    activity: number;
-    goal: string;
-  }): string {
-    return [
-      `Wzrost: ${profile.height} cm`,
-      `Waga: ${profile.weight} kg`,
-      `Wiek: ${profile.age} lat`,
-      `Aktywność: ${profile.activity}`,
-      `Cel: ${profile.goal}`,
     ].join(' | ');
   }
 }
