@@ -11,6 +11,7 @@ import { ApiExcludeEndpoint } from '@nestjs/swagger';
 import { PrismaService } from '../../shared/db/prisma.service';
 import { StripeService } from '../stripe/stripe.service';
 import { SubscriptionsService } from './subscriptions.service';
+import { MetricsService } from '../../shared/metrics/metrics.service';
 
 @Controller('stripe')
 export class StripeWebhookController {
@@ -20,6 +21,7 @@ export class StripeWebhookController {
     private readonly stripeService: StripeService,
     private readonly subscriptionsService: SubscriptionsService,
     private readonly prisma: PrismaService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   @Post('webhook')
@@ -36,6 +38,7 @@ export class StripeWebhookController {
       throw new BadRequestException('Missing stripe-signature header');
     }
 
+    const startTime = Date.now();
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) throw new Error('STRIPE_WEBHOOK_SECRET not set');
 
@@ -78,6 +81,7 @@ export class StripeWebhookController {
         this.logger.warn(`Post-transaction notification failed: ${err}`),
       );
 
+    this.metricsService.observeWebhookLatency((Date.now() - startTime) / 1000);
     return { received: true };
   }
 }

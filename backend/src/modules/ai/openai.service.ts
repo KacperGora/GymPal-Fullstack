@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import OpenAI from 'openai';
+import { MetricsService } from '../../shared/metrics/metrics.service';
 
 interface CacheEntry<T> {
   data: T;
@@ -16,7 +17,7 @@ export class OpenAiService {
   private readonly cacheTTL = 1000 * 60 * 60 * 6; // 6 hours
   private readonly maxCacheSize = 500;
 
-  constructor() {
+  constructor(private readonly metricsService: MetricsService) {
     this.initializeClient();
   }
 
@@ -131,8 +132,11 @@ export class OpenAiService {
       const cached = this.getCached<string>(cacheKey);
       if (cached) {
         this.logger.debug(`Cache hit for key: ${cacheKey}`);
+        this.metricsService.recordAiCacheHit();
+        this.metricsService.recordCacheHit();
         return cached;
       }
+      this.metricsService.recordCacheMiss();
     }
 
     try {
@@ -140,6 +144,8 @@ export class OpenAiService {
         `Calling OpenAI API: model=${model}, temperature=${temperature}`,
       );
 
+      const apiStart = Date.now();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const completion = await this.client.chat.completions.create({
         model,
         messages: [
@@ -150,6 +156,8 @@ export class OpenAiService {
         temperature,
       });
 
+      this.metricsService.observeAiResponseTime((Date.now() - apiStart) / 1000);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       const content = completion.choices[0]?.message?.content;
       if (!content) {
         throw new HttpException(
@@ -168,11 +176,13 @@ export class OpenAiService {
         );
       }
 
-      if (cacheKey) this.setCache(cacheKey, content);
+      if (cacheKey) this.setCache(cacheKey, content as string);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return content;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : JSON.stringify(error);
+
       this.logger.error(`OpenAI API error: ${errorMessage}`, error);
 
       if (error instanceof HttpException) {

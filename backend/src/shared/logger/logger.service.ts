@@ -1,5 +1,16 @@
 import { Injectable, LoggerService, Scope } from '@nestjs/common';
 import * as Sentry from '@sentry/nestjs';
+import { trace } from '@opentelemetry/api';
+
+// Cloud Logging severity levels
+// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#LogSeverity
+type GcpSeverity =
+  | 'DEBUG'
+  | 'INFO'
+  | 'WARNING'
+  | 'ERROR'
+  | 'CRITICAL'
+  | 'DEFAULT';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class CustomLoggerService implements LoggerService {
@@ -10,59 +21,76 @@ export class CustomLoggerService implements LoggerService {
   }
 
   log(message: string, ...optionalParams: any[]): void {
-    const context = this.extractContext(optionalParams);
-    const logContext = context || this.context;
-    console.log(`[LOG] [${logContext || 'App'}] ${message}`);
+    const logContext = this.extractContext(optionalParams) || this.context;
+    this.write('INFO', message, logContext);
   }
 
   error(message: string, ...optionalParams: any[]): void {
-    const { trace, context } = this.extractTraceAndContext(optionalParams);
+    const { trace: stackTrace, context } =
+      this.extractTraceAndContext(optionalParams);
     const logContext = context || this.context;
-    console.error(`[ERROR] [${logContext || 'App'}] ${message}`, trace);
+    this.write('ERROR', message, logContext, { stack: stackTrace });
 
-    // Send error to Sentry if initialized
     if (this.isSentryEnabled()) {
-      const errorToCapture = new Error(String(message));
-
-      Sentry.captureException(errorToCapture, {
-        contexts: {
-          logger: {
-            context: logContext,
-            trace: trace || undefined,
-          },
-        },
+      Sentry.captureException(new Error(String(message)), {
+        contexts: { logger: { context: logContext, trace: stackTrace } },
       });
     }
   }
 
   warn(message: string, ...optionalParams: any[]): void {
-    const context = this.extractContext(optionalParams);
-    const logContext = context || this.context;
-    console.warn(`[WARN] [${logContext || 'App'}] ${message}`);
+    const logContext = this.extractContext(optionalParams) || this.context;
+    this.write('WARNING', message, logContext);
 
-    // Send warning to Sentry if initialized
     if (this.isSentryEnabled()) {
       Sentry.captureMessage(String(message), {
         level: 'warning',
-        contexts: {
-          logger: {
-            context: logContext,
-          },
-        },
+        contexts: { logger: { context: logContext } },
       });
     }
   }
 
   debug(message: string, ...optionalParams: any[]): void {
-    const context = this.extractContext(optionalParams);
-    const logContext = context || this.context;
-    console.debug(`[DEBUG] [${logContext || 'App'}] ${message}`);
+    const logContext = this.extractContext(optionalParams) || this.context;
+    this.write('DEBUG', message, logContext);
   }
 
   verbose(message: string, ...optionalParams: any[]): void {
-    const context = this.extractContext(optionalParams);
-    const logContext = context || this.context;
-    console.log(`[VERBOSE] [${logContext || 'App'}] ${message}`);
+    const logContext = this.extractContext(optionalParams) || this.context;
+    this.write('DEFAULT', message, logContext);
+  }
+
+  private write(
+    severity: GcpSeverity,
+    message: string,
+    context?: string,
+    extra?: Record<string, unknown>,
+  ): void {
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT;
+    const spanContext = trace.getActiveSpan()?.spanContext();
+
+    const entry: Record<string, unknown> = {
+      severity,
+      message,
+      context: context || 'App',
+      ...extra,
+    };
+
+    // Cloud Logging trace correlation format
+    // https://cloud.google.com/trace/docs/trace-log-integration
+    if (spanContext && projectId) {
+      entry['logging.googleapis.com/trace'] =
+        `projects/${projectId}/traces/${spanContext.traceId}`;
+      entry['logging.googleapis.com/spanId'] = spanContext.spanId;
+      entry['logging.googleapis.com/traceSampled'] = true;
+    }
+
+    const line = JSON.stringify(entry);
+    if (severity === 'ERROR' || severity === 'CRITICAL') {
+      process.stderr.write(line + '\n');
+    } else {
+      process.stdout.write(line + '\n');
+    }
   }
 
   private extractContext(optionalParams: any[]): string | undefined {

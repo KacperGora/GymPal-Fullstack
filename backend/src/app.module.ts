@@ -27,6 +27,7 @@ import { LoggerModule } from './shared/sentry/logger.module';
 import { TrainerClientModule } from './modules/trainer-client/trainer-client.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { WorkoutGatewayModule } from './modules/workout-gateway/workout-gateway.module';
+import { MetricsModule } from './shared/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { WorkoutGatewayModule } from './modules/workout-gateway/workout-gateway.
         port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
       },
     }),
+    MetricsModule,
     LoggerModule,
     RedisModule,
     PrismaModule,

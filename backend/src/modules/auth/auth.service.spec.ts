@@ -173,6 +173,7 @@ describe('AuthService', () => {
       (comparePassword as jest.Mock).mockResolvedValue(false);
       (prisma.$transaction as jest.Mock).mockImplementation(
         (callback: (tx: any) => any): any =>
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           callback({
             user: {
               update: jest
