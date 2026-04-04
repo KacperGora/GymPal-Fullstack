@@ -39,7 +39,7 @@ describe('AgentToolsService — get_user_profile', () => {
       weight: 80,
       age: 28,
       activity: 1.55,
-      goal: 'GAIN',
+      goal: 'gain',
     });
 
     const result = (await service.executeTool(
@@ -52,7 +52,7 @@ describe('AgentToolsService — get_user_profile', () => {
     expect(result.height).toBe(180);
     expect(result.weight).toBe(80);
     expect(result.age).toBe(28);
-    expect(result.goal).toBe('GAIN');
+    expect(result.goal).toBe('gain');
     expect(typeof result.bmi).toBe('number');
     expect((result.bmi as number).toFixed(1)).toBe('24.7');
   });
@@ -71,17 +71,13 @@ describe('AgentToolsService — get_user_profile', () => {
     expect(result).toEqual({ error: 'Profile not configured' });
   });
 
-  it('returns error object on unexpected error', async () => {
+  it('rethrows unexpected errors', async () => {
     mockUserProfileService.getProfile.mockRejectedValueOnce(
       new Error('DB error'),
     );
 
-    const result = (await service.executeTool(
-      1,
-      'get_user_profile',
-      {},
-    )) as Record<string, unknown>;
-
-    expect(result).toEqual({ error: 'Profile not configured' });
+    await expect(
+      service.executeTool(1, 'get_user_profile', {}),
+    ).rejects.toThrow('DB error');
   });
 });
