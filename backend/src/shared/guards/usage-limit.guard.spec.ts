@@ -39,6 +39,7 @@ const buildContext = (
         user: { id: userId, subscriptionStatus },
       }),
     }),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     getHandler: () => jest.fn(),
   }) as unknown as ExecutionContext;
 

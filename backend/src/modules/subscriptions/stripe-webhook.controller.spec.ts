@@ -8,6 +8,7 @@ import { StripeWebhookController } from './stripe-webhook.controller';
 import { StripeService } from '../stripe/stripe.service';
 import { SubscriptionsService } from './subscriptions.service';
 import { PrismaService } from '../../shared/db/prisma.service';
+import { MetricsService } from '../../shared/metrics/metrics.service';
 
 type TxMock = {
   paymentEvent: {
@@ -34,6 +35,10 @@ const mockPrisma = {
   },
 };
 
+const mockMetricsService = {
+  observeWebhookLatency: jest.fn(),
+};
+
 describe('StripeWebhookController', () => {
   let controller: StripeWebhookController;
 
@@ -46,6 +51,7 @@ describe('StripeWebhookController', () => {
         { provide: StripeService, useValue: mockStripeService },
         { provide: SubscriptionsService, useValue: mockSubscriptionsService },
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: MetricsService, useValue: mockMetricsService },
       ],
     }).compile();
 
