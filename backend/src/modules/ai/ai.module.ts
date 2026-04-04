@@ -10,6 +10,7 @@ import { AgentController } from './agent/agent.controller';
 import { AgentService } from './agent/agent.service';
 import { AgentToolsService } from './agent/agent-tools.service';
 import { LangfuseService } from './agent/langfuse.service';
+import { RagModule } from './rag/rag.module';
 import { PrismaModule } from '../../shared/db/prisma.module';
 import { NutritionModule } from '../nutrition/nutrition.module';
 import { WorkoutsModule } from '../workouts/workouts.module';
@@ -29,6 +30,7 @@ import { UserProfileModule } from '../user-profile/user-profile.module';
     MealsModule,
     ExercisesModule,
     UserProfileModule,
+    RagModule,
   ],
   controllers: [AiController, AgentController],
   providers: [

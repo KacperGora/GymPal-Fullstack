@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../shared/db/prisma.service';
 import { NutritionStatsProducer } from '../jobs/nutrition-stats.producer';
 import { CreateMealDto, UpdateMealDto } from '@gympal/shared';
@@ -8,6 +9,7 @@ export class MealsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly statsProducer: NutritionStatsProducer,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private toDateString(date: Date | string): string {
@@ -22,6 +24,7 @@ export class MealsService {
       userId,
       this.toDateString(meal.date),
     );
+    this.eventEmitter.emit('meal.created', { userId, mealId: meal.id });
     return meal;
   }
 

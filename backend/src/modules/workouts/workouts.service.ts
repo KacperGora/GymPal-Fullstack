@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../shared/db/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
 import {
@@ -15,7 +16,10 @@ import {
 
 @Injectable()
 export class WorkoutsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   // ========== WorkoutSession CRUD Methods ==========
 
@@ -35,6 +39,11 @@ export class WorkoutsService {
       include: {
         exercises: true,
       },
+    });
+
+    this.eventEmitter.emit('workout.created', {
+      userId,
+      sessionId: workout.id,
     });
 
     return workout;

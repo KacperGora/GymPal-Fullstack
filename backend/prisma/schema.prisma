@@ -96,6 +96,7 @@ model User {
   favoriteExercises   FavoriteExercise[]
   subscription        Subscription?
   aiRequests          AiRequest[]
+  embeddings          UserEmbedding[]
   clientRelations     TrainerClient[]    @relation("TrainerRelation")
   trainerRelations    TrainerClient[]    @relation("ClientRelation")
 }
@@ -401,4 +402,20 @@ model AiRequest {
   createdAt DateTime @default(now())
 
   @@index([userId, feature, createdAt])
+}
+
+model UserEmbedding {
+  id         String   @id @default(cuid())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceType String   // "workout_session" | "meal" | "user_profile"
+  sourceId   String
+  content    String
+  embedding  Unsupported("vector(1536)")
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
+  @@index([sourceType, sourceId])
 }

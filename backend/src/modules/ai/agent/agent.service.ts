@@ -10,6 +10,7 @@ import { LangfuseService } from './langfuse.service';
 import { buildAgentGraph } from './agent.graph';
 import type { AgentResponse } from './dto/agent-query.dto';
 import { UserProfileService } from '../../user-profile/user-profile.service';
+import { RagService } from '../rag/rag.service';
 
 interface UserProfileContext {
   height: number;
@@ -28,6 +29,7 @@ export class AgentService {
     private readonly toolsService: AgentToolsService,
     private readonly langfuse: LangfuseService,
     private readonly userProfileService: UserProfileService,
+    private readonly ragService: RagService,
   ) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -63,13 +65,23 @@ export class AgentService {
       metadata: { language, queryLength: query.length },
     });
 
+    const ragSpan = trace?.span({ name: 'rag-retrieval', input: { query } });
+    const { contextString } = await this.ragService.retrieveContext(
+      userId,
+      query,
+    );
+    ragSpan?.end({ output: { hasContext: contextString.length > 0 } });
+
     const graph = buildAgentGraph(this.openai, this.toolsService, trace);
 
     const result = await graph.invoke({
       userId,
       language,
       messages: [
-        { role: 'system', content: buildSystemPrompt(language, profile) },
+        {
+          role: 'system',
+          content: buildSystemPrompt(language, profile, contextString),
+        },
         { role: 'user', content: query },
       ],
     });
@@ -154,9 +166,34 @@ USER PROFILE
 `;
 }
 
+function buildRagSection(contextString: string, language: string): string {
+  if (!contextString) return '';
+
+  if (language === 'pl') {
+    return `
+=====================
+TWOJA HISTORIA (RAG)
+=====================
+Poniżej znajdują się dane z Twojej historii treningów i diety. Bazuj na nich, gdy odpowiadasz. Odwołuj się do konkretnych danych (daty, ciężary, kalorie) — powiedz "w oparciu o Twoje ostatnie tygodnie..." gdy używasz tych informacji.
+
+${contextString}
+`;
+  }
+
+  return `
+=====================
+USER HISTORY (RAG)
+=====================
+The following data comes from the user's training and nutrition history. Base your responses on it. Reference specific data points (dates, weights, calories) — say "based on your recent history..." when using this information.
+
+${contextString}
+`;
+}
+
 function buildSystemPrompt(
   language: string,
   profile: UserProfileContext | null = null,
+  contextString = '',
 ): string {
   if (language === 'pl') {
     return `Jesteś zaawansowanym personalnym trenerem AI i ekspertem ds. żywienia w aplikacji GymPal.
@@ -224,7 +261,7 @@ Jeśli brak danych:
 JĘZYK
 =====================
 Odpowiadaj WYŁĄCZNIE po polsku.
-${buildProfileSection(profile, 'pl')}`;
+${buildProfileSection(profile, 'pl')}${buildRagSection(contextString, 'pl')}`;
   }
 
   return `You are an advanced AI personal trainer and nutrition expert in the GymPal app.
@@ -285,5 +322,5 @@ Diet:
 
 If missing data:
 - Ask max 3 focused questions
-${buildProfileSection(profile, 'en')}`;
+${buildProfileSection(profile, 'en')}${buildRagSection(contextString, 'en')}`;
 }
