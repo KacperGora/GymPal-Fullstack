@@ -3,6 +3,7 @@ import { AgentToolsService } from '../agent-tools.service';
 import { WorkoutsService } from '../../../workouts/workouts.service';
 import { MealsService } from '../../../meals/meals.service';
 import { WgerService } from '../../../exercises/wger.service';
+import { UserProfileService } from '../../../user-profile/user-profile.service';
 
 const mockWorkoutsService = {
   findAllWorkoutSessions: jest.fn(),
@@ -17,6 +18,10 @@ const mockWgerService = {
   searchExercises: jest.fn(),
 };
 
+const mockUserProfileService = {
+  getProfile: jest.fn(),
+};
+
 describe('AgentToolsService', () => {
   let service: AgentToolsService;
 
@@ -29,6 +34,7 @@ describe('AgentToolsService', () => {
         { provide: WorkoutsService, useValue: mockWorkoutsService },
         { provide: MealsService, useValue: mockMealsService },
         { provide: WgerService, useValue: mockWgerService },
+        { provide: UserProfileService, useValue: mockUserProfileService },
       ],
     }).compile();
 

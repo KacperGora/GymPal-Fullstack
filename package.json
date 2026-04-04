@@ -27,5 +27,8 @@
     "shared/**/*.ts": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "axios": "1.14.0"
   }
 }

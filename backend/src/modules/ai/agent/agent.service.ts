@@ -8,6 +8,15 @@ import { AgentToolsService } from './agent-tools.service';
 import { LangfuseService } from './langfuse.service';
 import { buildAgentGraph } from './agent.graph';
 import type { AgentResponse } from './dto/agent-query.dto';
+import { UserProfileService } from '../../user-profile/user-profile.service';
+
+interface UserProfileContext {
+  height: number;
+  weight: number;
+  age: number;
+  activity: number;
+  goal: string;
+}
 
 @Injectable()
 export class AgentService {
@@ -17,6 +26,7 @@ export class AgentService {
   constructor(
     private readonly toolsService: AgentToolsService,
     private readonly langfuse: LangfuseService,
+    private readonly userProfileService: UserProfileService,
   ) {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
@@ -44,6 +54,8 @@ export class AgentService {
 
     this.logger.debug(`Running agent graph for user ${userId}`);
 
+    const profile = await this.fetchProfile(userId);
+
     const trace = this.langfuse.createTrace({
       name: 'agent-run',
       userId: String(userId),
@@ -56,7 +68,7 @@ export class AgentService {
       userId,
       language,
       messages: [
-        { role: 'system', content: buildSystemPrompt(language) },
+        { role: 'system', content: buildSystemPrompt(language, profile) },
         { role: 'user', content: query },
       ],
     });
@@ -74,6 +86,16 @@ export class AgentService {
 
     return { answer, toolsUsed: result.toolsUsed };
   }
+
+  private async fetchProfile(
+    userId: number,
+  ): Promise<UserProfileContext | null> {
+    try {
+      return await this.userProfileService.getProfile(userId);
+    } catch {
+      return null;
+    }
+  }
 }
 
 function extractFinalAnswer(
@@ -89,7 +111,45 @@ function extractFinalAnswer(
   return last.content;
 }
 
-function buildSystemPrompt(language: string): string {
+function buildProfileSection(
+  profile: UserProfileContext | null,
+  language: string,
+): string {
+  if (!profile) return '';
+  const heightM = profile.height / 100;
+  const bmi = (profile.weight / (heightM * heightM)).toFixed(1);
+
+  if (language === 'pl') {
+    return `
+=====================
+PROFIL UŻYTKOWNIKA
+=====================
+- Wzrost: ${profile.height} cm
+- Waga: ${profile.weight} kg
+- Wiek: ${profile.age} lat
+- Aktywność (mnożnik): ${profile.activity}
+- Cel: ${profile.goal}
+- BMI: ${bmi}
+`;
+  }
+
+  return `
+=====================
+USER PROFILE
+=====================
+- Height: ${profile.height} cm
+- Weight: ${profile.weight} kg
+- Age: ${profile.age} years
+- Activity multiplier: ${profile.activity}
+- Goal: ${profile.goal}
+- BMI: ${bmi}
+`;
+}
+
+function buildSystemPrompt(
+  language: string,
+  profile: UserProfileContext | null = null,
+): string {
   if (language === 'pl') {
     return `Jesteś zaawansowanym personalnym trenerem AI i ekspertem ds. żywienia w aplikacji GymPal.
 
@@ -155,7 +215,7 @@ Jeśli brak danych:
 JĘZYK
 =====================
 Odpowiadaj WYŁĄCZNIE po polsku.
-`;
+${buildProfileSection(profile, 'pl')}`;
   }
 
   return `You are an advanced AI personal trainer and nutrition expert in the GymPal app.
@@ -215,5 +275,5 @@ Diet:
 
 If missing data:
 - Ask max 3 focused questions
-`;
+${buildProfileSection(profile, 'en')}`;
 }
