@@ -6,16 +6,29 @@ import { OpenAiService } from './openai.service';
 import { PromptBuilderV2Service } from './prompt-builder-v2.service';
 import { TemplateService } from './template.service';
 import { AiRetryService } from './ai-retry.service';
+import { AgentController } from './agent/agent.controller';
+import { AgentService } from './agent/agent.service';
+import { AgentToolsService } from './agent/agent-tools.service';
+import { LangfuseService } from './agent/langfuse.service';
 import { PrismaModule } from '../../shared/db/prisma.module';
 import { NutritionModule } from '../nutrition/nutrition.module';
+import { WorkoutsModule } from '../workouts/workouts.module';
+import { MealsModule } from '../meals/meals.module';
+import { ExercisesModule } from '../exercises/exercises.module';
 import { CacheService } from '../../shared/services/cache.service';
 import { MacroCalculatorService } from '../../shared/services/macro-calculator.service';
 import { MealValidatorService } from '../../shared/services/meal-validator.service';
 import { UsageLimitGuard } from '../../shared/guards/usage-limit.guard';
 
 @Module({
-  imports: [PrismaModule, NutritionModule],
-  controllers: [AiController],
+  imports: [
+    PrismaModule,
+    NutritionModule,
+    WorkoutsModule,
+    MealsModule,
+    ExercisesModule,
+  ],
+  controllers: [AiController, AgentController],
   providers: [
     AiService,
     AiRetryService,
@@ -27,6 +40,9 @@ import { UsageLimitGuard } from '../../shared/guards/usage-limit.guard';
     MealValidatorService,
     UsageLimitGuard,
     Reflector,
+    AgentService,
+    AgentToolsService,
+    LangfuseService,
   ],
   exports: [AiService, TemplateService, CacheService],
 })
