@@ -74,7 +74,7 @@ export const AGENT_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
                 wgerExerciseId: {
                   type: 'number',
                   description:
-                    'WGER exercise ID from search_exercises. Use 0 for custom exercises.',
+                    'WGER exercise ID from search_exercises. Must be a positive integer obtained from search_exercises results.',
                 },
                 exerciseName: { type: 'string', description: 'Exercise name.' },
                 exerciseCategory: {
@@ -217,6 +217,22 @@ interface LogMealInput {
   date?: string;
 }
 
+const TRAINING_HISTORY_DEFAULT_LIMIT = 10;
+const TRAINING_HISTORY_MAX_LIMIT = 100;
+const SEARCH_EXERCISES_DEFAULT_LIMIT = 5;
+const SEARCH_EXERCISES_MAX_LIMIT = 10;
+
+function clampLimit(
+  value: number | undefined,
+  defaultLimit: number,
+  maxLimit: number,
+): number {
+  if (!Number.isFinite(value)) return defaultLimit;
+  const clamped = Math.trunc(value as number);
+  if (clamped < 1) return 1;
+  return Math.min(clamped, maxLimit);
+}
+
 @Injectable()
 export class AgentToolsService {
   constructor(
@@ -254,7 +270,11 @@ export class AgentToolsService {
     const result = await this.workoutsService.findAllWorkoutSessions(userId, {
       startDate: input.startDate,
       endDate: input.endDate,
-      limit: input.limit ?? 10,
+      limit: clampLimit(
+        input.limit,
+        TRAINING_HISTORY_DEFAULT_LIMIT,
+        TRAINING_HISTORY_MAX_LIMIT,
+      ),
       page: 1,
     });
 
@@ -266,16 +286,23 @@ export class AgentToolsService {
   }
 
   private async updatePlan(userId: number, input: UpdatePlanInput) {
-    const exercises = (input.exercises ?? []).map((ex) => ({
-      wgerExerciseId: ex.wgerExerciseId ?? 0,
-      exerciseName: ex.exerciseName,
-      exerciseCategory: ex.exerciseCategory,
-      sets: ex.sets,
-      reps: ex.reps,
-      weight: ex.weight,
-      restTime: ex.restTime,
-      notes: ex.notes,
-    }));
+    const exercises = (input.exercises ?? []).map((ex) => {
+      if (ex.wgerExerciseId !== undefined && ex.wgerExerciseId < 1) {
+        throw new Error(
+          `Invalid wgerExerciseId for exercise "${ex.exerciseName}": must be a positive integer from search_exercises.`,
+        );
+      }
+      return {
+        wgerExerciseId: ex.wgerExerciseId as number,
+        exerciseName: ex.exerciseName,
+        exerciseCategory: ex.exerciseCategory,
+        sets: ex.sets,
+        reps: ex.reps,
+        weight: ex.weight,
+        restTime: ex.restTime,
+        notes: ex.notes,
+      };
+    });
 
     const session = await this.workoutsService.createWorkoutSession(userId, {
       name: input.name,
@@ -298,7 +325,11 @@ export class AgentToolsService {
   private async searchExercises(input: SearchExercisesInput) {
     const exercises = await this.wgerService.searchExercises(
       input.query,
-      input.limit ?? 5,
+      clampLimit(
+        input.limit,
+        SEARCH_EXERCISES_DEFAULT_LIMIT,
+        SEARCH_EXERCISES_MAX_LIMIT,
+      ),
       input.language ?? 'en',
     );
 

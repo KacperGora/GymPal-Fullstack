@@ -61,7 +61,7 @@ export class AgentService {
       ],
     });
 
-    const answer = extractFinalAnswer(result.messages);
+    const answer = extractFinalAnswer(result.messages, language);
 
     trace?.update({
       output: answer,
@@ -78,10 +78,13 @@ export class AgentService {
 
 function extractFinalAnswer(
   messages: OpenAI.Chat.ChatCompletionMessageParam[],
+  language: string = 'en',
 ): string {
   const last = [...messages].reverse().find((m) => m.role === 'assistant');
   if (!last || typeof last.content !== 'string') {
-    return 'Przepraszam, nie udało się wygenerować odpowiedzi.';
+    return language === 'pl'
+      ? 'Przepraszam, nie udało się wygenerować odpowiedzi.'
+      : 'Sorry, I was unable to generate a response.';
   }
   return last.content;
 }

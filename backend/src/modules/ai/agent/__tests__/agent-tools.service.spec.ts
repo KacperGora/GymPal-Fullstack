@@ -104,7 +104,7 @@ describe('AgentToolsService', () => {
         });
         const callArg =
           mockWorkoutsService.createWorkoutSession.mock.calls[0][1];
-        expect(callArg.exercises[0].wgerExerciseId).toBe(0);
+        expect(callArg.exercises[0].wgerExerciseId).toBeUndefined();
       });
     });
 

@@ -6,6 +6,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/jwt/jwt-auth.guard';
+import { SubscriptionGuard } from '../../../shared/guards/subscription.guard';
+import {
+  UsageLimitGuard,
+  UsageFeature,
+} from '../../../shared/guards/usage-limit.guard';
 import { RequestUser } from '../../../shared/decorators/request-user.decorator';
 import { ZodValidationPipe } from '../../../shared/pipes/zod-validation.pipe';
 import { AgentService } from './agent.service';
@@ -23,10 +28,12 @@ export class AgentController {
   constructor(private readonly agentService: AgentService) {}
 
   @Post('agent')
+  @UseGuards(SubscriptionGuard, UsageLimitGuard)
+  @UsageFeature('AI_AGENT')
   @ApiOperation({
     summary: 'GymPal AI Agent',
     description:
-      'Agentic AI that autonomously selects tools (getTrainingHistory, updatePlan, searchExercises, logMeal) based on the user query.',
+      'Agentic AI that autonomously selects tools (get_training_history, update_plan, search_exercises, log_meal) based on the user query.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
