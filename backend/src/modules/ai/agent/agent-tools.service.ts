@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type OpenAI from 'openai';
 import { WorkoutsService } from '../../workouts/workouts.service';
 import { MealsService } from '../../meals/meals.service';
@@ -11,7 +11,7 @@ export const AGENT_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
     function: {
       name: 'get_user_profile',
       description:
-        "Retrieves the user's fitness profile: height, weight, age, activity level, and goal (LOSE/MAINTAIN/GAIN). Also returns computed BMI. Call this at the start of any session where personalized advice is needed.",
+        "Retrieves the user's fitness profile: height, weight, age, activity level, and goal (lose/maintain/gain). Also returns computed BMI. Call this at the start of any session where personalized advice is needed.",
       parameters: {
         type: 'object',
         properties: {},
@@ -249,6 +249,8 @@ function clampLimit(
 
 @Injectable()
 export class AgentToolsService {
+  private readonly logger = new Logger(AgentToolsService.name);
+
   constructor(
     private readonly workoutsService: WorkoutsService,
     private readonly mealsService: MealsService,
@@ -373,8 +375,15 @@ export class AgentToolsService {
         goal: profile.goal,
         bmi: Math.round(bmi * 10) / 10,
       };
-    } catch {
-      return { error: 'Profile not configured' };
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return { error: 'Profile not configured' };
+      }
+      this.logger.error(
+        `Unexpected error fetching profile for user ${userId}`,
+        err,
+      );
+      throw err;
     }
   }
 

@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AgentService } from '../agent.service';
 import { AgentToolsService } from '../agent-tools.service';
@@ -16,7 +17,9 @@ const makeUserProfileService = (profile?: object) =>
   ({
     getProfile: profile
       ? jest.fn().mockResolvedValue(profile)
-      : jest.fn().mockRejectedValue(new Error('not found')),
+      : jest
+          .fn()
+          .mockRejectedValue(new NotFoundException('User profile not found')),
   }) as unknown as UserProfileService;
 
 const mockTrace = {

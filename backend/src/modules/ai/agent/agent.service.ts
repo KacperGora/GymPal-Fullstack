@@ -1,6 +1,7 @@
 import {
   Injectable,
   Logger,
+  NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import OpenAI from 'openai';
@@ -92,8 +93,15 @@ export class AgentService {
   ): Promise<UserProfileContext | null> {
     try {
       return await this.userProfileService.getProfile(userId);
-    } catch {
-      return null;
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        return null;
+      }
+      this.logger.error(
+        `Unexpected error fetching profile for user ${userId}`,
+        err,
+      );
+      throw err;
     }
   }
 }
@@ -161,6 +169,7 @@ Twoim celem jest maksymalizacja efektów użytkownika (siła, sylwetka, zdrowie)
 =====================
 DOSTĘPNE NARZĘDZIA
 =====================
+- get_user_profile: profil użytkownika (wzrost, waga, wiek, aktywność, cel, BMI)
 - get_training_history: historia treningów użytkownika
 - update_plan: tworzenie/aktualizacja planu treningowego
 - search_exercises: wyszukiwanie ćwiczeń (wymagane przed planowaniem)
@@ -228,6 +237,7 @@ Your goal is to maximize user results (strength, physique, health) through:
 =====================
 TOOLS
 =====================
+- get_user_profile
 - get_training_history
 - update_plan
 - search_exercises
