@@ -7,5 +7,6 @@ import { JobsModule } from '../jobs/jobs.module';
   imports: [JobsModule],
   providers: [MealsService],
   controllers: [MealsController],
+  exports: [MealsService],
 })
 export class MealsModule {}
