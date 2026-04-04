@@ -4,6 +4,7 @@ import { AgentService } from '../agent.service';
 import { AgentToolsService } from '../agent-tools.service';
 import { LangfuseService } from '../langfuse.service';
 import { UserProfileService } from '../../../user-profile/user-profile.service';
+import { RagService } from '../../rag/rag.service';
 import * as agentGraphModule from '../agent.graph';
 
 const mockInvoke = jest.fn();
@@ -21,6 +22,13 @@ const makeUserProfileService = (profile?: object) =>
           .fn()
           .mockRejectedValue(new NotFoundException('User profile not found')),
   }) as unknown as UserProfileService;
+
+const makeRagService = () =>
+  ({
+    retrieveContext: jest
+      .fn()
+      .mockResolvedValue({ results: [], contextString: '' }),
+  }) as unknown as RagService;
 
 const mockTrace = {
   update: jest.fn(),
@@ -54,6 +62,7 @@ describe('AgentService', () => {
         { provide: AgentToolsService, useValue: makeToolsService() },
         { provide: LangfuseService, useValue: makeLangfuseService() },
         { provide: UserProfileService, useValue: makeUserProfileService() },
+        { provide: RagService, useValue: makeRagService() },
       ],
     }).compile();
 
@@ -119,6 +128,7 @@ describe('AgentService', () => {
       makeToolsService(),
       makeLangfuseService(),
       makeUserProfileService(),
+      makeRagService(),
     );
     await expect(unconfigured.runAgent(1, 'query', 'en')).rejects.toThrow(
       'AI Agent is not configured',
@@ -184,6 +194,7 @@ describe('AgentService', () => {
             provide: UserProfileService,
             useValue: makeUserProfileService(profile),
           },
+          { provide: RagService, useValue: makeRagService() },
         ],
       }).compile();
       return module.get(AgentService);

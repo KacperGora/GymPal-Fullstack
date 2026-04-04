@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 jest.mock('../../shared/db/prisma.service');
 
@@ -24,6 +25,10 @@ describe('MealsService', () => {
         {
           provide: NutritionStatsProducer,
           useValue: mockNutritionStatsProducer,
+        },
+        {
+          provide: EventEmitter2,
+          useValue: { emit: jest.fn() },
         },
       ],
     }).compile();
