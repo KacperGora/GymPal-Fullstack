@@ -1,5 +1,6 @@
 import { Annotation, END, START, StateGraph } from '@langchain/langgraph';
 import OpenAI from 'openai';
+import { Logger } from '@nestjs/common';
 import type { Langfuse } from 'langfuse';
 import type { AgentToolsService } from './agent-tools.service';
 import { AGENT_TOOLS } from './agent-tools.service';
@@ -35,6 +36,8 @@ export type AgentState = typeof AgentStateAnnotation.State;
 type LangfuseTrace = ReturnType<Langfuse['trace']> | null;
 
 // ─── Graph factory ────────────────────────────────────────────────────────────
+
+const logger = new Logger('AgentGraph');
 
 export function buildAgentGraph(
   openai: OpenAI,
@@ -80,10 +83,26 @@ export function buildAgentGraph(
   ): Promise<Partial<AgentState>> {
     const results = await Promise.all(
       state.pendingToolCalls.map(async (toolCall) => {
-        const args = JSON.parse(toolCall.function.arguments) as Record<
-          string,
-          unknown
-        >;
+        const rawArgs = toolCall.function.arguments;
+
+        let args: Record<string, unknown>;
+        try {
+          args = JSON.parse(rawArgs) as Record<string, unknown>;
+        } catch (parseError) {
+          const errMsg =
+            parseError instanceof Error ? parseError.message : 'Unknown error';
+          const span = trace?.span({
+            name: `tool:${toolCall.function.name}`,
+            input: rawArgs,
+          });
+          span?.end({ output: { error: errMsg }, level: 'ERROR' });
+          return {
+            role: 'tool' as const,
+            tool_call_id: toolCall.id,
+            content: `Error: Invalid tool arguments: ${errMsg}`,
+          };
+        }
+
         const span = trace?.span({
           name: `tool:${toolCall.function.name}`,
           input: args,
@@ -104,11 +123,15 @@ export function buildAgentGraph(
         } catch (error) {
           const errMsg =
             error instanceof Error ? error.message : 'Unknown error';
+          logger.error(
+            `Tool execution failed: ${toolCall.function.name}`,
+            error instanceof Error ? error.stack : String(error),
+          );
           span?.end({ output: { error: errMsg }, level: 'ERROR' });
           return {
             role: 'tool' as const,
             tool_call_id: toolCall.id,
-            content: `Error: ${errMsg}`,
+            content: 'Error: Tool execution failed.',
           };
         }
       }),
@@ -160,15 +183,48 @@ export function buildAgentGraph(
     return {};
   }
 
-  // Routing: tool calls pending and under iteration limit → execute, otherwise → respond
-  function routeAfterLLM(state: AgentState): 'execute_tools' | 'respond' {
-    if (
-      state.pendingToolCalls.length > 0 &&
-      state.iterations < MAX_ITERATIONS
-    ) {
-      return 'execute_tools';
-    }
-    return 'respond';
+  // Node: ForceRespond — called when iteration limit reached with pending tool calls;
+  // calls LLM with tool_choice: 'none' to produce a plain-text summary
+  async function forceRespondNode(
+    state: AgentState,
+  ): Promise<Partial<AgentState>> {
+    const generation = trace?.generation({
+      name: 'force-respond',
+      model: MODEL,
+      input: state.messages,
+    });
+
+    const response = (await openai.chat.completions.create({
+      model: MODEL,
+      messages: state.messages,
+      tool_choice: 'none',
+    })) as OpenAI.Chat.ChatCompletion;
+
+    const message = response.choices[0].message;
+    const usage = response.usage;
+
+    generation?.end({
+      output: message,
+      usage: {
+        input: usage?.prompt_tokens,
+        output: usage?.completion_tokens,
+        total: usage?.total_tokens,
+      },
+    });
+
+    return {
+      messages: [message as OpenAI.Chat.ChatCompletionMessageParam],
+      pendingToolCalls: [],
+    };
+  }
+
+  // Routing: pending tool calls under limit → execute; limit reached → force text response; else → respond
+  function routeAfterLLM(
+    state: AgentState,
+  ): 'execute_tools' | 'force_respond' | 'respond' {
+    if (state.pendingToolCalls.length === 0) return 'respond';
+    if (state.iterations >= MAX_ITERATIONS) return 'force_respond';
+    return 'execute_tools';
   }
 
   return new StateGraph(AgentStateAnnotation)
@@ -176,10 +232,12 @@ export function buildAgentGraph(
     .addNode('execute_tools', executeToolsNode)
     .addNode('reflect', reflectNode)
     .addNode('respond', respondNode)
+    .addNode('force_respond', forceRespondNode)
     .addEdge(START, 'plan')
     .addConditionalEdges('plan', routeAfterLLM)
     .addEdge('execute_tools', 'reflect')
     .addConditionalEdges('reflect', routeAfterLLM)
     .addEdge('respond', END)
+    .addEdge('force_respond', END)
     .compile();
 }
