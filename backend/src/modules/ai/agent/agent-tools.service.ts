@@ -3,8 +3,22 @@ import type OpenAI from 'openai';
 import { WorkoutsService } from '../../workouts/workouts.service';
 import { MealsService } from '../../meals/meals.service';
 import { WgerService } from '../../exercises/wger.service';
+import { UserProfileService } from '../../user-profile/user-profile.service';
 
 export const AGENT_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
+  {
+    type: 'function',
+    function: {
+      name: 'get_user_profile',
+      description:
+        "Retrieves the user's fitness profile: height, weight, age, activity level, and goal (LOSE/MAINTAIN/GAIN). Also returns computed BMI. Call this at the start of any session where personalized advice is needed.",
+      parameters: {
+        type: 'object',
+        properties: {},
+        required: [],
+      },
+    },
+  },
   {
     type: 'function',
     function: {
@@ -239,6 +253,7 @@ export class AgentToolsService {
     private readonly workoutsService: WorkoutsService,
     private readonly mealsService: MealsService,
     private readonly wgerService: WgerService,
+    private readonly userProfileService: UserProfileService,
   ) {}
 
   async executeTool(
@@ -247,6 +262,8 @@ export class AgentToolsService {
     input: ToolInput,
   ): Promise<unknown> {
     switch (toolName) {
+      case 'get_user_profile':
+        return this.getUserProfile(userId);
       case 'get_training_history':
         return this.getTrainingHistory(
           userId,
@@ -341,6 +358,24 @@ export class AgentToolsService {
       muscles: ex.muscles,
       equipment: ex.equipment,
     }));
+  }
+
+  private async getUserProfile(userId: number) {
+    try {
+      const profile = await this.userProfileService.getProfile(userId);
+      const heightM = profile.height / 100;
+      const bmi = profile.weight / (heightM * heightM);
+      return {
+        height: profile.height,
+        weight: profile.weight,
+        age: profile.age,
+        activity: profile.activity,
+        goal: profile.goal,
+        bmi: Math.round(bmi * 10) / 10,
+      };
+    } catch {
+      return { error: 'Profile not configured' };
+    }
   }
 
   private async logMeal(userId: number, input: LogMealInput) {

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AgentService } from '../agent.service';
 import { AgentToolsService } from '../agent-tools.service';
 import { LangfuseService } from '../langfuse.service';
+import { UserProfileService } from '../../../user-profile/user-profile.service';
 import * as agentGraphModule from '../agent.graph';
 
 const mockInvoke = jest.fn();
@@ -10,6 +11,13 @@ const makeToolsService = () =>
   ({
     executeTool: jest.fn().mockResolvedValue({ result: 'ok' }),
   }) as unknown as AgentToolsService;
+
+const makeUserProfileService = (profile?: object) =>
+  ({
+    getProfile: profile
+      ? jest.fn().mockResolvedValue(profile)
+      : jest.fn().mockRejectedValue(new Error('not found')),
+  }) as unknown as UserProfileService;
 
 const mockTrace = {
   update: jest.fn(),
@@ -42,6 +50,7 @@ describe('AgentService', () => {
         AgentService,
         { provide: AgentToolsService, useValue: makeToolsService() },
         { provide: LangfuseService, useValue: makeLangfuseService() },
+        { provide: UserProfileService, useValue: makeUserProfileService() },
       ],
     }).compile();
 
@@ -106,6 +115,7 @@ describe('AgentService', () => {
     const unconfigured = new AgentService(
       makeToolsService(),
       makeLangfuseService(),
+      makeUserProfileService(),
     );
     await expect(unconfigured.runAgent(1, 'query', 'en')).rejects.toThrow(
       'AI Agent is not configured',
@@ -158,5 +168,75 @@ describe('AgentService', () => {
       expect.anything(),
       mockTrace,
     );
+  });
+
+  describe('auto-context injection', () => {
+    async function makeServiceWithProfile(profile?: object) {
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          AgentService,
+          { provide: AgentToolsService, useValue: makeToolsService() },
+          { provide: LangfuseService, useValue: makeLangfuseService() },
+          {
+            provide: UserProfileService,
+            useValue: makeUserProfileService(profile),
+          },
+        ],
+      }).compile();
+      return module.get(AgentService);
+    }
+
+    it('injects user profile data into system prompt when profile exists', async () => {
+      mockInvoke.mockResolvedValueOnce({
+        messages: [{ role: 'assistant', content: 'Answer' }],
+        toolsUsed: [],
+        iterations: 0,
+      });
+
+      const svc = await makeServiceWithProfile({
+        height: 180,
+        weight: 80,
+        age: 28,
+        activity: 1.55,
+        goal: 'GAIN',
+      });
+
+      await svc.runAgent(1, 'Plan my workout', 'en');
+
+      const invokeArg = mockInvoke.mock.calls[0][0];
+      const systemContent = invokeArg.messages[0].content as string;
+      expect(systemContent).toContain('80');
+      expect(systemContent).toContain('180');
+      expect(systemContent).toContain('GAIN');
+    });
+
+    it('proceeds without profile data when profile is missing', async () => {
+      mockInvoke.mockResolvedValueOnce({
+        messages: [{ role: 'assistant', content: 'Answer' }],
+        toolsUsed: [],
+        iterations: 0,
+      });
+
+      const svc = await makeServiceWithProfile();
+
+      await expect(
+        svc.runAgent(1, 'Plan my workout', 'en'),
+      ).resolves.toBeDefined();
+    });
+
+    it('system prompt does not contain profile section when profile is missing', async () => {
+      mockInvoke.mockResolvedValueOnce({
+        messages: [{ role: 'assistant', content: 'Answer' }],
+        toolsUsed: [],
+        iterations: 0,
+      });
+
+      const svc = await makeServiceWithProfile();
+      await svc.runAgent(1, 'query', 'en');
+
+      const invokeArg = mockInvoke.mock.calls[0][0];
+      const systemContent = invokeArg.messages[0].content as string;
+      expect(systemContent).not.toContain('USER PROFILE');
+    });
   });
 });

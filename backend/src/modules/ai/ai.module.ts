@@ -19,6 +19,7 @@ import { CacheService } from '../../shared/services/cache.service';
 import { MacroCalculatorService } from '../../shared/services/macro-calculator.service';
 import { MealValidatorService } from '../../shared/services/meal-validator.service';
 import { UsageLimitGuard } from '../../shared/guards/usage-limit.guard';
+import { UserProfileModule } from '../user-profile/user-profile.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { UsageLimitGuard } from '../../shared/guards/usage-limit.guard';
     WorkoutsModule,
     MealsModule,
     ExercisesModule,
+    UserProfileModule,
   ],
   controllers: [AiController, AgentController],
   providers: [
