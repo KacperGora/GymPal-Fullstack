@@ -7,7 +7,7 @@
 ![NestJS](https://img.shields.io/badge/NestJS-11-e0234e)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 
-**Stack:** Next.js · NestJS · PostgreSQL · Redis · BullMQ · Prisma · Stripe · Docker · GCP
+**Stack:** Next.js · NestJS · PostgreSQL · Redis · BullMQ · Prisma · Stripe · Socket.io · LangGraph · pgvector · Docker · GCP
 
 **Key engineering:**
 - Stripe subscription billing — Checkout, webhook processing with idempotency, usage limits per tier
@@ -15,7 +15,11 @@
 - Distributed Redis cache — shared across Cloud Run instances, survives container restarts
 - JWT refresh token rotation with family-based revocation and brute-force lockout
 - OpenAI integration with prompt builder, exponential backoff retry, and 6h cache layer
-- Background workers, rate limiting, Sentry tracing, Swagger docs — production-grade from day one
+- Autonomous AI agent (LangGraph) — tool-calling over user data with RAG context and Langfuse observability
+- RAG pipeline — OpenAI text-embedding-3-small, pgvector similarity search, auto-indexes workouts/meals/profile
+- Real-time workout tracking (Socket.io + Redis) — trainer watches client's live session with Redis-backed snapshots
+- RBAC — Trainer/Client roles, invite flow, row-level access, admin panel
+- OpenTelemetry tracing + Prometheus metrics — Cloud Trace integration, Redis and BullMQ health checks
 
 🔗 **Live demo: https://gympal-frontend-hjz4j5fyoq-ey.a.run.app** · `demo@gympal.app` / `Demo123!`
 
@@ -31,12 +35,13 @@ graph TD
 
     subgraph API
         NE[NestJS 11<br/>Modules · Guards · Interceptors]
+        WG[WorkoutGateway<br/>Socket.io · rooms]
     end
 
     subgraph Data
-        PG[(PostgreSQL 16<br/>Cloud SQL)]
+        PG[(PostgreSQL 16<br/>Cloud SQL + pgvector)]
         PR[Prisma ORM<br/>migrations · type-safety]
-        RD[(Redis 7<br/>cache · queues)]
+        RD[(Redis 7<br/>cache · queues · WS sessions)]
     end
 
     subgraph Jobs
@@ -47,7 +52,15 @@ graph TD
         ST[Stripe<br/>Checkout · Webhooks · Portal]
     end
 
+    subgraph AI
+        AG[LangGraph Agent<br/>tool calling · RAG]
+        EMB[EmbeddingIndexer<br/>text-embedding-3-small]
+        LF[Langfuse<br/>agent traces]
+    end
+
     N -->|REST / HTTP-only cookies| NE
+    N <-->|WebSocket| WG
+    WG <-->|session state| RD
     NE --> PR
     PR --> PG
     NE <-->|cache| RD
@@ -56,6 +69,11 @@ graph TD
     BQ <-->|job queue| RD
     NE <-->|subscriptions| ST
     ST -->|webhook events| NE
+    NE --> AG
+    AG -->|similarity search| PG
+    AG --> LF
+    NE --> EMB
+    EMB -->|store vectors| PG
 
     subgraph CICD[CI/CD]
         GH[GitHub] -->|push| CB[Cloud Build]
@@ -65,6 +83,7 @@ graph TD
 
     style N fill:#61dafb,stroke:#333
     style NE fill:#e0234e,color:#fff,stroke:#333
+    style WG fill:#e0234e,color:#fff,stroke:#333
     style PG fill:#336791,color:#fff,stroke:#333
     style PR fill:#2d3748,color:#fff,stroke:#333
     style RD fill:#dc382d,color:#fff,stroke:#333
@@ -72,6 +91,9 @@ graph TD
     style ST fill:#635bff,color:#fff,stroke:#333
     style CB fill:#4285f4,color:#fff,stroke:#333
     style GH fill:#24292e,color:#fff,stroke:#333
+    style AG fill:#10a37f,color:#fff,stroke:#333
+    style EMB fill:#10a37f,color:#fff,stroke:#333
+    style LF fill:#6366f1,color:#fff,stroke:#333
 ```
 
 ---
@@ -92,8 +114,12 @@ graph TD
 | **Auth** | JWT + HTTP-only cookies | XSS-proof token storage, refresh rotation |
 | **Payments** | Stripe | Checkout sessions, webhooks, billing portal |
 | **i18n** | next-intl | PL / EN, locale routing |
-| **AI** | OpenAI GPT-4o-mini | Meal suggestions, retry + exponential backoff |
-| **Monitoring** | Sentry | Performance tracing, error grouping |
+| **AI** | OpenAI GPT-4o-mini / GPT-4o | Meal suggestions, autonomous agent, embeddings |
+| **AI Orchestration** | LangGraph | Stateful agent graph, tool calling, multi-step reasoning |
+| **Observability (AI)** | Langfuse | Agent traces, tool usage, latency per step |
+| **Vector Search** | pgvector | RAG — cosine similarity over 1536-dim embeddings in Postgres |
+| **Real-time** | Socket.io + Redis | Live workout tracking, trainer/client rooms, session snapshots |
+| **Monitoring** | Sentry + OpenTelemetry | Performance tracing, error grouping, Cloud Trace |
 | **API Docs** | Swagger / OpenAPI | Auto-generated from decorators |
 | **Testing** | Jest · Vitest · Playwright | Unit, integration, E2E |
 | **CI/CD** | GitHub Actions + Cloud Build | Lint → test → build → deploy |
@@ -115,6 +141,11 @@ graph TD
 - [x] Responsive UI (MUI)
 - [x] API documentation (Swagger)
 - [x] Subscription billing (Stripe Checkout, webhooks, customer portal, usage limits per tier)
+- [x] RBAC — Trainer/Client roles, invite flow, trainer views client data, admin panel
+- [x] Real-time workout tracking (Socket.io) — client streams sets live, trainer receives snapshot on join; Redis-backed session state with 4h TTL
+- [x] Autonomous AI agent — LangGraph graph with tool calling: `get_user_profile`, `get_training_history`, `update_plan`, `search_exercises`, `log_meal`; Langfuse observability
+- [x] RAG pipeline — workouts, meals and user profile auto-indexed as 1536-dim embeddings (text-embedding-3-small); pgvector cosine similarity retrieval enriches agent context
+- [x] OpenTelemetry tracing + Prometheus metrics — Cloud Trace integration, Redis and BullMQ health checks
 - [x] Docker Compose for local development
 - [ ] Mobile app (React Native — planned)
 
@@ -199,10 +230,16 @@ AppModule
 ├── AuthModule            (JWT strategy, guards, refresh rotation)
 ├── WorkoutsModule        (sessions, exercises)
 ├── NutritionModule       (meals, daily stats)
-├── AiModule              (OpenAI, prompt builder, retry)
+├── AiModule
+│   ├── OpenAiService     (GPT-4o-mini meal suggestions, retry + cache)
+│   ├── AgentModule       (LangGraph agent, tool calling, Langfuse tracing)
+│   └── RagModule         (EmbeddingService, VectorStoreService, EmbeddingIndexerService)
+├── WorkoutGatewayModule  (Socket.io, Redis session state, trainer/client rooms)
+├── TrainerClientModule   (RBAC invite flow, row-level access)
 ├── SubscriptionsModule   (Stripe checkout, portal, webhook handlers)
 ├── StripeModule          (Stripe SDK wrapper, signature verification)
 ├── JobsModule            (BullMQ processors, producers)
+├── HealthModule          (Redis + BullMQ health indicators, Prometheus metrics)
 └── SharedModule          (Prisma, Redis, Logger, Cache, UsageLimitGuard)
 ```
 
@@ -242,6 +279,63 @@ Worker picks up job → queries DB → updates DailyStat
 ```
 
 This pattern decouples the write path from the computation, enables retries on failure, and provides a natural extension point for future jobs (email digests, streak calculations, export generation).
+
+---
+
+### Why LangGraph for the AI agent?
+
+A simple OpenAI tool-calling loop works for single-turn requests but breaks down when the agent needs to make conditional decisions: "Did the user ask about workouts? If yes, call `get_training_history`. Did that return enough data? If not, also call `get_user_profile`." Expressing this as a loop with manual state tracking is fragile.
+
+LangGraph models the agent as a **stateful graph** where each node is a step (LLM call, tool execution) and edges carry typed state. In GymPal:
+
+```
+START → llm_call → [tool_needed?] → tool_executor → llm_call → END
+                         │
+                    [no tool]
+                         │
+                        END
+```
+
+This gives:
+- **Typed state** at each step — no `any[]` accumulation
+- **Conditional routing** — edges decide next node based on LLM output
+- **Easy extension** — adding a new tool is adding a node, not refactoring a loop
+- **Langfuse integration** — traces capture which nodes fired, tool arguments, latency per step
+
+---
+
+### Why RAG over fine-tuning for personalization?
+
+Fine-tuning bakes knowledge into weights — useful for style, not for per-user dynamic data. A user's last 20 workouts change weekly; re-fine-tuning for each update is impractical.
+
+RAG (Retrieval-Augmented Generation) solves this by retrieving the right data at inference time:
+
+```
+User query
+    │
+    ▼
+EmbeddingService → text-embedding-3-small → query vector
+    │
+    ▼
+pgvector cosine similarity → top-5 UserEmbedding records
+    │
+    ▼
+Context injected into LLM system prompt → personalized response
+```
+
+GymPal indexes three source types — `workout_session`, `meal`, `user_profile` — using `EmbeddingIndexerService`. The `UserEmbedding` table stores 1536-dim vectors with an `ivfflat` index for fast approximate nearest-neighbour search. This means the agent always reasons over the user's actual recent data without any retraining.
+
+---
+
+### Why WebSockets for live workout tracking?
+
+Polling every 2s for "did my client log a new set?" wastes 95%+ of requests on empty responses and adds latency. WebSockets give a persistent, bidirectional channel — the server pushes data exactly when something happens.
+
+GymPal's implementation:
+- **Socket.io** over NestJS `@WebSocketGateway` — handles reconnection and fallback automatically
+- **JWT via cookie** — same auth guard as REST, no separate token flow
+- **Redis-backed session state** — `workout:{clientId}` key with 4h TTL persists the current set log; trainers who join mid-session get the full snapshot immediately
+- **30s disconnect timer** — container restarts and brief network drops don't end the session prematurely
 
 ---
 
@@ -298,7 +392,7 @@ Handled webhook events: `checkout.session.completed`, `customer.subscription.upd
 
 ## Database Design
 
-16 tables, fully relational with enforced foreign keys and indexes on all hot query paths.
+18 tables, fully relational with enforced foreign keys and indexes on all hot query paths.
 
 ```
 User ──< Meal
@@ -335,6 +429,8 @@ MealTemplate ──< MealTemplateIngredient ──> Ingredient
 | `PaymentEvent` | stripeEventId, type, payload | Unique on `stripeEventId` — webhook idempotency |
 | `AiRequest` | userId, feature, createdAt | Usage counter, indexed on `(userId, feature, createdAt)` |
 | `Ingredient` | name, servingSize, calories, proteins, carbs, fats | Unique on `(name, servingSize, servingUnit)` |
+| `UserEmbedding` | userId, sourceType, sourceId, embedding (vector 1536), content, metadata | pgvector index (ivfflat cosine), unique on `(userId, sourceType, sourceId)` |
+| `TrainerClient` | trainerId, clientId, status | RBAC linking table — trainer↔client relationship |
 
 ---
 
@@ -416,6 +512,41 @@ POST /billing/portal               # create Stripe Customer Portal session
 POST /stripe/webhook               # Stripe webhook (signature-verified)
 ```
 
+### AI Agent
+
+```http
+POST /ai/agent
+{ "query": "Plan a push day for me next Monday", "language": "en" }
+→ Agent autonomously calls tools (get_user_profile → search_exercises → update_plan)
+→ { "response": "I've created a Push Day workout for Monday...", "toolsUsed": [...] }
+```
+
+The agent is a LangGraph graph with five tools:
+- `get_user_profile` — fetches BMI, goal, activity level
+- `get_training_history` — queries past sessions with date range filter
+- `update_plan` — creates a new workout session with exercises
+- `search_exercises` — queries the Wger exercise catalogue
+- `log_meal` — adds a meal entry with macro breakdown
+
+Before each LLM call the RAG module retrieves the top-5 most relevant embeddings (workouts, meals, profile) and prepends them as context. All agent traces are recorded in Langfuse.
+
+### Real-time Workout Tracking (WebSocket)
+
+```
+Client connects: ws://localhost:4000  (JWT authenticated via cookie)
+→ joins room: workout:{clientId}
+
+client:startWorkout   { workoutId }
+client:logSet         { exerciseId, setIndex, reps, weight }
+client:endWorkout
+
+trainer:watch         { clientId }
+→ receives workout:snapshot (current session state from Redis)
+→ receives workout:setLogged in real-time
+```
+
+Session state is stored in Redis with 4h TTL. Trainers can join mid-session and receive the full snapshot immediately. Disconnect cleanup has a 30s grace period (reconnect cancels it).
+
 ### Exercises (Wger API proxy + favorites)
 
 ```http
@@ -426,19 +557,29 @@ POST /exercises-api/favorites     { "wgerExerciseId": 192, "name": "Bench Press"
 DELETE /exercises-api/favorites/:id
 ```
 
+### RBAC — Trainer / Client
+
+```http
+POST /trainer-client/invite        { "clientEmail": "..." }   # trainer invites client
+POST /trainer-client/accept/:id                               # client accepts invite
+GET  /trainer-client/clients                                  # trainer lists their clients
+GET  /trainer-client/trainer                                  # client sees their trainer
+
+# Trainer views client data by appending ?clientId=<id> to any endpoint:
+GET  /workouts?clientId=42
+GET  /meals?clientId=42&date=2026-04-05
+GET  /nutrition/daily-stats?clientId=42&date=2026-04-05
+```
+
 Full interactive docs: **http://localhost:4000/api/docs** (Swagger)
 
 ---
 
 ## Roadmap
 
-### In progress
-- [ ] RBAC — Trainer/Client roles with row-level access control
-- [ ] Ingredient database with macro lookup (USDA-sourced, seeded)
-
 ### Planned
-- [ ] Real-time workout sessions (WebSockets)
-- [ ] AI workout planner (weekly plans based on goals, equipment, level)
+- [ ] Ingredient database with macro lookup (USDA-sourced, seeded)
+- [ ] AI workout planner — weekly plan generation based on goals, equipment and history
 - [ ] Mobile app (React Native / Expo)
 - [ ] Weekly email digest (BullMQ scheduled job + Resend)
 - [ ] Streak tracking and habit goals
@@ -468,6 +609,10 @@ GymPal/
 │   │   │   ├── workouts/     # Sessions, exercises
 │   │   │   ├── nutrition/    # Meals, daily stats
 │   │   │   ├── ai/           # OpenAI, prompt builder, retry
+│   │   │   │   ├── agent/    # LangGraph agent, tool calling, Langfuse
+│   │   │   │   └── rag/      # Embeddings, vector store, indexer
+│   │   │   ├── workout-gateway/ # Socket.io gateway, Redis session
+│   │   │   ├── trainer-client/  # RBAC invite flow, row-level access
 │   │   │   ├── stripe/       # Stripe SDK wrapper, webhook signature
 │   │   │   ├── subscriptions/ # Checkout, portal, webhook handlers
 │   │   │   └── jobs/         # BullMQ processors & producers
@@ -581,6 +726,11 @@ FRONTEND_URL=http://localhost:3001
 # Optional
 OPENAI_API_KEY=sk-...
 SENTRY_DSN=
+
+# AI Agent / RAG
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
 ```
 
 ---
