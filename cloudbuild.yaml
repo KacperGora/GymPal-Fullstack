@@ -28,6 +28,8 @@ steps:
         'frontend/Dockerfile',
         '--build-arg',
         'BACKEND_URL=https://gympal-backend-hjz4j5fyoq-ey.a.run.app',
+        '--build-arg',
+        'NEXT_PUBLIC_API_URL=https://gympal-backend-hjz4j5fyoq-ey.a.run.app',
         '.',
       ]
 

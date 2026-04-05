@@ -42,6 +42,8 @@ COPY frontend ./frontend
 WORKDIR /app/frontend
 ARG BACKEND_URL=http://localhost:4000
 ENV BACKEND_URL=$BACKEND_URL
+ARG NEXT_PUBLIC_API_URL=http://localhost:4000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN npm run build
 
 # Stage 4: Production
