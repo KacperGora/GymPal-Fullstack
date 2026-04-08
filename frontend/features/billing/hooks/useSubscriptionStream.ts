@@ -1,6 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
+import { api } from '@/shared/api/axios';
+import { endpointList } from '@/shared/api/endpoint';
+
 interface SubscriptionStreamState {
   isPending: boolean;
   timedOut: boolean;
@@ -47,11 +50,27 @@ export const useSubscriptionStream = (
 
       if (data.status === 'timeout') {
         setStatus('timedOut');
+        // Even on timeout the subscription may be active in DB — refresh JWT to pick it up
+        void api
+          .post(endpointList.auth.refresh)
+          .catch(() => null)
+          .finally(() => {
+            void queryClient.invalidateQueries({
+              queryKey: ['subscription', 'me'],
+            });
+          });
       } else {
         setStatus('activated');
-        void queryClient.invalidateQueries({
-          queryKey: ['subscription', 'me'],
-        });
+        // Refresh JWT so new subscriptionStatus is embedded in the token,
+        // then invalidate subscription query to update the UI.
+        void api
+          .post(endpointList.auth.refresh)
+          .catch(() => null)
+          .finally(() => {
+            void queryClient.invalidateQueries({
+              queryKey: ['subscription', 'me'],
+            });
+          });
       }
       es.close();
     };

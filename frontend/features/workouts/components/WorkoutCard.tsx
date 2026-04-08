@@ -38,7 +38,7 @@ export const WorkoutCard = ({
   const t = useTranslations('workouts');
 
   return (
-    <Card sx={glassCardSx}>
+    <Card sx={{ ...glassCardSx, position: 'relative' }}>
       <CardActionArea onClick={onClick}>
         <CardContent>
           <Box
@@ -57,17 +57,7 @@ export const WorkoutCard = ({
                 {formatDate(workout.date)}
               </Typography>
             </Box>
-            <Box
-              sx={{ display: 'flex', gap: 0.5 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <IconButton size="small" onClick={onEdit}>
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton size="small" color="error" onClick={onDelete}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            </Box>
+            <Box sx={{ width: 80 }} />
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2 }}>
@@ -105,6 +95,23 @@ export const WorkoutCard = ({
           )}
         </CardContent>
       </CardActionArea>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          display: 'flex',
+          gap: 0.5,
+          zIndex: 1,
+        }}
+      >
+        <IconButton size="small" onClick={onEdit}>
+          <EditIcon fontSize="small" />
+        </IconButton>
+        <IconButton size="small" color="error" onClick={onDelete}>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
     </Card>
   );
 };

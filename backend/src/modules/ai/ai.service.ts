@@ -3,6 +3,7 @@ import type {
   MealSuggestionRequest,
   MealSuggestionsResponse,
   MealSuggestionItem,
+  MealCategory,
 } from '@gympal/shared';
 import { mealSuggestionsResponseSchema } from '@gympal/shared';
 
@@ -12,13 +13,25 @@ import { PromptBuilderV2Service } from './prompt-builder-v2.service';
 import { TemplateService } from './template.service';
 import { AiRetryService } from './ai-retry.service';
 import { CacheService } from '../../shared/services/cache.service';
-import { MacroCalculatorService } from '../../shared/services/macro-calculator.service';
 import { MealValidatorService } from '../../shared/services/meal-validator.service';
 
 interface AiSelectionResponse {
   templateIndices: number[];
   scalingFactors: number[];
   reasoning?: string;
+}
+
+interface DirectSuggestionItem {
+  name: string;
+  calories: number;
+  proteins: number;
+  carbs: number;
+  fats: number;
+  reasoning?: string;
+}
+
+interface DirectSuggestionsResponse {
+  suggestions: DirectSuggestionItem[];
 }
 
 @Injectable()
@@ -28,7 +41,6 @@ export class AiService {
   constructor(
     private nutrition: NutritionService,
     private templates: TemplateService,
-    private macros: MacroCalculatorService,
     private validator: MealValidatorService,
     private openai: OpenAiService,
     private promptBuilder: PromptBuilderV2Service,
@@ -41,6 +53,7 @@ export class AiService {
     dto: MealSuggestionRequest,
   ): Promise<MealSuggestionsResponse> {
     const language = dto.language || 'en';
+    const count = dto.count ?? 3;
 
     // 1. Get TDEE
     const tdee = await this.nutrition.getTDEE(userId);
@@ -66,7 +79,7 @@ export class AiService {
 
     this.logger.debug(`Remaining: ${remaining.calories} kcal`);
 
-    // 3. Get templates matching category + remaining calories
+    // 3. Get templates
     const cachedTemplates = await this.cache.getTemplates(
       language,
       dto.category,
@@ -83,7 +96,6 @@ export class AiService {
         remaining.calories,
         language,
       );
-
       await this.cache.setTemplates(
         language,
         dto.category,
@@ -93,19 +105,32 @@ export class AiService {
     }
 
     if (templateList.length === 0) {
-      this.logger.warn(
-        `No templates found for category=${dto.category}, calories=${remaining.calories}`,
-      );
       templateList = await this.templates.getPopularTemplates(dto.category, 5);
     }
 
-    // 4. Build minimal prompt
+    // 4. If not enough unique templates, generate directly with AI
+    if (templateList.length < count) {
+      this.logger.debug(
+        `Only ${templateList.length} templates available for ${dto.category}, using direct AI generation`,
+      );
+      return this.generateDirectly(
+        userId,
+        dto.category,
+        count,
+        language,
+        tdee.targetCalories,
+        consumed,
+        remaining,
+      );
+    }
+
+    // 5. Template-based flow: build prompt
     const promptContext = {
       category: dto.category,
       targetCalories: tdee.targetCalories,
       remaining,
       language,
-      count: dto.count ?? 3,
+      count,
       templates: templateList,
     };
 
@@ -115,55 +140,77 @@ export class AiService {
       `Prompt built: ~${metadata.tokenEstimate} tokens, ${metadata.templateCount} templates`,
     );
 
-    // 5. Get cache key
     const cacheKey = this.promptBuilder.buildCacheKey(promptContext);
 
-    // 6. Call OpenAI with retry
     const aiResponse = await this.retry.executeWithRetry(
       () =>
         this.openai.chat(system, user, {
           cacheKey,
-          temperature: 0.2,
+          temperature: 0.7,
           model: 'gpt-4o-mini',
         }),
       (response) => this.validateAiResponse(response, templateList.length),
       { maxRetries: 3, backoffMs: 100 },
     );
 
-    // 7. Parse AI response
     const aiSelection = JSON.parse(aiResponse) as AiSelectionResponse;
+
+    // Deduplicate indices
+    const seenIndices = new Set<number>();
+    const deduplicatedPairs: Array<{ index: number; factor: number }> = [];
+    for (let i = 0; i < aiSelection.templateIndices.length; i++) {
+      const index = aiSelection.templateIndices[i];
+      if (!seenIndices.has(index)) {
+        seenIndices.add(index);
+        deduplicatedPairs.push({
+          index,
+          factor: aiSelection.scalingFactors[i],
+        });
+      }
+    }
+    if (deduplicatedPairs.length < count) {
+      for (
+        let i = 0;
+        i < templateList.length && deduplicatedPairs.length < count;
+        i++
+      ) {
+        if (!seenIndices.has(i)) {
+          seenIndices.add(i);
+          deduplicatedPairs.push({ index: i, factor: 1.0 });
+        }
+      }
+    }
+
     this.logger.debug(
-      `AI selected templates: ${aiSelection.templateIndices.join(', ')}`,
+      `AI selected templates: ${deduplicatedPairs.map((p) => p.index).join(', ')}`,
     );
 
-    // 8. Scale templates & calculate macros
-    const meals: MealSuggestionItem[] = [];
-    for (let i = 0; i < aiSelection.templateIndices.length; i++) {
-      const templateIndex = aiSelection.templateIndices[i];
-      const scaleFactor = aiSelection.scalingFactors[i];
+    type TranslationEntry = { name?: string; steps?: string[] };
+    type TranslationsMap = Record<string, TranslationEntry>;
 
+    const meals: MealSuggestionItem[] = [];
+    for (const {
+      index: templateIndex,
+      factor: scaleFactor,
+    } of deduplicatedPairs) {
       const template = templateList[templateIndex];
       const scaledMacros = await this.templates.getTemplateWithScaledMacros(
         template.id,
         scaleFactor,
       );
 
-      // Get template name (with translation if available)
       let mealName = template.name;
       if (template.translations && language !== 'en') {
-        const translations = template.translations as Record<string, any>;
-        if (translations[language]?.name) {
-          mealName = translations[language].name;
-        }
+        const translations = template.translations as TranslationsMap;
+        const translationName = translations[language]?.name;
+        if (translationName) mealName = translationName;
       }
 
-      // Get steps (with translation if available)
-      let steps: string[] | undefined = undefined;
+      let steps: string[] | undefined;
       if (template.translations && language !== 'en') {
-        const translations = template.translations as Record<string, any>;
-        if (translations[language]?.steps) {
-          steps = translations[language].steps;
-        }
+        const translations = template.translations as TranslationsMap;
+        const translationSteps = translations[language]?.steps;
+        if (translationSteps) steps = translationSteps;
       }
 
       meals.push({
@@ -181,32 +228,164 @@ export class AiService {
       });
     }
 
-    // 9. Validate all meals
+    return this.buildResponse(meals, tdee.targetCalories, consumed, remaining);
+  }
+
+  private async generateDirectly(
+    _userId: number,
+    category: MealCategory,
+    count: number,
+    language: string,
+    targetCalories: number,
+    consumed: {
+      calories: number;
+      proteins: number;
+      carbs: number;
+      fats: number;
+    },
+    remaining: {
+      calories: number;
+      proteins: number;
+      carbs: number;
+      fats: number;
+    },
+  ): Promise<MealSuggestionsResponse> {
+    const mealCalTarget = this.getMealCalorieTarget(
+      category,
+      remaining.calories,
+    );
+
+    const systemPrompt =
+      language === 'pl'
+        ? `Jesteś dietetykiem. Generuj realistyczne propozycje posiłków z dokładnymi makrami. Odpowiedz TYLKO w JSON.
+Format: {"suggestions":[{"name":"...","calories":<int>,"proteins":<float>,"carbs":<float>,"fats":<float>,"reasoning":"..."}]}`
+        : `You are a nutritionist. Generate realistic meal suggestions with accurate macros. Respond ONLY in JSON.
+Format: {"suggestions":[{"name":"...","calories":<int>,"proteins":<float>,"carbs":<float>,"fats":<float>,"reasoning":"..."}]}`;
+
+    const userPrompt =
+      language === 'pl'
+        ? `Zaproponuj ${count} RÓŻNYCH posiłków na ${category.toLowerCase()} (${count} różne nazwy!).
+Cel dzienny: ${targetCalories} kcal | Spożyte: ${consumed.calories} kcal | Pozostało: ${remaining.calories} kcal
+Cel na posiłek: ~${mealCalTarget} kcal
+Makra pozostałe: białko ${remaining.proteins.toFixed(0)}g, węgle ${remaining.carbs.toFixed(0)}g, tłuszcze ${remaining.fats.toFixed(0)}g`
+        : `Suggest ${count} DIFFERENT meals for ${category.toLowerCase()} (${count} different names!).
+Daily target: ${targetCalories} kcal | Consumed: ${consumed.calories} kcal | Remaining: ${remaining.calories} kcal
+Per-meal target: ~${mealCalTarget} kcal
+Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.carbs.toFixed(0)}g, fats ${remaining.fats.toFixed(0)}g`;
+
+    const cacheKey = `ai:direct:${language}:${category}:${Math.round(remaining.calories / 100) * 100}`;
+
+    const aiResponse = await this.retry.executeWithRetry(
+      () =>
+        this.openai.chat(systemPrompt, userPrompt, {
+          cacheKey,
+          temperature: 0.9,
+          model: 'gpt-4o-mini',
+        }),
+      (response) => this.validateDirectResponse(response, count),
+      { maxRetries: 3, backoffMs: 100 },
+    );
+
+    const parsed = JSON.parse(aiResponse) as DirectSuggestionsResponse;
+
+    const meals: MealSuggestionItem[] = parsed.suggestions
+      .slice(0, count)
+      .map((s) => {
+        const proteins = Math.round(s.proteins * 10) / 10;
+        const carbs = Math.round(s.carbs * 10) / 10;
+        const fats = Math.round(s.fats * 10) / 10;
+        // Recalculate calories from macros to ensure integrity (AI often mismatches)
+        const calories = Math.round(proteins * 4 + carbs * 4 + fats * 9);
+        return {
+          name: s.name,
+          calories,
+          proteins,
+          carbs,
+          fats,
+          ingredients: [],
+          reasoning: s.reasoning,
+        };
+      });
+
+    return this.buildResponse(meals, targetCalories, consumed, remaining);
+  }
+
+  private buildResponse(
+    meals: MealSuggestionItem[],
+    targetCalories: number,
+    consumed: {
+      calories: number;
+      proteins: number;
+      carbs: number;
+      fats: number;
+    },
+    remaining: {
+      calories: number;
+      proteins: number;
+      carbs: number;
+      fats: number;
+    },
+  ): MealSuggestionsResponse {
     for (const meal of meals) {
       const validation = this.validator.validate(meal);
       if (!validation.isValid) {
-        const errorMessages = validation.errors
-          .map((e) => e.message)
-          .join(', ');
-        this.logger.error(
-          `Meal validation failed for "${meal.name}": ${errorMessages}`,
-        );
-        throw new Error(`Validation failed: ${errorMessages}`);
+        const msgs = validation.errors.map((e) => e.message).join(', ');
+        this.logger.error(`Meal validation failed for "${meal.name}": ${msgs}`);
+        throw new Error(`Validation failed: ${msgs}`);
       }
     }
 
-    // 10. Add context & return
     const response: MealSuggestionsResponse = {
       suggestions: meals,
-      context: {
-        targetCalories: tdee.targetCalories,
-        consumed,
-        remaining,
-      },
+      context: { targetCalories, consumed, remaining },
     };
+    return mealSuggestionsResponseSchema.parse(response);
+  }
 
-    const validated = mealSuggestionsResponseSchema.parse(response);
-    return validated;
+  private getMealCalorieTarget(
+    category: MealCategory,
+    remainingCalories: number,
+  ): number {
+    const defaults: Record<MealCategory, number> = {
+      BREAKFAST: 450,
+      LUNCH: 600,
+      DINNER: 650,
+      SNACK: 250,
+    };
+    const target =
+      remainingCalories > 0 ? remainingCalories / 3 : defaults[category];
+    return Math.round(target);
+  }
+
+  private validateDirectResponse(
+    response: string,
+    expectedCount: number,
+  ): boolean {
+    try {
+      const parsed = JSON.parse(response) as DirectSuggestionsResponse;
+      if (
+        !Array.isArray(parsed.suggestions) ||
+        parsed.suggestions.length < expectedCount
+      ) {
+        this.logger.warn(
+          `Direct response has ${parsed.suggestions?.length ?? 0} suggestions, expected ${expectedCount}`,
+        );
+        return false;
+      }
+      for (const s of parsed.suggestions) {
+        if (
+          !s.name ||
+          typeof s.calories !== 'number' ||
+          typeof s.proteins !== 'number'
+        ) {
+          this.logger.warn('Direct response has malformed suggestion');
+          return false;
+        }
+      }
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private validateAiResponse(response: string, maxIndex: number): boolean {

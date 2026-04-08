@@ -77,9 +77,10 @@ You must respond in valid JSON format.
 
 Rules:
 1. Select exactly 3 templates from the provided list
-2. Return ONLY template indices (0-based) and scaling factors (0.7-1.3)
-3. DO NOT generate macros - backend will calculate them
-4. Response format (JSON): {"templateIndices": [0,1,2], "scalingFactors": [1.0, 0.95, 1.05]}`,
+2. Each selected index MUST be unique — never repeat the same index
+3. Return ONLY template indices (0-based) and scaling factors (0.7-1.3)
+4. DO NOT generate macros - backend will calculate them
+5. Response format (JSON): {"templateIndices": [0,2,4], "scalingFactors": [1.0, 0.95, 1.05]}`,
 
       pl: `Jesteś asystentem wyboru posiłków. Twoim JEDYNYM zadaniem jest wybranie indeksów szablonów i współczynników skalowania.
 
@@ -87,9 +88,10 @@ Musisz odpowiedzieć w prawidłowym formacie JSON.
 
 Zasady:
 1. Wybierz dokładnie 3 szablony z dostarczonej listy
-2. Zwróć TYLKO indeksy szablonów (0-based) i współczynniki skalowania (0.7-1.3)
-3. NIE generuj makr - backend je obliczy
-4. Format odpowiedzi (JSON): {"templateIndices": [0,1,2], "scalingFactors": [1.0, 0.95, 1.05]}`,
+2. Każdy wybrany indeks MUSI być unikalny — nigdy nie powtarzaj tego samego indeksu
+3. Zwróć TYLKO indeksy szablonów (0-based) i współczynniki skalowania (0.7-1.3)
+4. NIE generuj makr - backend je obliczy
+5. Format odpowiedzi (JSON): {"templateIndices": [0,2,4], "scalingFactors": [1.0, 0.95, 1.05]}`,
     };
 
     return prompts[language] ?? prompts.en;
