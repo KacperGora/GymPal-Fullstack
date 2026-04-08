@@ -30,8 +30,9 @@ const traceExporter = useCloudTrace
 const sdk = new NodeSDK({
   resource: new Resource({
     [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
-  }),
-  traceExporter,
+  }) as any,
+
+  traceExporter: traceExporter as any,
   instrumentations: [
     getNodeAutoInstrumentations({
       // fs instrumentation generates thousands of spans for every file read — useless noise

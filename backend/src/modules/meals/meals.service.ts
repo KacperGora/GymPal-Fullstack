@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../shared/db/prisma.service';
 import { NutritionStatsProducer } from '../jobs/nutrition-stats.producer';
@@ -6,6 +6,8 @@ import { CreateMealDto, UpdateMealDto } from '@gympal/shared';
 
 @Injectable()
 export class MealsService {
+  private readonly logger = new Logger(MealsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly statsProducer: NutritionStatsProducer,
@@ -20,10 +22,16 @@ export class MealsService {
     const meal = await this.prisma.meal.create({
       data: { ...dto, userId },
     });
-    await this.statsProducer.scheduleRecalculation(
-      userId,
-      this.toDateString(meal.date),
-    );
+    try {
+      await this.statsProducer.scheduleRecalculation(
+        userId,
+        this.toDateString(meal.date),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to schedule stats recalculation for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     this.eventEmitter.emit('meal.created', { userId, mealId: meal.id });
     return meal;
   }
@@ -71,10 +79,16 @@ export class MealsService {
         data: dto,
       });
     });
-    await this.statsProducer.scheduleRecalculation(
-      userId,
-      this.toDateString(updated.date),
-    );
+    try {
+      await this.statsProducer.scheduleRecalculation(
+        userId,
+        this.toDateString(updated.date),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to schedule stats recalculation for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     return updated;
   }
 
@@ -84,10 +98,16 @@ export class MealsService {
       throw new NotFoundException('Meal not found or not owned by user');
     }
     await this.prisma.meal.delete({ where: { id } });
-    await this.statsProducer.scheduleRecalculation(
-      userId,
-      this.toDateString(meal.date),
-    );
+    try {
+      await this.statsProducer.scheduleRecalculation(
+        userId,
+        this.toDateString(meal.date),
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to schedule stats recalculation for user ${userId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
     return { id };
   }
 

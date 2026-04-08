@@ -66,33 +66,60 @@ export class SubscriptionsController {
     return new Observable<MessageEvent>((observer) => {
       const channel = `subscription:activated:${userId}`;
       const subscriber = this.redisService.createSubscriber();
+      let done = false;
 
-      // Fix #3: await subscribe i obsłuż błąd Redis zamiast zostawiać unhandled rejection
+      const cleanup = () => {
+        if (done) return;
+        done = true;
+        void subscriber.quit();
+      };
+
+      const sendActivated = () => {
+        observer.next({ data: { status: 'activated' } } as MessageEvent);
+        observer.complete();
+        cleanup();
+      };
+
+      // Check DB first — webhook may have been processed before SSE connected
+      void this.subscriptionsService
+        .getSubscription(userId)
+        .then((sub) => {
+          if (done) return;
+          if (sub?.status === 'ACTIVE' || sub?.status === 'TRIALING') {
+            clearTimeout(timeout);
+            sendActivated();
+          }
+        })
+        .catch((err: unknown) => {
+          this.logger.warn(
+            `SSE pre-check failed for userId=${userId}: ${String(err)}`,
+          );
+        });
+
       subscriber.subscribe(channel).catch((err: unknown) => {
+        if (done) return;
         this.logger.error(
           `Redis subscribe failed for userId=${userId}: ${String(err)}`,
         );
+        clearTimeout(timeout);
+        cleanup();
         observer.error(err);
-        void subscriber.quit();
       });
 
       subscriber.on('message', () => {
-        observer.next({ data: { status: 'activated' } } as MessageEvent);
-        observer.complete();
-        void subscriber.quit();
+        clearTimeout(timeout);
+        sendActivated();
       });
 
       const timeout = setTimeout(() => {
-        // Fix #4: wyślij jawny event timeout — klient nie może odróżnić
-        // normalnego zamknięcia od błędu sieciowego bez tego sygnału
         observer.next({ data: { status: 'timeout' } } as MessageEvent);
         observer.complete();
-        void subscriber.quit();
+        cleanup();
       }, SSE_TIMEOUT_MS);
 
       return () => {
         clearTimeout(timeout);
-        void subscriber.quit();
+        cleanup();
       };
     });
   }

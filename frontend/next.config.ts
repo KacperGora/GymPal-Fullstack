@@ -22,8 +22,12 @@ const nextConfig: NextConfig = {
   headers: async () => {
     const isDev = process.env.NODE_ENV !== 'production';
     const backendUrl = process.env.BACKEND_URL ?? 'http://localhost:4000';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
     const isLocalBackend =
-      backendUrl.includes('localhost') || backendUrl.includes('127.0.0.1');
+      backendUrl.includes('localhost') ||
+      backendUrl.includes('127.0.0.1') ||
+      apiUrl.includes('localhost') ||
+      apiUrl.includes('127.0.0.1');
     const localWs = isLocalBackend ? 'ws://localhost:* ws://127.0.0.1:* ' : '';
 
     // Looser CSP for development to allow HMR and debug tools

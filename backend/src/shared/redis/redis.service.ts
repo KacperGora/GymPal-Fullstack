@@ -16,6 +16,10 @@ export class RedisService implements OnModuleDestroy {
       this.logger.error(`Redis error: ${err.message}`);
     });
 
+    this.client.on('close', () => {
+      this.logger.warn('Redis connection closed');
+    });
+
     this.client.on('connect', () => {
       this.logger.log(`Redis connected at ${host}:${port}`);
     });
@@ -77,11 +81,12 @@ export class RedisService implements OnModuleDestroy {
   }
 
   createSubscriber(): Redis {
-    // Fix #6: duplicate() dziedziczy konfigurację (host/port/options) i event handlery
-    // zamiast tworzyć niezależne połączenie per request SSE
     const subscriber = this.client.duplicate();
     subscriber.on('error', (err) => {
       this.logger.error(`Redis subscriber error: ${err.message}`);
+    });
+    subscriber.on('close', () => {
+      this.logger.debug('Redis subscriber connection closed');
     });
     return subscriber;
   }
