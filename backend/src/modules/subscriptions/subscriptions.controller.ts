@@ -97,11 +97,13 @@ export class SubscriptionsController {
         });
 
       subscriber.subscribe(channel).catch((err: unknown) => {
+        if (done) return;
         this.logger.error(
           `Redis subscribe failed for userId=${userId}: ${String(err)}`,
         );
-        observer.error(err);
+        clearTimeout(timeout);
         cleanup();
+        observer.error(err);
       });
 
       subscriber.on('message', () => {

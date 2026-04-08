@@ -253,6 +253,7 @@ export class AiService {
     const mealCalTarget = this.getMealCalorieTarget(
       category,
       remaining.calories,
+      count,
     );
 
     const systemPrompt =
@@ -273,7 +274,7 @@ Daily target: ${targetCalories} kcal | Consumed: ${consumed.calories} kcal | Rem
 Per-meal target: ~${mealCalTarget} kcal
 Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.carbs.toFixed(0)}g, fats ${remaining.fats.toFixed(0)}g`;
 
-    const cacheKey = `ai:direct:${language}:${category}:${Math.round(remaining.calories / 100) * 100}`;
+    const cacheKey = `ai:direct:${language}:${category}:${count}:${Math.round(remaining.calories / 100) * 100}`;
 
     const aiResponse = await this.retry.executeWithRetry(
       () =>
@@ -345,6 +346,7 @@ Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.c
   private getMealCalorieTarget(
     category: MealCategory,
     remainingCalories: number,
+    count: number,
   ): number {
     const defaults: Record<MealCategory, number> = {
       BREAKFAST: 450,
@@ -352,8 +354,9 @@ Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.c
       DINNER: 650,
       SNACK: 250,
     };
+    const divisor = count > 0 ? count : 1;
     const target =
-      remainingCalories > 0 ? remainingCalories / 3 : defaults[category];
+      remainingCalories > 0 ? remainingCalories / divisor : defaults[category];
     return Math.round(target);
   }
 
@@ -376,7 +379,12 @@ Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.c
         if (
           !s.name ||
           typeof s.calories !== 'number' ||
-          typeof s.proteins !== 'number'
+          typeof s.proteins !== 'number' ||
+          typeof s.carbs !== 'number' ||
+          typeof s.fats !== 'number' ||
+          s.proteins < 0 ||
+          s.carbs < 0 ||
+          s.fats < 0
         ) {
           this.logger.warn('Direct response has malformed suggestion');
           return false;
