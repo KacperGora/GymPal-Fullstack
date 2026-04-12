@@ -294,6 +294,15 @@ export class AiService {
     const availableIngredients =
       await this.ingredientLookup.getNamesByCategories(allowedCategories);
 
+    if (availableIngredients.length === 0) {
+      this.logger.error(
+        `No seeded ingredients found for category ${category}. Run: npm run seed:ingredients`,
+      );
+      throw new Error(
+        'Ingredient database is empty. Run "npm run seed:ingredients" before using AI suggestions.',
+      );
+    }
+
     const ingredientList = availableIngredients.join(', ');
 
     const systemPrompt =
@@ -339,21 +348,8 @@ Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.c
 
         if (looked.coverage < 0.5) {
           this.logger.warn(
-            `Low ingredient coverage (${Math.round(looked.coverage * 100)}%) for "${s.name}" — falling back to AI macros`,
+            `Low ingredient coverage (${Math.round(looked.coverage * 100)}%) for "${s.name}" — using partial DB macros`,
           );
-          const proteins = Math.round(s.proteins * 10) / 10;
-          const carbs = Math.round(s.carbs * 10) / 10;
-          const fats = Math.round(s.fats * 10) / 10;
-          return {
-            name: s.name,
-            calories: Math.round(proteins * 4 + carbs * 4 + fats * 9),
-            proteins,
-            carbs,
-            fats,
-            ingredients,
-            steps: Array.isArray(s.steps) ? s.steps : [],
-            reasoning: s.reasoning,
-          };
         }
 
         return {
