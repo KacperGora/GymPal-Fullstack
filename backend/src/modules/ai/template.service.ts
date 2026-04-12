@@ -111,6 +111,26 @@ export class TemplateService {
     );
   }
 
+  scaleLoadedTemplate(
+    template: MealTemplate,
+    scaleFactor: number,
+  ): MacroCalcResult {
+    return this.macroCalculator.scaleTemplate(
+      {
+        totalCalories: template.totalCalories,
+        totalProteins: template.totalProteins,
+        totalCarbs: template.totalCarbs,
+        totalFats: template.totalFats,
+        ingredients: template.ingredients.map((ing) => ({
+          name: ing.name,
+          grams: ing.grams,
+          scaleable: ing.scaleable,
+        })),
+      },
+      scaleFactor,
+    );
+  }
+
   async getTemplateWithScaledMacros(
     templateId: string,
     scaleFactor: number,

@@ -6,6 +6,7 @@ import type {
   MealCategory,
 } from '@gympal/shared';
 import { mealSuggestionsResponseSchema } from '@gympal/shared';
+import { IngredientCategory } from '../../generated/prisma/client';
 
 import { NutritionService } from '../nutrition/nutrition.service';
 import { OpenAiService } from './openai.service';
@@ -13,6 +14,7 @@ import { PromptBuilderV2Service } from './prompt-builder-v2.service';
 import { TemplateService } from './template.service';
 import { AiRetryService } from './ai-retry.service';
 import { CacheService } from '../../shared/services/cache.service';
+import { IngredientLookupService } from '../../shared/services/ingredient-lookup.service';
 import { MealValidatorService } from '../../shared/services/meal-validator.service';
 
 interface AiSelectionResponse {
@@ -27,6 +29,8 @@ interface DirectSuggestionItem {
   proteins: number;
   carbs: number;
   fats: number;
+  ingredients: { name: string; grams: number }[];
+  steps: string[];
   reasoning?: string;
 }
 
@@ -46,6 +50,7 @@ export class AiService {
     private promptBuilder: PromptBuilderV2Service,
     private retry: AiRetryService,
     private cache: CacheService,
+    private ingredientLookup: IngredientLookupService,
   ) {}
 
   async generateMealSuggestions(
@@ -55,13 +60,13 @@ export class AiService {
     const language = dto.language || 'en';
     const count = dto.count ?? 3;
 
-    // 1. Get TDEE
-    const tdee = await this.nutrition.getTDEE(userId);
-    this.logger.debug(`TDEE calculated: ${tdee.targetCalories} kcal`);
-
-    // 2. Get daily stats
+    // 1. Get TDEE and daily stats in parallel
     const date = dto.date ? new Date(dto.date) : new Date();
-    const dailyStats = await this.nutrition.calculateDailyStats(userId, date);
+    const [tdee, dailyStats] = await Promise.all([
+      this.nutrition.getTDEE(userId),
+      this.nutrition.calculateDailyStats(userId, date),
+    ]);
+    this.logger.debug(`TDEE calculated: ${tdee.targetCalories} kcal`);
 
     const consumed = {
       calories: dailyStats.calories ?? 0,
@@ -188,48 +193,77 @@ export class AiService {
     type TranslationEntry = { name?: string; steps?: string[] };
     type TranslationsMap = Record<string, TranslationEntry>;
 
-    const meals: MealSuggestionItem[] = [];
-    for (const {
-      index: templateIndex,
-      factor: scaleFactor,
-    } of deduplicatedPairs) {
-      const template = templateList[templateIndex];
-      const scaledMacros = await this.templates.getTemplateWithScaledMacros(
-        template.id,
-        scaleFactor,
-      );
+    const meals: MealSuggestionItem[] = deduplicatedPairs.map(
+      ({ index: templateIndex, factor: scaleFactor }) => {
+        const template = templateList[templateIndex];
+        const scaledMacros = this.templates.scaleLoadedTemplate(
+          template,
+          scaleFactor,
+        );
 
-      let mealName = template.name;
-      if (template.translations && language !== 'en') {
-        const translations = template.translations as TranslationsMap;
-        const translationName = translations[language]?.name;
-        if (translationName) mealName = translationName;
-      }
+        let mealName = template.name;
+        let steps: string[] | undefined;
+        if (template.translations && language !== 'en') {
+          const translations = template.translations as TranslationsMap;
+          const translationName = translations[language]?.name;
+          if (translationName) mealName = translationName;
+          const translationSteps = translations[language]?.steps;
+          if (translationSteps) steps = translationSteps;
+        }
 
-      let steps: string[] | undefined;
-      if (template.translations && language !== 'en') {
-        const translations = template.translations as TranslationsMap;
-        const translationSteps = translations[language]?.steps;
-        if (translationSteps) steps = translationSteps;
-      }
-
-      meals.push({
-        name: mealName,
-        calories: scaledMacros.calories,
-        proteins: scaledMacros.proteins,
-        carbs: scaledMacros.carbs,
-        fats: scaledMacros.fats,
-        ingredients: scaledMacros.ingredients.map((ing) => ({
-          name: ing.name,
-          grams: ing.grams,
-        })),
-        steps,
-        reasoning: aiSelection.reasoning,
-      });
-    }
+        return {
+          name: mealName,
+          calories: scaledMacros.calories,
+          proteins: scaledMacros.proteins,
+          carbs: scaledMacros.carbs,
+          fats: scaledMacros.fats,
+          ingredients: scaledMacros.ingredients.map((ing) => ({
+            name: ing.name,
+            grams: ing.grams,
+          })),
+          steps,
+          reasoning: aiSelection.reasoning,
+        };
+      },
+    );
 
     return this.buildResponse(meals, tdee.targetCalories, consumed, remaining);
   }
+
+  private static readonly CATEGORY_INGREDIENT_MAP: Record<
+    MealCategory,
+    IngredientCategory[]
+  > = {
+    BREAKFAST: [
+      IngredientCategory.GRAINS,
+      IngredientCategory.DAIRY,
+      IngredientCategory.FRUITS,
+      IngredientCategory.NUTS_SEEDS,
+      IngredientCategory.PROTEIN,
+    ],
+    LUNCH: [
+      IngredientCategory.PROTEIN,
+      IngredientCategory.GRAINS,
+      IngredientCategory.VEGETABLES,
+      IngredientCategory.LEGUMES,
+      IngredientCategory.FATS_OILS,
+      IngredientCategory.DAIRY,
+    ],
+    DINNER: [
+      IngredientCategory.PROTEIN,
+      IngredientCategory.GRAINS,
+      IngredientCategory.VEGETABLES,
+      IngredientCategory.LEGUMES,
+      IngredientCategory.FATS_OILS,
+      IngredientCategory.DAIRY,
+    ],
+    SNACK: [
+      IngredientCategory.FRUITS,
+      IngredientCategory.NUTS_SEEDS,
+      IngredientCategory.DAIRY,
+      IngredientCategory.CONDIMENTS,
+    ],
+  };
 
   private async generateDirectly(
     _userId: number,
@@ -256,12 +290,29 @@ export class AiService {
       count,
     );
 
+    const allowedCategories = AiService.CATEGORY_INGREDIENT_MAP[category];
+    const availableIngredients =
+      await this.ingredientLookup.getNamesByCategories(allowedCategories);
+
+    if (availableIngredients.length === 0) {
+      this.logger.error(
+        `No seeded ingredients found for category ${category}. Run: npm run seed:ingredients`,
+      );
+      throw new Error(
+        'Ingredient database is empty. Run "npm run seed:ingredients" before using AI suggestions.',
+      );
+    }
+
+    const ingredientList = availableIngredients.join(', ');
+
     const systemPrompt =
       language === 'pl'
-        ? `Jesteś dietetykiem. Generuj realistyczne propozycje posiłków z dokładnymi makrami. Odpowiedz TYLKO w JSON.
-Format: {"suggestions":[{"name":"...","calories":<int>,"proteins":<float>,"carbs":<float>,"fats":<float>,"reasoning":"..."}]}`
-        : `You are a nutritionist. Generate realistic meal suggestions with accurate macros. Respond ONLY in JSON.
-Format: {"suggestions":[{"name":"...","calories":<int>,"proteins":<float>,"carbs":<float>,"fats":<float>,"reasoning":"..."}]}`;
+        ? `Jesteś dietetykiem. Generuj realistyczne propozycje posiłków ze składnikami i krokami przygotowania. NIE obliczaj makroskładników — wpisz 0 jako placeholder. Odpowiedz TYLKO w JSON.
+Format: {"suggestions":[{"name":"...","calories":0,"proteins":0,"carbs":0,"fats":0,"ingredients":[{"name":"<polska_nazwa>","grams":<int>}],"steps":["..."]}]}
+WAŻNE: Używaj TYLKO składników z poniższej listy (dokładne nazwy): ${ingredientList}`
+        : `You are a nutritionist. Generate realistic meal suggestions with ingredients and preparation steps. Do NOT calculate macros — use 0 as placeholder. Respond ONLY in JSON.
+Format: {"suggestions":[{"name":"...","calories":0,"proteins":0,"carbs":0,"fats":0,"ingredients":[{"name":"<ingredient_name>","grams":<int>}],"steps":["..."]}]}
+IMPORTANT: Use ONLY ingredients from this list (exact names): ${ingredientList}`;
 
     const userPrompt =
       language === 'pl'
@@ -282,6 +333,7 @@ Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.c
           cacheKey,
           temperature: 0.9,
           model: 'gpt-4o-mini',
+          maxTokens: 1200,
         }),
       (response) => this.validateDirectResponse(response, count),
       { maxRetries: 3, backoffMs: 100 },
@@ -289,24 +341,29 @@ Remaining macros: protein ${remaining.proteins.toFixed(0)}g, carbs ${remaining.c
 
     const parsed = JSON.parse(aiResponse) as DirectSuggestionsResponse;
 
-    const meals: MealSuggestionItem[] = parsed.suggestions
-      .slice(0, count)
-      .map((s) => {
-        const proteins = Math.round(s.proteins * 10) / 10;
-        const carbs = Math.round(s.carbs * 10) / 10;
-        const fats = Math.round(s.fats * 10) / 10;
-        // Recalculate calories from macros to ensure integrity (AI often mismatches)
-        const calories = Math.round(proteins * 4 + carbs * 4 + fats * 9);
+    const meals: MealSuggestionItem[] = await Promise.all(
+      parsed.suggestions.slice(0, count).map(async (s) => {
+        const ingredients = Array.isArray(s.ingredients) ? s.ingredients : [];
+        const looked = await this.ingredientLookup.calculateMacros(ingredients);
+
+        if (looked.coverage < 0.5) {
+          this.logger.warn(
+            `Low ingredient coverage (${Math.round(looked.coverage * 100)}%) for "${s.name}" — using partial DB macros`,
+          );
+        }
+
         return {
           name: s.name,
-          calories,
-          proteins,
-          carbs,
-          fats,
-          ingredients: [],
+          calories: looked.calories,
+          proteins: looked.proteins,
+          carbs: looked.carbs,
+          fats: looked.fats,
+          ingredients,
+          steps: Array.isArray(s.steps) ? s.steps : [],
           reasoning: s.reasoning,
         };
-      });
+      }),
+    );
 
     return this.buildResponse(meals, targetCalories, consumed, remaining);
   }

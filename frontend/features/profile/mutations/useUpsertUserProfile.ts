@@ -18,6 +18,7 @@ export const useUpsertUserProfile = (
     mutationFn: (data: CreateUserProfileDto) => upsertUserProfile(data),
     onSuccess: (profile) => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
       options.onSuccess?.(profile);
     },
   });

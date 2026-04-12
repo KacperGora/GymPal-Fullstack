@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
 } from '@mui/material';
 import { useTranslations } from 'next-intl';
@@ -23,12 +24,14 @@ interface EditFitnessDataModalProps {
   open: boolean;
   onClose: () => void;
   profile?: UserProfile | null;
+  description?: string;
 }
 
 export const EditFitnessDataModal = ({
   open,
   onClose,
   profile,
+  description,
 }: EditFitnessDataModalProps) => {
   const t = useTranslations('profile');
 
@@ -60,6 +63,7 @@ export const EditFitnessDataModal = ({
         <DialogContent
           sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
         >
+          {description && <DialogContentText>{description}</DialogContentText>}
           <FitnessDataFields
             register={register}
             errors={errors}

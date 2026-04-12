@@ -417,7 +417,12 @@
     "aiSuggestions": "Sugestie posiłków AI",
     "getSuggestions": "Uzyskaj sugestie AI",
     "generating": "AI generuje...",
-    "errorGeneratingSuggestions": "Nie udało się wygenerować sugestii. Spróbuj ponownie."
+    "errorGeneratingSuggestions": "Nie udało się wygenerować sugestii. Spróbuj ponownie.",
+    "completeProfileRequired": "Aby skorzystać z sugestii AI, wypełnij najpierw swój profil fitness.",
+    "ingredients": "Składniki",
+    "preparation": "Przygotowanie",
+    "showRecipe": "Pokaż przepis",
+    "hideRecipe": "Ukryj przepis"
   },
   "welcome": {
     "title": "Witaj w GymPal!",
