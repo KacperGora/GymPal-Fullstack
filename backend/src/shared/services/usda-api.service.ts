@@ -48,6 +48,11 @@ export class UsdaApiService {
     this.apiKey = key ?? '';
   }
 
+  /** Max retries on HTTP 429 (rate limited) */
+  private static readonly MAX_RETRIES = 3;
+  /** Initial backoff in ms; doubles on each retry */
+  private static readonly INITIAL_BACKOFF_MS = 2000;
+
   async searchFood(
     query: string,
     dataTypes: string[] = ['Foundation', 'SR Legacy'],
@@ -66,26 +71,46 @@ export class UsdaApiService {
     const url = `${USDA_BASE}/foods/search?${params.toString()}`;
     this.logger.debug(`USDA search: "${query}"`);
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(
-        `USDA API error: ${response.status} ${response.statusText}`,
+    let attempt = 0;
+    let backoffMs = UsdaApiService.INITIAL_BACKOFF_MS;
+
+    while (attempt <= UsdaApiService.MAX_RETRIES) {
+      const response = await fetch(url);
+
+      if (response.status === 429) {
+        if (attempt === UsdaApiService.MAX_RETRIES) {
+          throw new Error(`USDA rate limit exceeded after ${attempt} retries`);
+        }
+        this.logger.warn(
+          `USDA rate limited (429) for "${query}" — retry ${attempt + 1} in ${backoffMs}ms`,
+        );
+        await new Promise((r) => setTimeout(r, backoffMs));
+        backoffMs *= 2;
+        attempt++;
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          `USDA API error: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const body = (await response.json()) as UsdaSearchResponse;
+
+      if (!body.foods?.length) {
+        this.logger.warn(`USDA: no results for "${query}"`);
+        return null;
+      }
+
+      const food = body.foods[0];
+      this.logger.debug(
+        `USDA match: "${food.description}" (fdcId=${food.fdcId})`,
       );
+      return this.extractMacros(food);
     }
 
-    const body = (await response.json()) as UsdaSearchResponse;
-
-    if (!body.foods?.length) {
-      this.logger.warn(`USDA: no results for "${query}"`);
-      return null;
-    }
-
-    const food = body.foods[0];
-    this.logger.debug(
-      `USDA match: "${food.description}" (fdcId=${food.fdcId})`,
-    );
-
-    return this.extractMacros(food);
+    return null;
   }
 
   private extractMacros(food: UsdaFood): UsdaMacros {

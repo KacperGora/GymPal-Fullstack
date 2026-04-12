@@ -1,13 +1,14 @@
 /**
- * Seeds the Ingredient table with Polish ingredient names + USDA macros.
+ * Standalone USDA ingredient seed script — no NestJS server required.
  *
- * Usage:
- *   npx tsx prisma/seeds/ingredients-usda.seed.ts
+ * Usage (from backend/ directory):
+ *   npm run seed:ingredients
  */
 
-import { PrismaClient, IngredientCategory } from '../../src/generated/prisma/client';
+import { PrismaClient } from '../../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as dotenv from 'dotenv';
+import { INGREDIENTS_TO_SEED } from '../../src/shared/data/ingredient-specs.data';
 
 dotenv.config();
 
@@ -22,128 +23,60 @@ const NUTRIENT_CARBS = 1005;
 const NUTRIENT_FAT = 1004;
 const NUTRIENT_FIBER = 1079;
 
-interface IngredientSpec {
-  polishName: string;
-  usdaQuery: string;
-  category: IngredientCategory;
-  unit?: string;
-}
+/** USDA documented limit: ~3500 req/hour → 1 req per ~1030ms. Use 1100ms for headroom. */
+const USDA_RATE_LIMIT_MS = 1100;
+const MAX_RETRIES = 3;
 
-const INGREDIENTS: IngredientSpec[] = [
-  // Mięso i drób
-  { polishName: 'Pierś z kurczaka (surowa)', usdaQuery: 'chicken breast raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Pierś z kurczaka (gotowana)', usdaQuery: 'chicken breast cooked roasted', category: IngredientCategory.PROTEIN },
-  { polishName: 'Udo kurczaka (surowe)', usdaQuery: 'chicken thigh raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Pierś z indyka (surowa)', usdaQuery: 'turkey breast raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Wołowina chuda (surowa)', usdaQuery: 'beef round lean raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Mielona wołowina (surowa)', usdaQuery: 'ground beef 85% lean raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Schab wieprzowy (surowy)', usdaQuery: 'pork loin raw', category: IngredientCategory.PROTEIN },
-  // Ryby
-  { polishName: 'Łosoś (surowy)', usdaQuery: 'salmon atlantic raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Łosoś (gotowany/pieczony)', usdaQuery: 'salmon atlantic cooked dry heat', category: IngredientCategory.PROTEIN },
-  { polishName: 'Tuńczyk w sosie własnym', usdaQuery: 'tuna canned water drained', category: IngredientCategory.PROTEIN },
-  { polishName: 'Tuńczyk w oleju (odsączony)', usdaQuery: 'tuna canned oil drained', category: IngredientCategory.PROTEIN },
-  { polishName: 'Dorsz (surowy)', usdaQuery: 'cod atlantic raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Krewetki (surowe)', usdaQuery: 'shrimp raw', category: IngredientCategory.PROTEIN },
-  // Jajka
-  { polishName: 'Jajko całe', usdaQuery: 'egg whole raw', category: IngredientCategory.PROTEIN },
-  { polishName: 'Białko jajka', usdaQuery: 'egg white raw', category: IngredientCategory.PROTEIN },
-  // Nabiał
-  { polishName: 'Mleko pełnotłuste', usdaQuery: 'milk whole', category: IngredientCategory.DAIRY, unit: 'ml' },
-  { polishName: 'Mleko 2%', usdaQuery: 'milk reduced fat 2%', category: IngredientCategory.DAIRY, unit: 'ml' },
-  { polishName: 'Jogurt naturalny', usdaQuery: 'yogurt plain whole milk', category: IngredientCategory.DAIRY },
-  { polishName: 'Jogurt grecki pełnotłusty', usdaQuery: 'greek yogurt plain whole milk', category: IngredientCategory.DAIRY },
-  { polishName: 'Jogurt grecki 0%', usdaQuery: 'greek yogurt nonfat plain', category: IngredientCategory.DAIRY },
-  { polishName: 'Skyr', usdaQuery: 'skyr icelandic yogurt nonfat', category: IngredientCategory.DAIRY },
-  { polishName: 'Twaróg', usdaQuery: 'cottage cheese lowfat', category: IngredientCategory.DAIRY },
-  { polishName: 'Ser mozzarella', usdaQuery: 'mozzarella cheese part skim', category: IngredientCategory.DAIRY },
-  { polishName: 'Ser żółty', usdaQuery: 'cheddar cheese', category: IngredientCategory.DAIRY },
-  { polishName: 'Parmezan', usdaQuery: 'parmesan cheese', category: IngredientCategory.DAIRY },
-  { polishName: 'Śmietana 18%', usdaQuery: 'sour cream', category: IngredientCategory.DAIRY },
-  { polishName: 'Masło', usdaQuery: 'butter unsalted', category: IngredientCategory.FATS_OILS },
-  // Zboża (suche)
-  { polishName: 'Ryż biały (suchy)', usdaQuery: 'white rice raw unenriched', category: IngredientCategory.GRAINS },
-  { polishName: 'Ryż brązowy (suchy)', usdaQuery: 'brown rice raw', category: IngredientCategory.GRAINS },
-  { polishName: 'Makaron (suchy)', usdaQuery: 'pasta dry unenriched', category: IngredientCategory.GRAINS },
-  { polishName: 'Makaron pełnoziarnisty (suchy)', usdaQuery: 'whole wheat pasta dry', category: IngredientCategory.GRAINS },
-  { polishName: 'Kasza jaglana (sucha)', usdaQuery: 'millet raw', category: IngredientCategory.GRAINS },
-  { polishName: 'Kasza gryczana (sucha)', usdaQuery: 'buckwheat groats raw', category: IngredientCategory.GRAINS },
-  { polishName: 'Kasza bulgur (sucha)', usdaQuery: 'bulgur dry', category: IngredientCategory.GRAINS },
-  { polishName: 'Płatki owsiane', usdaQuery: 'oats rolled dry', category: IngredientCategory.GRAINS },
-  { polishName: 'Chleb pełnoziarnisty', usdaQuery: 'whole wheat bread', category: IngredientCategory.GRAINS },
-  { polishName: 'Quinoa (sucha)', usdaQuery: 'quinoa raw', category: IngredientCategory.GRAINS },
-  // Warzywa
-  { polishName: 'Brokuły', usdaQuery: 'broccoli raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Szpinak', usdaQuery: 'spinach raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Pomidor', usdaQuery: 'tomatoes raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Sos pomidorowy', usdaQuery: 'tomato sauce canned', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Cebula', usdaQuery: 'onions raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Czosnek', usdaQuery: 'garlic raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Papryka czerwona', usdaQuery: 'sweet red pepper raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Papryka zielona', usdaQuery: 'sweet green pepper raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Cukinia', usdaQuery: 'zucchini summer squash raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Bakłażan', usdaQuery: 'eggplant raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Marchew', usdaQuery: 'carrots raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Ziemniaki', usdaQuery: 'potatoes raw flesh skin', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Rukola', usdaQuery: 'arugula raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Ogórek', usdaQuery: 'cucumber with peel raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Kapusta', usdaQuery: 'cabbage raw', category: IngredientCategory.VEGETABLES },
-  { polishName: 'Pieczarki', usdaQuery: 'mushrooms white raw', category: IngredientCategory.VEGETABLES },
-  // Owoce
-  { polishName: 'Banan', usdaQuery: 'bananas raw', category: IngredientCategory.FRUITS },
-  { polishName: 'Jabłko', usdaQuery: 'apples raw with skin', category: IngredientCategory.FRUITS },
-  { polishName: 'Awokado', usdaQuery: 'avocados raw', category: IngredientCategory.FRUITS },
-  { polishName: 'Truskawki', usdaQuery: 'strawberries raw', category: IngredientCategory.FRUITS },
-  { polishName: 'Borówki', usdaQuery: 'blueberries raw', category: IngredientCategory.FRUITS },
-  // Strączkowe
-  { polishName: 'Soczewica (sucha)', usdaQuery: 'lentils raw', category: IngredientCategory.LEGUMES },
-  { polishName: 'Ciecierzyca (gotowana)', usdaQuery: 'chickpeas cooked boiled', category: IngredientCategory.LEGUMES },
-  { polishName: 'Fasola czarna (gotowana)', usdaQuery: 'black beans cooked boiled', category: IngredientCategory.LEGUMES },
-  { polishName: 'Tofu twarde', usdaQuery: 'tofu firm', category: IngredientCategory.PROTEIN },
-  // Orzechy
-  { polishName: 'Migdały', usdaQuery: 'almonds', category: IngredientCategory.NUTS_SEEDS },
-  { polishName: 'Orzechy włoskie', usdaQuery: 'walnuts', category: IngredientCategory.NUTS_SEEDS },
-  { polishName: 'Masło orzechowe', usdaQuery: 'peanut butter smooth', category: IngredientCategory.NUTS_SEEDS },
-  // Tłuszcze
-  { polishName: 'Oliwa z oliwek', usdaQuery: 'olive oil', category: IngredientCategory.FATS_OILS, unit: 'ml' },
-  { polishName: 'Olej rzepakowy', usdaQuery: 'canola oil', category: IngredientCategory.FATS_OILS, unit: 'ml' },
-  // Inne
-  { polishName: 'Miód', usdaQuery: 'honey', category: IngredientCategory.CONDIMENTS },
-  { polishName: 'Czekolada gorzka', usdaQuery: 'dark chocolate 70-85% cocoa', category: IngredientCategory.CONDIMENTS },
-];
-
-async function searchUsda(query: string, apiKey: string) {
+async function searchUsda(query: string, apiKey: string, dataTypes = ['Foundation', 'SR Legacy']) {
   const params = new URLSearchParams({
     query,
     api_key: apiKey,
-    dataType: 'Foundation,SR Legacy',
+    dataType: dataTypes.join(','),
     pageSize: '3',
   });
 
-  const res = await fetch(`${USDA_BASE}/foods/search?${params}`);
-  if (!res.ok) throw new Error(`USDA ${res.status}: ${res.statusText}`);
+  const url = `${USDA_BASE}/foods/search?${params}`;
+  let attempt = 0;
+  let backoffMs = 2000;
 
-  const body = await res.json() as { foods: Array<{
-    fdcId: number;
-    description: string;
-    foodNutrients: Array<{ nutrientId: number; value: number }>;
-  }> };
+  while (attempt <= MAX_RETRIES) {
+    const res = await fetch(url);
 
-  const food = body.foods?.[0];
-  if (!food) return null;
+    if (res.status === 429) {
+      if (attempt === MAX_RETRIES) throw new Error(`Rate limited after ${attempt} retries`);
+      console.warn(`  ⏳ 429 rate limit — retry ${attempt + 1} in ${backoffMs}ms`);
+      await new Promise((r) => setTimeout(r, backoffMs));
+      backoffMs *= 2;
+      attempt++;
+      continue;
+    }
 
-  const get = (id: number) =>
-    food.foodNutrients.find((n) => n.nutrientId === id)?.value ?? 0;
+    if (!res.ok) throw new Error(`USDA ${res.status}: ${res.statusText}`);
 
-  return {
-    fdcId: food.fdcId,
-    description: food.description,
-    calories: Math.round(get(NUTRIENT_ENERGY)),
-    proteins: Math.round(get(NUTRIENT_PROTEIN) * 10) / 10,
-    carbs: Math.round(get(NUTRIENT_CARBS) * 10) / 10,
-    fats: Math.round(get(NUTRIENT_FAT) * 10) / 10,
-    fiber: Math.round(get(NUTRIENT_FIBER) * 10) / 10,
-  };
+    const body = await res.json() as { foods: Array<{
+      fdcId: number;
+      description: string;
+      foodNutrients: Array<{ nutrientId: number; value: number }>;
+    }> };
+
+    const food = body.foods?.[0];
+    if (!food) return null;
+
+    const get = (id: number) =>
+      food.foodNutrients.find((n) => n.nutrientId === id)?.value ?? 0;
+
+    return {
+      fdcId: food.fdcId,
+      description: food.description,
+      calories: Math.round(get(NUTRIENT_ENERGY)),
+      proteins: Math.round(get(NUTRIENT_PROTEIN) * 10) / 10,
+      carbs: Math.round(get(NUTRIENT_CARBS) * 10) / 10,
+      fats: Math.round(get(NUTRIENT_FAT) * 10) / 10,
+      fiber: Math.round(get(NUTRIENT_FIBER) * 10) / 10,
+    };
+  }
+
+  return null;
 }
 
 async function main() {
@@ -153,13 +86,13 @@ async function main() {
     process.exit(1);
   }
 
-  console.log(`🌱 Seeding ${INGREDIENTS.length} ingredients from USDA...\n`);
+  console.log(`🌱 Seeding ${INGREDIENTS_TO_SEED.length} ingredients from USDA...\n`);
 
   let seeded = 0;
   let skipped = 0;
   const failed: string[] = [];
 
-  for (const spec of INGREDIENTS) {
+  for (const spec of INGREDIENTS_TO_SEED) {
     const existing = await prisma.ingredient.findFirst({
       where: { name: spec.polishName },
     });
@@ -171,7 +104,7 @@ async function main() {
     }
 
     try {
-      const macros = await searchUsda(spec.usdaQuery, apiKey);
+      const macros = await searchUsda(spec.usdaQuery, apiKey, spec.dataTypes);
 
       if (!macros) {
         console.warn(`  ⚠️  No result: "${spec.polishName}" (query: "${spec.usdaQuery}")`);
@@ -179,11 +112,14 @@ async function main() {
         continue;
       }
 
+      const servingUnit =
+        spec.polishName.includes('oliwa') || spec.polishName.includes('olej') ? 'ml' : 'g';
+
       await prisma.ingredient.create({
         data: {
           name: spec.polishName,
           servingSize: 100,
-          servingUnit: spec.unit ?? 'g',
+          servingUnit,
           calories: macros.calories,
           proteins: macros.proteins,
           carbs: macros.carbs,
@@ -201,8 +137,7 @@ async function main() {
       console.log(`      ${macros.calories} kcal | P: ${macros.proteins}g | C: ${macros.carbs}g | F: ${macros.fats}g | błonnik: ${macros.fiber}g\n`);
       seeded++;
 
-      // USDA rate limit: ~3500 req/hour → safe at 1 req/300ms
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, USDA_RATE_LIMIT_MS));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error(`  ❌  ${spec.polishName}: ${msg}`);
