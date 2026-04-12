@@ -1,7 +1,14 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import OpenAI from 'openai';
 import { MetricsService } from '../../shared/metrics/metrics.service';
+import { RedisService } from '../../shared/redis/redis.service';
 
 interface CacheEntry<T> {
   data: T;
@@ -17,7 +24,12 @@ export class OpenAiService {
   private readonly cacheTTL = 1000 * 60 * 60 * 6; // 6 hours
   private readonly maxCacheSize = 500;
 
-  constructor(private readonly metricsService: MetricsService) {
+  private static readonly REDIS_TTL = 60 * 60 * 6; // 6 hours
+
+  constructor(
+    private readonly metricsService: MetricsService,
+    @Optional() private readonly redis: RedisService | null,
+  ) {
     this.initializeClient();
   }
 
@@ -115,6 +127,7 @@ export class OpenAiService {
       temperature?: number;
       model?: string;
       maxRetries?: number;
+      maxTokens?: number;
     },
   ): Promise<string> {
     if (!this.client) {
@@ -127,14 +140,27 @@ export class OpenAiService {
     const cacheKey = options?.cacheKey;
     const temperature = options?.temperature ?? 0.2;
     const model = options?.model ?? 'gpt-4o-mini';
+    const maxTokens = options?.maxTokens;
 
     if (cacheKey) {
+      // L1: in-memory
       const cached = this.getCached<string>(cacheKey);
       if (cached) {
-        this.logger.debug(`Cache hit for key: ${cacheKey}`);
+        this.logger.debug(`Cache hit (memory) for key: ${cacheKey}`);
         this.metricsService.recordAiCacheHit();
         this.metricsService.recordCacheHit();
         return cached;
+      }
+      // L2: Redis (survives restarts / Cloud Run cold starts)
+      if (this.redis) {
+        const redisCached = await this.redis.get<string>(cacheKey);
+        if (redisCached) {
+          this.logger.debug(`Cache hit (Redis) for key: ${cacheKey}`);
+          this.setCache(cacheKey, redisCached);
+          this.metricsService.recordAiCacheHit();
+          this.metricsService.recordCacheHit();
+          return redisCached;
+        }
       }
       this.metricsService.recordCacheMiss();
     }
@@ -154,6 +180,7 @@ export class OpenAiService {
         ],
         response_format: { type: 'json_object' },
         temperature,
+        ...(maxTokens !== undefined && { max_tokens: maxTokens }),
       });
 
       this.metricsService.observeAiResponseTime((Date.now() - apiStart) / 1000);
@@ -176,7 +203,12 @@ export class OpenAiService {
         );
       }
 
-      if (cacheKey) this.setCache(cacheKey, content as string);
+      if (cacheKey) {
+        this.setCache(cacheKey, content as string);
+        if (this.redis) {
+          void this.redis.set(cacheKey, content, OpenAiService.REDIS_TTL);
+        }
+      }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return content;
     } catch (error) {

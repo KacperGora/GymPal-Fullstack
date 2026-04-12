@@ -17,8 +17,11 @@ import { WorkoutsModule } from '../workouts/workouts.module';
 import { MealsModule } from '../meals/meals.module';
 import { ExercisesModule } from '../exercises/exercises.module';
 import { CacheService } from '../../shared/services/cache.service';
+import { IngredientLookupService } from '../../shared/services/ingredient-lookup.service';
+import { IngredientSeederService } from '../../shared/services/ingredient-seeder.service';
 import { MacroCalculatorService } from '../../shared/services/macro-calculator.service';
 import { MealValidatorService } from '../../shared/services/meal-validator.service';
+import { UsdaApiService } from '../../shared/services/usda-api.service';
 import { UsageLimitGuard } from '../../shared/guards/usage-limit.guard';
 import { UserProfileModule } from '../user-profile/user-profile.module';
 
@@ -42,6 +45,9 @@ import { UserProfileModule } from '../user-profile/user-profile.module';
     OpenAiService,
     MacroCalculatorService,
     MealValidatorService,
+    IngredientLookupService,
+    IngredientSeederService,
+    UsdaApiService,
     UsageLimitGuard,
     Reflector,
     AgentService,

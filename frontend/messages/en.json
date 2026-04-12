@@ -333,7 +333,12 @@
     "aiSuggestions": "AI Meal Suggestions",
     "getSuggestions": "Get AI Suggestions",
     "generating": "AI is generating...",
-    "errorGeneratingSuggestions": "Unable to generate suggestions. Try again."
+    "errorGeneratingSuggestions": "Unable to generate suggestions. Try again.",
+    "completeProfileRequired": "To use AI suggestions, please complete your fitness profile first.",
+    "ingredients": "Ingredients",
+    "preparation": "Preparation",
+    "showRecipe": "Show recipe",
+    "hideRecipe": "Hide recipe"
   },
   "exercises": {
     "title": "Exercises",
