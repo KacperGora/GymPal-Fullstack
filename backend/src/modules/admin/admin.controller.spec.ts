@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AdminController } from './admin.controller';
 import { PrismaService } from '../../shared/db/prisma.service';
 import { AdminService } from './admin.service';
+import { IngredientSeederService } from '../../shared/services/ingredient-seeder.service';
 
 describe('AdminController', () => {
   let controller: AdminController;
@@ -17,6 +18,10 @@ describe('AdminController', () => {
         {
           provide: AdminService,
           useValue: {},
+        },
+        {
+          provide: IngredientSeederService,
+          useValue: { seedFromUsda: jest.fn() },
         },
       ],
     }).compile();
