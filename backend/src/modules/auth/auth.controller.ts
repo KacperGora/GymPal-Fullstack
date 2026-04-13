@@ -55,8 +55,44 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User successfully registered' })
   @ApiResponse({ status: 400, description: 'Invalid input data' })
   @ApiResponse({ status: 409, description: 'User already exists' })
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(
+    @Body() dto: RegisterDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const context = {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip || req.socket.remoteAddress,
+    };
+    const { token, refreshToken, hasProfile, ...user } =
+      await this.authService.register(dto, context);
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const cookieBase = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax' as const,
+      path: '/',
+    };
+
+    res.cookie(ACCESS_TOKEN_COOKIE, token, {
+      ...cookieBase,
+      maxAge: ACCESS_TOKEN_MAX_AGE_MS,
+    });
+    res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, {
+      ...cookieBase,
+      maxAge: REFRESH_TOKEN_MAX_AGE_MS,
+    });
+    res.cookie(HAS_PROFILE_COOKIE, HAS_PROFILE_FALSE, {
+      ...cookieBase,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    const isMobile = req.headers['x-client-type'] === 'mobile';
+    if (isMobile) {
+      return { ...user, hasProfile, accessToken: token, refreshToken };
+    }
+    return { ...user, hasProfile };
   }
 
   @Post('login')
@@ -101,6 +137,10 @@ export class AuthController {
       },
     );
 
+    const isMobile = req.headers['x-client-type'] === 'mobile';
+    if (isMobile) {
+      return { ...user, hasProfile, accessToken: token, refreshToken };
+    }
     return { ...user, hasProfile };
   }
 
@@ -112,10 +152,11 @@ export class AuthController {
   async refresh(
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
+    @Body('refreshToken') bodyRefreshToken?: string,
   ) {
-    const refreshToken = req.cookies?.[REFRESH_TOKEN_COOKIE] as
-      | string
-      | undefined;
+    const refreshToken =
+      bodyRefreshToken ??
+      (req.cookies?.[REFRESH_TOKEN_COOKIE] as string | undefined);
     if (!refreshToken) {
       throw new UnauthorizedException('Missing refresh token');
     }
@@ -155,6 +196,10 @@ export class AuthController {
       },
     );
 
+    const isMobile = req.headers['x-client-type'] === 'mobile';
+    if (isMobile) {
+      return { accessToken, refreshToken: nextRefresh };
+    }
     return { success: true };
   }
 

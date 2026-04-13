@@ -85,16 +85,19 @@ describe('AuthService', () => {
       email: 'jan@test.pl',
       password: 'password123',
     };
+    const context = { userAgent: 'test-agent', ipAddress: '127.0.0.1' };
 
-    it('should create user with hashed password and return {id, email}', async () => {
+    it('should create user, issue tokens and return {id, email, hasProfile, token, refreshToken}', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
       (hashPassword as jest.Mock).mockResolvedValue('hashed-password');
       (prisma.user.create as jest.Mock).mockResolvedValue({
         id: 1,
         email: dto.email,
+        role: 'CLIENT',
       });
+      (prisma.refreshToken.create as jest.Mock).mockResolvedValue({});
 
-      const result = await service.register(dto);
+      const result = await service.register(dto, context);
 
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: dto.email },
@@ -102,9 +105,15 @@ describe('AuthService', () => {
       expect(hashPassword).toHaveBeenCalledWith(dto.password);
       expect(prisma.user.create).toHaveBeenCalledWith({
         data: { ...dto, password: 'hashed-password' },
-        select: { email: true, id: true },
+        select: { email: true, id: true, role: true },
       });
-      expect(result).toEqual({ id: 1, email: dto.email });
+      expect(result).toEqual({
+        id: 1,
+        email: dto.email,
+        hasProfile: false,
+        token: 'mock-jwt',
+        refreshToken: 'mocked-random-token',
+      });
     });
 
     it('should throw BadRequestException when email is taken', async () => {
@@ -113,7 +122,9 @@ describe('AuthService', () => {
         email: dto.email,
       });
 
-      await expect(service.register(dto)).rejects.toThrow(BadRequestException);
+      await expect(service.register(dto, context)).rejects.toThrow(
+        BadRequestException,
+      );
       expect(prisma.user.create).not.toHaveBeenCalled();
     });
   });

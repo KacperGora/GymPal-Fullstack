@@ -59,41 +59,94 @@ describe('AuthController', () => {
   });
 
   describe('register', () => {
-    it('should call authService.register', async () => {
-      const dto: RegisterDto = {
-        firstName: 'Kacper',
-        lastName: 'G.',
-        email: 'a@a.pl',
-        password: '12345678',
-      };
+    const mockRes = {
+      cookie: jest.fn(),
+    } as unknown as import('express').Response;
 
-      mockAuthService.register.mockResolvedValue({
-        id: 'user-id',
-        email: dto.email,
+    const webReq = {
+      headers: { 'user-agent': 'test-agent' },
+      ip: '127.0.0.1',
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as import('express').Request;
+
+    const mobileReq = {
+      headers: { 'user-agent': 'test-agent', 'x-client-type': 'mobile' },
+      ip: '127.0.0.1',
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as import('express').Request;
+
+    const registerServiceResponse = {
+      id: 'user-id',
+      email: 'a@a.pl',
+      hasProfile: false,
+      token: 'jwt',
+      refreshToken: 'refresh',
+    };
+
+    const dto: RegisterDto = {
+      firstName: 'Kacper',
+      lastName: 'G.',
+      email: 'a@a.pl',
+      password: '12345678',
+    };
+
+    it('should set cookies and omit tokens from body for web clients', async () => {
+      mockAuthService.register.mockResolvedValue(registerServiceResponse);
+
+      const result = await controller.register(dto, webReq, mockRes);
+
+      expect(mockAuthService.register).toHaveBeenCalledWith(dto, {
+        userAgent: 'test-agent',
+        ipAddress: '127.0.0.1',
       });
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'jwt',
+        expect.objectContaining({ httpOnly: true }),
+      );
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'refresh_token',
+        'refresh',
+        expect.objectContaining({ httpOnly: true }),
+      );
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'has_profile',
+        '0',
+        expect.objectContaining({ httpOnly: true }),
+      );
+      expect(result).toEqual({
+        id: 'user-id',
+        email: 'a@a.pl',
+        hasProfile: false,
+      });
+    });
 
-      const result = await controller.register(dto);
+    it('should set cookies and return tokens in body for mobile clients', async () => {
+      mockAuthService.register.mockResolvedValue(registerServiceResponse);
 
-      expect(mockAuthService.register).toHaveBeenCalledWith(dto);
-      expect(result).toEqual({ id: 'user-id', email: dto.email });
+      const result = await controller.register(dto, mobileReq, mockRes);
+
+      expect(result).toEqual({
+        id: 'user-id',
+        email: 'a@a.pl',
+        hasProfile: false,
+        accessToken: 'jwt',
+        refreshToken: 'refresh',
+      });
     });
 
     it('should throw BadRequestException when email already exists', async () => {
-      const dto: RegisterDto = {
-        firstName: 'Kacper',
-        lastName: 'G.',
-        email: 'existing@example.com',
-        password: '12345678',
-      };
-
       mockAuthService.register.mockRejectedValue(
         new BadRequestException('Email already in use'),
       );
 
-      await expect(controller.register(dto)).rejects.toThrow(
+      await expect(controller.register(dto, webReq, mockRes)).rejects.toThrow(
         BadRequestException,
       );
-      expect(mockAuthService.register).toHaveBeenCalledWith(dto);
+      expect(mockAuthService.register).toHaveBeenCalledWith(dto, {
+        userAgent: 'test-agent',
+        ipAddress: '127.0.0.1',
+      });
     });
   });
 
@@ -102,57 +155,81 @@ describe('AuthController', () => {
       cookie: jest.fn(),
     } as unknown as import('express').Response;
 
-    const mockReq = {
+    const webReq = {
       headers: { 'user-agent': 'test-agent' },
       ip: '127.0.0.1',
       socket: { remoteAddress: '127.0.0.1' },
     } as unknown as import('express').Request;
 
-    it('should call authService.login and set cookie', async () => {
-      const dto: LoginDto = {
-        email: 'a@a.pl',
-        password: '12345678',
-      };
+    const mobileReq = {
+      headers: { 'user-agent': 'test-agent', 'x-client-type': 'mobile' },
+      ip: '127.0.0.1',
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as import('express').Request;
 
-      mockAuthService.login.mockResolvedValue({
-        id: 'user-id',
-        email: dto.email,
-        token: 'jwt',
-        refreshToken: 'refresh',
-        hasProfile: false,
-      });
+    const loginServiceResponse = {
+      id: 'user-id',
+      email: 'a@a.pl',
+      token: 'jwt',
+      refreshToken: 'refresh',
+      hasProfile: false,
+    };
 
-      const result = await controller.login(dto, mockReq, mockRes);
-
-      expect(mockAuthService.login).toHaveBeenCalledWith(dto, {
-        userAgent: 'test-agent',
-        ipAddress: '127.0.0.1',
-      });
-      expect(mockRes.cookie).toHaveBeenCalledWith('access_token', 'jwt', {
+    const expectedCookieCalls = (mockResCookie: jest.Mock) => {
+      expect(mockResCookie).toHaveBeenCalledWith('access_token', 'jwt', {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/',
         maxAge: 15 * 60 * 1000,
       });
-      expect(mockRes.cookie).toHaveBeenCalledWith('refresh_token', 'refresh', {
+      expect(mockResCookie).toHaveBeenCalledWith('refresh_token', 'refresh', {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
-      expect(mockRes.cookie).toHaveBeenCalledWith('has_profile', '0', {
+      expect(mockResCookie).toHaveBeenCalledWith('has_profile', '0', {
         httpOnly: true,
         secure: false,
         sameSite: 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
+    };
+
+    it('should set cookies and omit tokens from body for web clients', async () => {
+      const dto: LoginDto = { email: 'a@a.pl', password: '12345678' };
+      mockAuthService.login.mockResolvedValue(loginServiceResponse);
+
+      const result = await controller.login(dto, webReq, mockRes);
+
+      expect(mockAuthService.login).toHaveBeenCalledWith(dto, {
+        userAgent: 'test-agent',
+        ipAddress: '127.0.0.1',
+      });
+      expectedCookieCalls(mockRes.cookie as jest.Mock);
       expect(result).toEqual({
         id: 'user-id',
-        email: dto.email,
+        email: 'a@a.pl',
         hasProfile: false,
+      });
+    });
+
+    it('should set cookies and return tokens in body for mobile clients', async () => {
+      const dto: LoginDto = { email: 'a@a.pl', password: '12345678' };
+      mockAuthService.login.mockResolvedValue(loginServiceResponse);
+
+      const result = await controller.login(dto, mobileReq, mockRes);
+
+      expectedCookieCalls(mockRes.cookie as jest.Mock);
+      expect(result).toEqual({
+        id: 'user-id',
+        email: 'a@a.pl',
+        hasProfile: false,
+        accessToken: 'jwt',
+        refreshToken: 'refresh',
       });
     });
 
@@ -166,7 +243,7 @@ describe('AuthController', () => {
         new UnauthorizedException('Invalid credentials'),
       );
 
-      await expect(controller.login(dto, mockReq, mockRes)).rejects.toThrow(
+      await expect(controller.login(dto, webReq, mockRes)).rejects.toThrow(
         UnauthorizedException,
       );
       expect(mockAuthService.login).toHaveBeenCalledWith(dto, {
@@ -181,7 +258,13 @@ describe('AuthController', () => {
       cookie: jest.fn(),
     } as unknown as import('express').Response;
 
-    it('should set new cookies on refresh', async () => {
+    const refreshServiceResponse = {
+      accessToken: 'new-jwt',
+      refreshToken: 'new-refresh',
+      hasProfile: true,
+    };
+
+    it('should set new cookies and return success for web clients', async () => {
       const mockReq = {
         cookies: { refresh_token: 'refresh' },
         headers: { 'user-agent': 'test-agent' },
@@ -189,11 +272,7 @@ describe('AuthController', () => {
         socket: { remoteAddress: '127.0.0.1' },
       } as unknown as import('express').Request;
 
-      mockAuthService.refresh.mockResolvedValue({
-        accessToken: 'new-jwt',
-        refreshToken: 'new-refresh',
-        hasProfile: true,
-      });
+      mockAuthService.refresh.mockResolvedValue(refreshServiceResponse);
 
       const result = await controller.refresh(mockReq, mockRes);
 
@@ -227,6 +306,24 @@ describe('AuthController', () => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       expect(result).toEqual({ success: true });
+    });
+
+    it('should set cookies and return tokens in body for mobile clients', async () => {
+      const mockReq = {
+        cookies: {},
+        headers: { 'user-agent': 'test-agent', 'x-client-type': 'mobile' },
+        ip: '127.0.0.1',
+        socket: { remoteAddress: '127.0.0.1' },
+      } as unknown as import('express').Request;
+
+      mockAuthService.refresh.mockResolvedValue(refreshServiceResponse);
+
+      const result = await controller.refresh(mockReq, mockRes, 'refresh');
+
+      expect(result).toEqual({
+        accessToken: 'new-jwt',
+        refreshToken: 'new-refresh',
+      });
     });
 
     it('should throw UnauthorizedException when refresh token missing', async () => {

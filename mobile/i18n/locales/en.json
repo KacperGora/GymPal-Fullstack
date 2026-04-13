@@ -1,0 +1,222 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "tryAgain": "Try again"
+  },
+  "errors": {
+    "sessionExpired": "Session expired. Please log in again.",
+    "invalidCredentials": "Invalid login credentials",
+    "unexpectedError": "An unexpected error occurred"
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "register": "Register",
+      "forgotPassword": "Forgot password?",
+      "errorInvalid": "Invalid login credentials",
+      "errorGeneral": "An error occurred during login"
+    },
+    "register": {
+      "title": "Register",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "submit": "Register",
+      "backToLogin": "Back to login",
+      "errorPasswordMismatch": "Passwords do not match",
+      "errorInvalid": "Invalid registration data",
+      "errorGeneral": "An error occurred during registration",
+      "firstName": "First name",
+      "lastName": "Last name"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Hi, {name}!",
+    "subtitle": "Your daily overview",
+    "calories": "Calories",
+    "remaining": "remaining",
+    "overLimit": "over limit",
+    "macros": "Macros",
+    "proteins": "Protein",
+    "carbs": "Carbs",
+    "fats": "Fats",
+    "water": "Hydration",
+    "glasses": "glasses",
+    "waterGoalReached": "Goal reached!",
+    "goal": "Your goal",
+    "weeklyTitle": "Last 7 days",
+    "weeklyAvg": "Average",
+    "weeklyTarget": "Target",
+    "workoutFrequencyTitle": "Workout Frequency",
+    "workoutFrequencyPerWeek": "per week",
+    "macroBreakdownTitle": "Today's Macro Breakdown"
+  },
+  "nutrition": {
+    "title": "Nutrition",
+    "calories": "Calories",
+    "remaining": "remaining",
+    "overLimit": "over limit",
+    "macros": "Macronutrients",
+    "proteins": "Protein",
+    "carbs": "Carbohydrates",
+    "fats": "Fats",
+    "todaysMeals": "Meals",
+    "addMeal": "Add meal",
+    "noMealsYet": "No meals yet",
+    "addFirstMeal": "Add your first meal",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "mealName": "Meal name",
+    "category": "Category",
+    "categories": {
+      "breakfast": "Breakfast",
+      "lunch": "Lunch",
+      "dinner": "Dinner",
+      "snack": "Snack"
+    },
+    "water": {
+      "title": "Hydration",
+      "glasses": "glasses",
+      "goalReached": "Goal reached!"
+    },
+    "quickAdd": {
+      "title": "Quick add",
+      "favorites": "Favorites",
+      "recent": "Recent",
+      "empty": "No recent meals"
+    },
+    "tips": {
+      "title": "Tips",
+      "onTrack": "You're close to today's goal.",
+      "allDone": "Great job! You've hit your macros today.",
+      "overCalories": "You are over by {value} kcal.",
+      "moreProtein": "You still need about {value} g protein.",
+      "moreCarbs": "You still need about {value} g carbs.",
+      "moreFats": "You still need about {value} g fats."
+    },
+    "weekly": {
+      "title": "Last 7 days",
+      "avg": "Average",
+      "target": "Target"
+    }
+  },
+  "workouts": {
+    "title": "Workouts",
+    "greeting": "Hi, {name}!",
+    "addWorkout": "Add workout",
+    "editWorkout": "Edit workout",
+    "noWorkoutsYet": "No workouts yet",
+    "startFirstWorkout": "Start your first workout to track your progress",
+    "workoutName": "Workout name",
+    "duration": "Duration",
+    "durationMinutes": "in minutes",
+    "caloriesBurned": "Calories burned",
+    "notes": "Notes",
+    "exercises": "exercises",
+    "addExercise": "Add exercise",
+    "noExercisesYet": "No exercises added yet",
+    "sets": "sets",
+    "reps": "reps",
+    "weight": "Weight",
+    "restTime": "Rest time",
+    "seconds": "seconds",
+    "searchExercise": "Search exercise",
+    "searchExercisePlaceholder": "Type to search exercises...",
+    "noExercisesFound": "No exercises found"
+  },
+  "exercises": {
+    "title": "Exercises",
+    "searchPlaceholder": "Search exercises by name...",
+    "allBodyParts": "All",
+    "noResults": "No exercises found",
+    "secondaryMuscles": "Secondary muscles",
+    "instructions": "Instructions",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "bodyPart": "Body part",
+    "target": "Target muscle",
+    "equipment": "Equipment"
+  },
+  "profile": {
+    "title": "Profile",
+    "personalInfo": "Personal info",
+    "fitnessData": "Fitness data",
+    "editFitnessData": "Edit fitness data",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "height": "Height",
+    "weight": "Weight",
+    "age": "Age",
+    "activity": "Activity level",
+    "goal": "Goal",
+    "bmr": "BMR",
+    "tdee": "TDEE",
+    "targetCalories": "Target calories",
+    "noProfile": "No fitness data. Complete it on the welcome screen.",
+    "activityLevels": {
+      "sedentary": "Sedentary lifestyle",
+      "light": "Light activity",
+      "moderate": "Moderate activity",
+      "active": "High activity",
+      "veryActive": "Very high activity"
+    },
+    "goals": {
+      "lose": "Lose weight",
+      "maintain": "Maintain weight",
+      "gain": "Gain mass"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to GymPal!",
+    "subtitle": "Fill in your details to calculate calorie needs",
+    "form": {
+      "height": "Height (cm)",
+      "weight": "Weight (kg)",
+      "age": "Age",
+      "activity": "Activity level",
+      "goal": "Goal",
+      "submit": "Save",
+      "activityLevels": {
+        "sedentary": "Sedentary lifestyle",
+        "light": "Light activity (1-3 days/week)",
+        "moderate": "Moderate activity (3-5 days/week)",
+        "active": "High activity (6-7 days/week)",
+        "veryActive": "Very high activity"
+      },
+      "goals": {
+        "lose": "Lose weight",
+        "maintain": "Maintain weight",
+        "gain": "Gain mass"
+      }
+    }
+  },
+  "trainer": {
+    "clients": "Your Clients",
+    "noClients": "You have no clients yet. Share your invite link to get started!",
+    "inviteLink": "Invite link",
+    "generateLink": "Generate invite link",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied!",
+    "removeClient": "Remove client",
+    "workoutsTab": "Workouts",
+    "nutritionTab": "Nutrition",
+    "noWorkouts": "No workouts.",
+    "noMeals": "No meals today.",
+    "today": "Today"
+  },
+  "trainerInfo": {
+    "title": "My Trainer",
+    "noTrainer": "You have no trainer assigned yet. Ask your trainer for an invite link."
+  }
+}

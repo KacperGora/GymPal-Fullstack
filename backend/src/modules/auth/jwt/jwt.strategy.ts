@@ -10,8 +10,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const secret = process.env.JWT_SECRET;
     if (!secret) throw new Error('JWT_SECRET not set');
     super({
-      jwtFromRequest: (req: Request) =>
-        (req?.cookies?.[ACCESS_TOKEN_COOKIE] as string) ?? null,
+      jwtFromRequest: (req: Request) => {
+        const cookie = req?.cookies?.[ACCESS_TOKEN_COOKIE] as
+          | string
+          | undefined;
+        if (cookie) return cookie;
+        const authHeader = req?.headers?.authorization;
+        if (authHeader?.startsWith('Bearer ')) return authHeader.slice(7);
+        return null;
+      },
       secretOrKey: secret,
     });
   }
