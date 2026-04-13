@@ -1,0 +1,222 @@
+{
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "add": "Dodaj",
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "loading": "Ładowanie...",
+    "error": "Coś poszło nie tak",
+    "tryAgain": "Spróbuj ponownie"
+  },
+  "errors": {
+    "sessionExpired": "Sesja wygasła. Zaloguj się ponownie.",
+    "invalidCredentials": "Nieprawidłowe dane logowania",
+    "unexpectedError": "Wystąpił nieoczekiwany błąd"
+  },
+  "auth": {
+    "login": {
+      "title": "Logowanie",
+      "email": "Email",
+      "password": "Hasło",
+      "submit": "Zaloguj",
+      "register": "Rejestracja",
+      "forgotPassword": "Nie pamiętasz hasła?",
+      "errorInvalid": "Niepoprawne dane logowania",
+      "errorGeneral": "Wystąpił błąd podczas logowania"
+    },
+    "register": {
+      "title": "Rejestracja",
+      "email": "Email",
+      "password": "Hasło",
+      "confirmPassword": "Potwierdź hasło",
+      "submit": "Zarejestruj",
+      "backToLogin": "Wróć do logowania",
+      "errorPasswordMismatch": "Hasła nie są zgodne",
+      "errorInvalid": "Niepoprawne dane rejestracji",
+      "errorGeneral": "Wystąpił błąd podczas rejestracji",
+      "firstName": "Imię",
+      "lastName": "Nazwisko"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "greeting": "Cześć, {name}!",
+    "subtitle": "Twój dzienny przegląd",
+    "calories": "Kalorie",
+    "remaining": "pozostało",
+    "overLimit": "ponad limit",
+    "macros": "Makro",
+    "proteins": "Białko",
+    "carbs": "Węgle",
+    "fats": "Tłuszcze",
+    "water": "Nawodnienie",
+    "glasses": "szklanek",
+    "waterGoalReached": "Cel osiągnięty!",
+    "goal": "Twój cel",
+    "weeklyTitle": "Ostatnie 7 dni",
+    "weeklyAvg": "Średnia",
+    "weeklyTarget": "Cel",
+    "workoutFrequencyTitle": "Częstotliwość treningów",
+    "workoutFrequencyPerWeek": "na tydzień",
+    "macroBreakdownTitle": "Dzisiejszy rozkład makro"
+  },
+  "nutrition": {
+    "title": "Odżywianie",
+    "calories": "Kalorie",
+    "remaining": "pozostało",
+    "overLimit": "ponad limit",
+    "macros": "Makroskładniki",
+    "proteins": "Białko",
+    "carbs": "Węglowodany",
+    "fats": "Tłuszcze",
+    "todaysMeals": "Posiłki",
+    "addMeal": "Dodaj posiłek",
+    "noMealsYet": "Brak posiłków",
+    "addFirstMeal": "Dodaj swój pierwszy posiłek",
+    "today": "Dziś",
+    "yesterday": "Wczoraj",
+    "mealName": "Nazwa posiłku",
+    "category": "Kategoria",
+    "categories": {
+      "breakfast": "Śniadanie",
+      "lunch": "Obiad",
+      "dinner": "Kolacja",
+      "snack": "Przekąska"
+    },
+    "water": {
+      "title": "Nawodnienie",
+      "glasses": "szklanek",
+      "goalReached": "Cel osiągnięty!"
+    },
+    "quickAdd": {
+      "title": "Szybkie dodawanie",
+      "favorites": "Ulubione",
+      "recent": "Ostatnie",
+      "empty": "Brak ostatnich posiłków"
+    },
+    "tips": {
+      "title": "Wskazówki",
+      "onTrack": "Jesteś blisko celu na dziś.",
+      "allDone": "Świetnie! Dziś domknąłeś makroskładniki.",
+      "overCalories": "Przekroczyłeś cel o {value} kcal.",
+      "moreProtein": "Brakuje jeszcze ok. {value} g białka.",
+      "moreCarbs": "Brakuje jeszcze ok. {value} g węglowodanów.",
+      "moreFats": "Brakuje jeszcze ok. {value} g tłuszczu."
+    },
+    "weekly": {
+      "title": "Ostatnie 7 dni",
+      "avg": "Średnia",
+      "target": "Cel"
+    }
+  },
+  "workouts": {
+    "title": "Treningi",
+    "greeting": "Cześć, {name}!",
+    "addWorkout": "Dodaj trening",
+    "editWorkout": "Edytuj trening",
+    "noWorkoutsYet": "Brak treningów",
+    "startFirstWorkout": "Rozpocznij pierwszy trening, aby śledzić postępy",
+    "workoutName": "Nazwa treningu",
+    "duration": "Czas trwania",
+    "durationMinutes": "w minutach",
+    "caloriesBurned": "Spalone kalorie",
+    "notes": "Notatki",
+    "exercises": "ćwiczeń",
+    "addExercise": "Dodaj ćwiczenie",
+    "noExercisesYet": "Brak dodanych ćwiczeń",
+    "sets": "serii",
+    "reps": "powt.",
+    "weight": "Ciężar",
+    "restTime": "Czas odpoczynku",
+    "seconds": "sekundy",
+    "searchExercise": "Szukaj ćwiczenia",
+    "searchExercisePlaceholder": "Wpisz, aby wyszukać ćwiczenia...",
+    "noExercisesFound": "Nie znaleziono ćwiczeń"
+  },
+  "exercises": {
+    "title": "Ćwiczenia",
+    "searchPlaceholder": "Szukaj ćwiczeń po nazwie...",
+    "allBodyParts": "Wszystkie",
+    "noResults": "Nie znaleziono ćwiczeń",
+    "secondaryMuscles": "Dodatkowe mięśnie",
+    "instructions": "Instrukcje",
+    "addToFavorites": "Dodaj do ulubionych",
+    "removeFromFavorites": "Usuń z ulubionych",
+    "bodyPart": "Partia ciała",
+    "target": "Mięsień docelowy",
+    "equipment": "Sprzęt"
+  },
+  "profile": {
+    "title": "Profil",
+    "personalInfo": "Dane osobowe",
+    "fitnessData": "Dane fitness",
+    "editFitnessData": "Edytuj dane fitness",
+    "email": "Email",
+    "firstName": "Imię",
+    "lastName": "Nazwisko",
+    "height": "Wzrost",
+    "weight": "Waga",
+    "age": "Wiek",
+    "activity": "Poziom aktywności",
+    "goal": "Cel",
+    "bmr": "BMR",
+    "tdee": "TDEE",
+    "targetCalories": "Docelowe kalorie",
+    "noProfile": "Brak danych fitness. Uzupełnij je na ekranie powitalnym.",
+    "activityLevels": {
+      "sedentary": "Siedzący tryb życia",
+      "light": "Lekka aktywność",
+      "moderate": "Umiarkowana aktywność",
+      "active": "Wysoka aktywność",
+      "veryActive": "Bardzo wysoka aktywność"
+    },
+    "goals": {
+      "lose": "Redukcja wagi",
+      "maintain": "Utrzymanie wagi",
+      "gain": "Przyrost masy"
+    }
+  },
+  "welcome": {
+    "title": "Witaj w GymPal!",
+    "subtitle": "Uzupełnij swoje dane, aby obliczyć zapotrzebowanie kaloryczne",
+    "form": {
+      "height": "Wzrost (cm)",
+      "weight": "Waga (kg)",
+      "age": "Wiek",
+      "activity": "Poziom aktywności",
+      "goal": "Cel",
+      "submit": "Zapisz",
+      "activityLevels": {
+        "sedentary": "Siedzący tryb życia",
+        "light": "Lekka aktywność (1-3 dni/tydzień)",
+        "moderate": "Umiarkowana aktywność (3-5 dni/tydzień)",
+        "active": "Wysoka aktywność (6-7 dni/tydzień)",
+        "veryActive": "Bardzo wysoka aktywność"
+      },
+      "goals": {
+        "lose": "Redukcja wagi",
+        "maintain": "Utrzymanie wagi",
+        "gain": "Przyrost masy"
+      }
+    }
+  },
+  "trainer": {
+    "clients": "Twoi klienci",
+    "noClients": "Nie masz jeszcze klientów. Udostępnij link zaproszenia!",
+    "inviteLink": "Link zaproszenia",
+    "generateLink": "Wygeneruj link",
+    "copyLink": "Skopiuj link",
+    "linkCopied": "Link skopiowany!",
+    "removeClient": "Usuń klienta",
+    "workoutsTab": "Treningi",
+    "nutritionTab": "Żywienie",
+    "noWorkouts": "Brak treningów.",
+    "noMeals": "Brak posiłków dzisiaj.",
+    "today": "Dzisiaj"
+  },
+  "trainerInfo": {
+    "title": "Mój trener",
+    "noTrainer": "Nie masz jeszcze przypisanego trenera. Poproś trenera o link zaproszenia."
+  }
+}

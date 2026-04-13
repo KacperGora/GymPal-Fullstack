@@ -95,7 +95,7 @@ export class AuthService {
     });
     this.logger.log(`Cleaned up ${result.count} expired/revoked tokens`);
   }
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, context: TokenContext) {
     const exist = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -106,10 +106,24 @@ export class AuthService {
 
     const user = await this.prisma.user.create({
       data: { ...dto, password: hashed },
-      select: { email: true, id: true },
+      select: { email: true, id: true, role: true },
     });
 
-    return user;
+    const token = this.generateAccessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      subscriptionStatus: null,
+    });
+    const refresh = await this.createRefreshToken(user.id, context);
+
+    return {
+      id: user.id,
+      email: user.email,
+      hasProfile: false,
+      token,
+      refreshToken: refresh.token,
+    };
   }
   async login(dto: LoginDto, context: TokenContext) {
     const user = await this.prisma.user.findUnique({
