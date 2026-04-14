@@ -20,7 +20,7 @@
     "@gympal/shared": "file:../shared",
     "@hookform/resolvers": "^5.2.2",
     "@mui/icons-material": "^7.3.9",
-    "@mui/material": "^7.3.7",
+    "@mui/material": "^9.0.0",
     "@tanstack/react-query": "^5.96.2",
     "axios": "^1.13.6",
     "dayjs": "^1.11.20",
