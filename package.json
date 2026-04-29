@@ -27,5 +27,8 @@
     "shared/**/*.ts": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "commitlint": "^20.5.2"
   }
 }
