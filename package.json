@@ -29,6 +29,6 @@
     ]
   },
   "dependencies": {
-    "commitlint": "^20.5.2"
+    "commitlint": "^20.5.3"
   }
 }
