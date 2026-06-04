@@ -34,20 +34,20 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58.2",
+    "@bramus/specificity": "^2.4.2",
+    "@playwright/test": "^1.60.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^25",
+    "@types/node": "^25.9.1",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19",
     "axios-mock-adapter": "^2.1.0",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint": "^10",
+    "eslint-config-next": "16.2.7",
     "eslint-plugin-import": "^2.32.0",
-    "@bramus/specificity": "^2.4.2",
-    "jsdom": "^29.0.2",
-    "typescript": "^5",
-    "vitest": "^4.0.18"
+    "jsdom": "^29.1.1",
+    "typescript": "^6",
+    "vitest": "^4.1.8"
   }
 }
