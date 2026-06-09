@@ -47,7 +47,7 @@
     "eslint-plugin-import": "^2.32.0",
     "@bramus/specificity": "^2.4.2",
     "jsdom": "^29.0.2",
-    "typescript": "^5",
+    "typescript": "^6",
     "vitest": "^4.0.18"
   }
 }
